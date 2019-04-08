@@ -1,0 +1,13 @@
+﻿blog.kutulu.org/2012/01/com-interop-part-10-recapping-and.html
+csharperimage.jeremylikness.com/
+duckduckgo.com/?q=site%3Aw3.org+http&search-submit=&ia=web
+stackoverflow.com/questions/10190906/how-to-get-video-duration-from-mp4-wmv-flv-mov-videos?noredirect=1&lq=1
+stackoverflow.com/questions/10390260/p-invoke-with-shell32-bypass-interop-shell32-dll-generation/10406221
+stackoverflow.com/questions/2226554/c-class-for-decoding-quoted-printable-encoding#answer-2236192
+stackoverflow.com/questions/2774471/what-is-c2-a0-in-mime-encoded-quoted-printable-text
+stackoverflow.com/questions/37540244/how-to-convert-quoted-print-string/37540375#37540375
+twitter.com/jeremylikness
+www.pinvoke.net/default.aspx/shell32.SHGetFileInfo
+www.w3.org/Protocols/
+www.w3.org/Protocols/rfc2616/rfc2616-sec7.html#sec7.2.1
+www.w3schools.com/tags/ref_attributes.asp

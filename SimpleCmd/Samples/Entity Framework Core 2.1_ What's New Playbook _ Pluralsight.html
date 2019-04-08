@@ -1,0 +1,1462 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0092)https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/table-of-contents -->
+<html lang="en">
+<head class="at-element-marker">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/wootric-sdk.js.download"></script>
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/fs.js.download"></script>
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/30489.js.download"></script>
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/webengage-min-v-6.0.js.download"></script>
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/2700af8a3c"></script>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/nr-spa-1099.min.js.download"></script>
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/analytics.min.js.download"></script>
+  <script type="text/javascript">window.NREUM || (NREUM = {}); NREUM.info = { "agent": "", "beacon": "bam.nr-data.net", "errorBeacon": "bam.nr-data.net", "licenseKey": "2700af8a3c", "applicationID": "9777241,9777242", "applicationTime": 78.563046, "transactionName": "Z1ZRN0EDCEMDABVYWl4ccAxdFhRfDg8EQxp8VlIRXQcUZStMJnRh", "queueTime": 0, "ttGuid": "6b54d65f3d8438", "agentToken": null }; (window.NREUM || (NREUM = {})).loader_config = { xpid: "VwUGVl5VGwoHU1ZQAwA=" }; window.NREUM || (NREUM = {}), __nr_require = function (t, e, n) { function r(n) { if (!e[n]) { var o = e[n] = { exports: {} }; t[n][0].call(o.exports, function (e) { var o = t[n][1][e]; return r(o || e) }, o, o.exports) } return e[n].exports } if ("function" == typeof __nr_require) return __nr_require; for (var o = 0; o < n.length; o++)r(n[o]); return r }({ 1: [function (t, e, n) { function r(t) { try { s.console && console.log(t) } catch (e) { } } var o, i = t("ee"), a = t(21), s = {}; try { o = localStorage.getItem("__nr_flags").split(","), console && "function" == typeof console.log && (s.console = !0, o.indexOf("dev") !== -1 && (s.dev = !0), o.indexOf("nr_dev") !== -1 && (s.nrDev = !0)) } catch (c) { } s.nrDev && i.on("internal-error", function (t) { r(t.stack) }), s.dev && i.on("fn-err", function (t, e, n) { r(n.stack) }), s.dev && (r("NR AGENT IN DEVELOPMENT MODE"), r("flags: " + a(s, function (t, e) { return t }).join(", "))) }, {}], 2: [function (t, e, n) { function r(t, e, n, r, s) { try { l ? l -= 1 : o(s || new UncaughtException(t, e, n), !0) } catch (f) { try { i("ierr", [f, c.now(), !0]) } catch (d) { } } return "function" == typeof u && u.apply(this, a(arguments)) } function UncaughtException(t, e, n) { this.message = t || "Uncaught error with no additional information", this.sourceURL = e, this.line = n } function o(t, e) { var n = e ? null : c.now(); i("err", [t, n]) } var i = t("handle"), a = t(22), s = t("ee"), c = t("loader"), f = t("gos"), u = window.onerror, d = !1, p = "nr@seenError", l = 0; c.features.err = !0, t(1), window.onerror = r; try { throw new Error } catch (h) { "stack" in h && (t(13), t(12), "addEventListener" in window && t(6), c.xhrWrappable && t(14), d = !0) } s.on("fn-start", function (t, e, n) { d && (l += 1) }), s.on("fn-err", function (t, e, n) { d && !n[p] && (f(n, p, function () { return !0 }), this.thrown = !0, o(n)) }), s.on("fn-end", function () { d && !this.thrown && l > 0 && (l -= 1) }), s.on("internal-error", function (t) { i("ierr", [t, c.now(), !0]) }) }, {}], 3: [function (t, e, n) { t("loader").features.ins = !0 }, {}], 4: [function (t, e, n) { function r() { M++ , N = y.hash, this[u] = g.now() } function o() { M-- , y.hash !== N && i(0, !0); var t = g.now(); this[h] = ~~this[h] + t - this[u], this[d] = t } function i(t, e) { E.emit("newURL", ["" + y, e]) } function a(t, e) { t.on(e, function () { this[e] = g.now() }) } var s = "-start", c = "-end", f = "-body", u = "fn" + s, d = "fn" + c, p = "cb" + s, l = "cb" + c, h = "jsTime", m = "fetch", v = "addEventListener", w = window, y = w.location, g = t("loader"); if (w[v] && g.xhrWrappable) { var b = t(10), x = t(11), E = t(8), O = t(6), P = t(13), R = t(7), T = t(14), L = t(9), j = t("ee"), S = j.get("tracer"); t(15), g.features.spa = !0; var N, M = 0; j.on(u, r), j.on(p, r), j.on(d, o), j.on(l, o), j.buffer([u, d, "xhr-done", "xhr-resolved"]), O.buffer([u]), P.buffer(["setTimeout" + c, "clearTimeout" + s, u]), T.buffer([u, "new-xhr", "send-xhr" + s]), R.buffer([m + s, m + "-done", m + f + s, m + f + c]), E.buffer(["newURL"]), b.buffer([u]), x.buffer(["propagate", p, l, "executor-err", "resolve" + s]), S.buffer([u, "no-" + u]), L.buffer(["new-jsonp", "cb-start", "jsonp-error", "jsonp-end"]), a(T, "send-xhr" + s), a(j, "xhr-resolved"), a(j, "xhr-done"), a(R, m + s), a(R, m + "-done"), a(L, "new-jsonp"), a(L, "jsonp-end"), a(L, "cb-start"), E.on("pushState-end", i), E.on("replaceState-end", i), w[v]("hashchange", i, !0), w[v]("load", i, !0), w[v]("popstate", function () { i(0, M > 1) }, !0) } }, {}], 5: [function (t, e, n) { function r(t) { } if (window.performance && window.performance.timing && window.performance.getEntriesByType) { var o = t("ee"), i = t("handle"), a = t(13), s = t(12), c = "learResourceTimings", f = "addEventListener", u = "resourcetimingbufferfull", d = "bstResource", p = "resource", l = "-start", h = "-end", m = "fn" + l, v = "fn" + h, w = "bstTimer", y = "pushState", g = t("loader"); g.features.stn = !0, t(8); var b = NREUM.o.EV; o.on(m, function (t, e) { var n = t[0]; n instanceof b && (this.bstStart = g.now()) }), o.on(v, function (t, e) { var n = t[0]; n instanceof b && i("bst", [n, e, this.bstStart, g.now()]) }), a.on(m, function (t, e, n) { this.bstStart = g.now(), this.bstType = n }), a.on(v, function (t, e) { i(w, [e, this.bstStart, g.now(), this.bstType]) }), s.on(m, function () { this.bstStart = g.now() }), s.on(v, function (t, e) { i(w, [e, this.bstStart, g.now(), "requestAnimationFrame"]) }), o.on(y + l, function (t) { this.time = g.now(), this.startPath = location.pathname + location.hash }), o.on(y + h, function (t) { i("bstHist", [location.pathname + location.hash, this.startPath, this.time]) }), f in window.performance && (window.performance["c" + c] ? window.performance[f](u, function (t) { i(d, [window.performance.getEntriesByType(p)]), window.performance["c" + c]() }, !1) : window.performance[f]("webkit" + u, function (t) { i(d, [window.performance.getEntriesByType(p)]), window.performance["webkitC" + c]() }, !1)), document[f]("scroll", r, { passive: !0 }), document[f]("keypress", r, !1), document[f]("click", r, !1) } }, {}], 6: [function (t, e, n) { function r(t) { for (var e = t; e && !e.hasOwnProperty(u);)e = Object.getPrototypeOf(e); e && o(e) } function o(t) { s.inPlace(t, [u, d], "-", i) } function i(t, e) { return t[1] } var a = t("ee").get("events"), s = t(24)(a, !0), c = t("gos"), f = XMLHttpRequest, u = "addEventListener", d = "removeEventListener"; e.exports = a, "getPrototypeOf" in Object ? (r(document), r(window), r(f.prototype)) : f.prototype.hasOwnProperty(u) && (o(window), o(f.prototype)), a.on(u + "-start", function (t, e) { var n = t[1], r = c(n, "nr@wrapped", function () { function t() { if ("function" == typeof n.handleEvent) return n.handleEvent.apply(n, arguments) } var e = { object: t, "function": n }[typeof n]; return e ? s(e, "fn-", null, e.name || "anonymous") : n }); this.wrapped = t[1] = r }), a.on(d + "-start", function (t) { t[1] = this.wrapped || t[1] }) }, {}], 7: [function (t, e, n) { function r(t, e, n) { var r = t[e]; "function" == typeof r && (t[e] = function () { var t = r.apply(this, arguments); return o.emit(n + "start", arguments, t), t.then(function (e) { return o.emit(n + "end", [null, e], t), e }, function (e) { throw o.emit(n + "end", [e], t), e }) }) } var o = t("ee").get("fetch"), i = t(21); e.exports = o; var a = window, s = "fetch-", c = s + "body-", f = ["arrayBuffer", "blob", "json", "text", "formData"], u = a.Request, d = a.Response, p = a.fetch, l = "prototype"; u && d && p && (i(f, function (t, e) { r(u[l], e, c), r(d[l], e, c) }), r(a, "fetch", s), o.on(s + "end", function (t, e) { var n = this; if (e) { var r = e.headers.get("content-length"); null !== r && (n.rxSize = r), o.emit(s + "done", [null, e], n) } else o.emit(s + "done", [t], n) })) }, {}], 8: [function (t, e, n) { var r = t("ee").get("history"), o = t(24)(r); e.exports = r, o.inPlace(window.history, ["pushState", "replaceState"], "-") }, {}], 9: [function (t, e, n) { function r(t) { function e() { c.emit("jsonp-end", [], p), t.removeEventListener("load", e, !1), t.removeEventListener("error", n, !1) } function n() { c.emit("jsonp-error", [], p), c.emit("jsonp-end", [], p), t.removeEventListener("load", e, !1), t.removeEventListener("error", n, !1) } var r = t && "string" == typeof t.nodeName && "script" === t.nodeName.toLowerCase(); if (r) { var o = "function" == typeof t.addEventListener; if (o) { var a = i(t.src); if (a) { var u = s(a), d = "function" == typeof u.parent[u.key]; if (d) { var p = {}; f.inPlace(u.parent, [u.key], "cb-", p), t.addEventListener("load", e, !1), t.addEventListener("error", n, !1), c.emit("new-jsonp", [t.src], p) } } } } } function o() { return "addEventListener" in window } function i(t) { var e = t.match(u); return e ? e[1] : null } function a(t, e) { var n = t.match(p), r = n[1], o = n[3]; return o ? a(o, e[r]) : e[r] } function s(t) { var e = t.match(d); return e && e.length >= 3 ? { key: e[2], parent: a(e[1], window) } : { key: t, parent: window } } var c = t("ee").get("jsonp"), f = t(24)(c); if (e.exports = c, o()) { var u = /[?&](?:callback|cb)=([^&#]+)/, d = /(.*)\.([^.]+)/, p = /^(\w+)(\.|$)(.*)$/, l = ["appendChild", "insertBefore", "replaceChild"]; f.inPlace(HTMLElement.prototype, l, "dom-"), f.inPlace(HTMLHeadElement.prototype, l, "dom-"), f.inPlace(HTMLBodyElement.prototype, l, "dom-"), c.on("dom-start", function (t) { r(t[0]) }) } }, {}], 10: [function (t, e, n) { var r = t("ee").get("mutation"), o = t(24)(r), i = NREUM.o.MO; e.exports = r, i && (window.MutationObserver = function (t) { return this instanceof i ? new i(o(t, "fn-")) : i.apply(this, arguments) }, MutationObserver.prototype = i.prototype) }, {}], 11: [function (t, e, n) { function r(t) { var e = a.context(), n = s(t, "executor-", e), r = new f(n); return a.context(r).getCtx = function () { return e }, a.emit("new-promise", [r, e], e), r } function o(t, e) { return e } var i = t(24), a = t("ee").get("promise"), s = i(a), c = t(21), f = NREUM.o.PR; e.exports = a, f && (window.Promise = r, ["all", "race"].forEach(function (t) { var e = f[t]; f[t] = function (n) { function r(t) { return function () { a.emit("propagate", [null, !o], i), o = o || !t } } var o = !1; c(n, function (e, n) { Promise.resolve(n).then(r("all" === t), r(!1)) }); var i = e.apply(f, arguments), s = f.resolve(i); return s } }), ["resolve", "reject"].forEach(function (t) { var e = f[t]; f[t] = function (t) { var n = e.apply(f, arguments); return t !== n && a.emit("propagate", [t, !0], n), n } }), f.prototype["catch"] = function (t) { return this.then(null, t) }, f.prototype = Object.create(f.prototype, { constructor: { value: r } }), c(Object.getOwnPropertyNames(f), function (t, e) { try { r[e] = f[e] } catch (n) { } }), a.on("executor-start", function (t) { t[0] = s(t[0], "resolve-", this), t[1] = s(t[1], "resolve-", this) }), a.on("executor-err", function (t, e, n) { t[1](n) }), s.inPlace(f.prototype, ["then"], "then-", o), a.on("then-start", function (t, e) { this.promise = e, t[0] = s(t[0], "cb-", this), t[1] = s(t[1], "cb-", this) }), a.on("then-end", function (t, e, n) { this.nextPromise = n; var r = this.promise; a.emit("propagate", [r, !0], n) }), a.on("cb-end", function (t, e, n) { a.emit("propagate", [n, !0], this.nextPromise) }), a.on("propagate", function (t, e, n) { this.getCtx && !e || (this.getCtx = function () { if (t instanceof Promise) var e = a.context(t); return e && e.getCtx ? e.getCtx() : this }) }), r.toString = function () { return "" + f }) }, {}], 12: [function (t, e, n) { var r = t("ee").get("raf"), o = t(24)(r), i = "equestAnimationFrame"; e.exports = r, o.inPlace(window, ["r" + i, "mozR" + i, "webkitR" + i, "msR" + i], "raf-"), r.on("raf-start", function (t) { t[0] = o(t[0], "fn-") }) }, {}], 13: [function (t, e, n) { function r(t, e, n) { t[0] = a(t[0], "fn-", null, n) } function o(t, e, n) { this.method = n, this.timerDuration = isNaN(t[1]) ? 0 : +t[1], t[0] = a(t[0], "fn-", this, n) } var i = t("ee").get("timer"), a = t(24)(i), s = "setTimeout", c = "setInterval", f = "clearTimeout", u = "-start", d = "-"; e.exports = i, a.inPlace(window, [s, "setImmediate"], s + d), a.inPlace(window, [c], c + d), a.inPlace(window, [f, "clearImmediate"], f + d), i.on(c + u, r), i.on(s + u, o) }, {}], 14: [function (t, e, n) { function r(t, e) { d.inPlace(e, ["onreadystatechange"], "fn-", s) } function o() { var t = this, e = u.context(t); t.readyState > 3 && !e.resolved && (e.resolved = !0, u.emit("xhr-resolved", [], t)), d.inPlace(t, y, "fn-", s) } function i(t) { g.push(t), h && (x ? x.then(a) : v ? v(a) : (E = -E, O.data = E)) } function a() { for (var t = 0; t < g.length; t++)r([], g[t]); g.length && (g = []) } function s(t, e) { return e } function c(t, e) { for (var n in t) e[n] = t[n]; return e } t(6); var f = t("ee"), u = f.get("xhr"), d = t(24)(u), p = NREUM.o, l = p.XHR, h = p.MO, m = p.PR, v = p.SI, w = "readystatechange", y = ["onload", "onerror", "onabort", "onloadstart", "onloadend", "onprogress", "ontimeout"], g = []; e.exports = u; var b = window.XMLHttpRequest = function (t) { var e = new l(t); try { u.emit("new-xhr", [e], e), e.addEventListener(w, o, !1) } catch (n) { try { u.emit("internal-error", [n]) } catch (r) { } } return e }; if (c(l, b), b.prototype = l.prototype, d.inPlace(b.prototype, ["open", "send"], "-xhr-", s), u.on("send-xhr-start", function (t, e) { r(t, e), i(e) }), u.on("open-xhr-start", r), h) { var x = m && m.resolve(); if (!v && !m) { var E = 1, O = document.createTextNode(E); new h(a).observe(O, { characterData: !0 }) } } else f.on("fn-end", function (t) { t[0] && t[0].type === w || a() }) }, {}], 15: [function (t, e, n) { function r(t) { var e = this.params, n = this.metrics; if (!this.ended) { this.ended = !0; for (var r = 0; r < d; r++)t.removeEventListener(u[r], this.listener, !1); if (!e.aborted) { if (n.duration = a.now() - this.startTime, 4 === t.readyState) { e.status = t.status; var i = o(t, this.lastSize); if (i && (n.rxSize = i), this.sameOrigin) { var c = t.getResponseHeader("X-NewRelic-App-Data"); c && (e.cat = c.split(", ").pop()) } } else e.status = 0; n.cbTime = this.cbTime, f.emit("xhr-done", [t], t), s("xhr", [e, n, this.startTime]) } } } function o(t, e) { var n = t.responseType; if ("json" === n && null !== e) return e; var r = "arraybuffer" === n || "blob" === n || "json" === n ? t.response : t.responseText; return h(r) } function i(t, e) { var n = c(e), r = t.params; r.host = n.hostname + ":" + n.port, r.pathname = n.pathname, t.sameOrigin = n.sameOrigin } var a = t("loader"); if (a.xhrWrappable) { var s = t("handle"), c = t(16), f = t("ee"), u = ["load", "error", "abort", "timeout"], d = u.length, p = t("id"), l = t(19), h = t(18), m = window.XMLHttpRequest; a.features.xhr = !0, t(14), f.on("new-xhr", function (t) { var e = this; e.totalCbs = 0, e.called = 0, e.cbTime = 0, e.end = r, e.ended = !1, e.xhrGuids = {}, e.lastSize = null, l && (l > 34 || l < 10) || window.opera || t.addEventListener("progress", function (t) { e.lastSize = t.loaded }, !1) }), f.on("open-xhr-start", function (t) { this.params = { method: t[0] }, i(this, t[1]), this.metrics = {} }), f.on("open-xhr-end", function (t, e) { "loader_config" in NREUM && "xpid" in NREUM.loader_config && this.sameOrigin && e.setRequestHeader("X-NewRelic-ID", NREUM.loader_config.xpid) }), f.on("send-xhr-start", function (t, e) { var n = this.metrics, r = t[0], o = this; if (n && r) { var i = h(r); i && (n.txSize = i) } this.startTime = a.now(), this.listener = function (t) { try { "abort" === t.type && (o.params.aborted = !0), ("load" !== t.type || o.called === o.totalCbs && (o.onloadCalled || "function" != typeof e.onload)) && o.end(e) } catch (n) { try { f.emit("internal-error", [n]) } catch (r) { } } }; for (var s = 0; s < d; s++)e.addEventListener(u[s], this.listener, !1) }), f.on("xhr-cb-time", function (t, e, n) { this.cbTime += t, e ? this.onloadCalled = !0 : this.called += 1, this.called !== this.totalCbs || !this.onloadCalled && "function" == typeof n.onload || this.end(n) }), f.on("xhr-load-added", function (t, e) { var n = "" + p(t) + !!e; this.xhrGuids && !this.xhrGuids[n] && (this.xhrGuids[n] = !0, this.totalCbs += 1) }), f.on("xhr-load-removed", function (t, e) { var n = "" + p(t) + !!e; this.xhrGuids && this.xhrGuids[n] && (delete this.xhrGuids[n], this.totalCbs -= 1) }), f.on("addEventListener-end", function (t, e) { e instanceof m && "load" === t[0] && f.emit("xhr-load-added", [t[1], t[2]], e) }), f.on("removeEventListener-end", function (t, e) { e instanceof m && "load" === t[0] && f.emit("xhr-load-removed", [t[1], t[2]], e) }), f.on("fn-start", function (t, e, n) { e instanceof m && ("onload" === n && (this.onload = !0), ("load" === (t[0] && t[0].type) || this.onload) && (this.xhrCbStart = a.now())) }), f.on("fn-end", function (t, e) { this.xhrCbStart && f.emit("xhr-cb-time", [a.now() - this.xhrCbStart, this.onload, e], e) }) } }, {}], 16: [function (t, e, n) { e.exports = function (t) { var e = document.createElement("a"), n = window.location, r = {}; e.href = t, r.port = e.port; var o = e.href.split("://"); !r.port && o[1] && (r.port = o[1].split("/")[0].split("@").pop().split(":")[1]), r.port && "0" !== r.port || (r.port = "https" === o[0] ? "443" : "80"), r.hostname = e.hostname || n.hostname, r.pathname = e.pathname, r.protocol = o[0], "/" !== r.pathname.charAt(0) && (r.pathname = "/" + r.pathname); var i = !e.protocol || ":" === e.protocol || e.protocol === n.protocol, a = e.hostname === document.domain && e.port === n.port; return r.sameOrigin = i && (!e.hostname || a), r } }, {}], 17: [function (t, e, n) { function r() { } function o(t, e, n) { return function () { return i(t, [f.now()].concat(s(arguments)), e ? null : this, n), e ? void 0 : this } } var i = t("handle"), a = t(21), s = t(22), c = t("ee").get("tracer"), f = t("loader"), u = NREUM; "undefined" == typeof window.newrelic && (newrelic = u); var d = ["setPageViewName", "setCustomAttribute", "setErrorHandler", "finished", "addToTrace", "inlineHit", "addRelease"], p = "api-", l = p + "ixn-"; a(d, function (t, e) { u[e] = o(p + e, !0, "api") }), u.addPageAction = o(p + "addPageAction", !0), u.setCurrentRouteName = o(p + "routeName", !0), e.exports = newrelic, u.interaction = function () { return (new r).get() }; var h = r.prototype = { createTracer: function (t, e) { var n = {}, r = this, o = "function" == typeof e; return i(l + "tracer", [f.now(), t, n], r), function () { if (c.emit((o ? "" : "no-") + "fn-start", [f.now(), r, o], n), o) try { return e.apply(this, arguments) } catch (t) { throw c.emit("fn-err", [arguments, this, t], n), t } finally { c.emit("fn-end", [f.now()], n) } } } }; a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","), function (t, e) { h[e] = o(l + e) }), newrelic.noticeError = function (t) { "string" == typeof t && (t = new Error(t)), i("err", [t, f.now()]) } }, {}], 18: [function (t, e, n) { e.exports = function (t) { if ("string" == typeof t && t.length) return t.length; if ("object" == typeof t) { if ("undefined" != typeof ArrayBuffer && t instanceof ArrayBuffer && t.byteLength) return t.byteLength; if ("undefined" != typeof Blob && t instanceof Blob && t.size) return t.size; if (!("undefined" != typeof FormData && t instanceof FormData)) try { return JSON.stringify(t).length } catch (e) { return } } } }, {}], 19: [function (t, e, n) { var r = 0, o = navigator.userAgent.match(/Firefox[\/\s](\d+\.\d+)/); o && (r = +o[1]), e.exports = r }, {}], 20: [function (t, e, n) { function r(t, e) { if (!o) return !1; if (t !== o) return !1; if (!e) return !0; if (!i) return !1; for (var n = i.split("."), r = e.split("."), a = 0; a < r.length; a++)if (r[a] !== n[a]) return !1; return !0 } var o = null, i = null, a = /Version\/(\S+)\s+Safari/; if (navigator.userAgent) { var s = navigator.userAgent, c = s.match(a); c && s.indexOf("Chrome") === -1 && s.indexOf("Chromium") === -1 && (o = "Safari", i = c[1]) } e.exports = { agent: o, version: i, match: r } }, {}], 21: [function (t, e, n) { function r(t, e) { var n = [], r = "", i = 0; for (r in t) o.call(t, r) && (n[i] = e(r, t[r]), i += 1); return n } var o = Object.prototype.hasOwnProperty; e.exports = r }, {}], 22: [function (t, e, n) { function r(t, e, n) { e || (e = 0), "undefined" == typeof n && (n = t ? t.length : 0); for (var r = -1, o = n - e || 0, i = Array(o < 0 ? 0 : o); ++r < o;)i[r] = t[e + r]; return i } e.exports = r }, {}], 23: [function (t, e, n) { e.exports = { exists: "undefined" != typeof window.performance && window.performance.timing && "undefined" != typeof window.performance.timing.navigationStart } }, {}], 24: [function (t, e, n) { function r(t) { return !(t && t instanceof Function && t.apply && !t[a]) } var o = t("ee"), i = t(22), a = "nr@original", s = Object.prototype.hasOwnProperty, c = !1; e.exports = function (t, e) { function n(t, e, n, o) { function nrWrapper() { var r, a, s, c; try { a = this, r = i(arguments), s = "function" == typeof n ? n(r, a) : n || {} } catch (f) { p([f, "", [r, a, o], s]) } u(e + "start", [r, a, o], s); try { return c = t.apply(a, r) } catch (d) { throw u(e + "err", [r, a, d], s), d } finally { u(e + "end", [r, a, c], s) } } return r(t) ? t : (e || (e = ""), nrWrapper[a] = t, d(t, nrWrapper), nrWrapper) } function f(t, e, o, i) { o || (o = ""); var a, s, c, f = "-" === o.charAt(0); for (c = 0; c < e.length; c++)s = e[c], a = t[s], r(a) || (t[s] = n(a, f ? s + o : o, i, s)) } function u(n, r, o) { if (!c || e) { var i = c; c = !0; try { t.emit(n, r, o, e) } catch (a) { p([a, n, r, o]) } c = i } } function d(t, e) { if (Object.defineProperty && Object.keys) try { var n = Object.keys(t); return n.forEach(function (n) { Object.defineProperty(e, n, { get: function () { return t[n] }, set: function (e) { return t[n] = e, e } }) }), e } catch (r) { p([r]) } for (var o in t) s.call(t, o) && (e[o] = t[o]); return e } function p(e) { try { t.emit("internal-error", e) } catch (n) { } } return t || (t = o), n.inPlace = f, n.flag = a, n } }, {}], ee: [function (t, e, n) { function r() { } function o(t) { function e(t) { return t && t instanceof r ? t : t ? c(t, s, i) : i() } function n(n, r, o, i) { if (!p.aborted || i) { t && t(n, r, o); for (var a = e(o), s = m(n), c = s.length, f = 0; f < c; f++)s[f].apply(a, r); var d = u[g[n]]; return d && d.push([b, n, r, a]), a } } function l(t, e) { y[t] = m(t).concat(e) } function h(t, e) { var n = y[t]; if (n) for (var r = 0; r < n.length; r++)n[r] === e && n.splice(r, 1) } function m(t) { return y[t] || [] } function v(t) { return d[t] = d[t] || o(n) } function w(t, e) { f(t, function (t, n) { e = e || "feature", g[n] = e, e in u || (u[e] = []) }) } var y = {}, g = {}, b = { on: l, addEventListener: l, removeEventListener: h, emit: n, get: v, listeners: m, context: e, buffer: w, abort: a, aborted: !1 }; return b } function i() { return new r } function a() { (u.api || u.feature) && (p.aborted = !0, u = p.backlog = {}) } var s = "nr@context", c = t("gos"), f = t(21), u = {}, d = {}, p = e.exports = o(); p.backlog = u }, {}], gos: [function (t, e, n) { function r(t, e, n) { if (o.call(t, e)) return t[e]; var r = n(); if (Object.defineProperty && Object.keys) try { return Object.defineProperty(t, e, { value: r, writable: !0, enumerable: !1 }), r } catch (i) { } return t[e] = r, r } var o = Object.prototype.hasOwnProperty; e.exports = r }, {}], handle: [function (t, e, n) { function r(t, e, n, r) { o.buffer([t], r), o.emit(t, e, n) } var o = t("ee").get("handle"); e.exports = r, r.ee = o }, {}], id: [function (t, e, n) { function r(t) { var e = typeof t; return !t || "object" !== e && "function" !== e ? -1 : t === window ? 0 : a(t, i, function () { return o++ }) } var o = 1, i = "nr@id", a = t("gos"); e.exports = r }, {}], loader: [function (t, e, n) { function r() { if (!E++) { var t = x.info = NREUM.info, e = l.getElementsByTagName("script")[0]; if (setTimeout(u.abort, 3e4), !(t && t.licenseKey && t.applicationID && e)) return u.abort(); f(g, function (e, n) { t[e] || (t[e] = n) }), c("mark", ["onload", a() + x.offset], null, "api"); var n = l.createElement("script"); n.src = "https://" + t.agent, e.parentNode.insertBefore(n, e) } } function o() { "complete" === l.readyState && i() } function i() { c("mark", ["domContent", a() + x.offset], null, "api") } function a() { return O.exists && performance.now ? Math.round(performance.now()) : (s = Math.max((new Date).getTime(), s)) - x.offset } var s = (new Date).getTime(), c = t("handle"), f = t(21), u = t("ee"), d = t(20), p = window, l = p.document, h = "addEventListener", m = "attachEvent", v = p.XMLHttpRequest, w = v && v.prototype; NREUM.o = { ST: setTimeout, SI: p.setImmediate, CT: clearTimeout, XHR: v, REQ: p.Request, EV: p.Event, PR: p.Promise, MO: p.MutationObserver }; var y = "" + location, g = { beacon: "bam.nr-data.net", errorBeacon: "bam.nr-data.net", agent: "js-agent.newrelic.com/nr-spa-1099.min.js" }, b = v && w && w[h] && !/CriOS/.test(navigator.userAgent), x = e.exports = { offset: s, now: a, origin: y, features: {}, xhrWrappable: b, userAgent: d }; t(17), l[h] ? (l[h]("DOMContentLoaded", i, !1), p[h]("load", r, !1)) : (l[m]("onreadystatechange", o), p[m]("onload", r)), c("mark", ["firstbyte", s], null, "api"); var E = 0, O = t(23) }, {}] }, {}, ["loader", 2, 15, 5, 3, 4]);</script>
+  <title>Entity Framework Core 2.1: What's New Playbook | Pluralsight</title>
+  <meta name="apple-itunes-app" content="app-id=431748264">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="dns-prefetch" href="https://s2.pluralsight.com/">
+  <link rel="dns-prefetch" href="https://pluralsight-res.cloudinary.com/">
+  <link rel="dns-prefetch" href="https://s.pluralsight.com/">
+  <link rel="dns-prefetch" href="https://cdn.segment.com/">
+  <link rel="dns-prefetch" href="https://cdn.segment.io/">
+  <link rel="dns-prefetch" href="https://cdn.livefyre.com/">
+  <link rel="dns-prefetch" href="https://bootstrap.livefyre.com/">
+  <script>
+    API_LEARNER_ROOT = "//app.pluralsight.com/learner"
+    API_FEATURES_ROOT = "https://app.pluralsight.com/features/api"
+    API_LEARNER_CONTENT_ROOT = "https://app.pluralsight.com/learner/content"
+    API_LEARNER_USER_ROOT = "https://app.pluralsight.com/learner/user"
+    API_SEARCH_ROOT = "/search/proxy"
+    ANDROID_APP_ID = "com.pluralsight"
+    MONOLITH_BASE_URL = "app.pluralsight.com"
+    ENABLE_REDUX_DEV_TOOLS = false
+    DATA_CAMP_BASE_URL = "https://www.datacamp.com/pluralsight"
+    API_MENTORS_ROOT = "https://app.pluralsight.com/mentors"</script>
+  <link rel="stylesheet" href="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/fonts.css">
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/shared.9d0b1653922fc40ded1e.js.download"></script>
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/satelliteLib-3f2001f88315610d295e482607f7d003c8627d08.js.download"></script>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/mbox-contents-960477878e7f88665f7209d1be8777f29226dba6.js.download"></script>
+  <script>
+    window.analyticsHelpers = function (e) { function r(n) { if (t[n]) return t[n].exports; var u = t[n] = { exports: {}, id: n, loaded: !1 }; return e[n].call(u.exports, u, u.exports, r), u.loaded = !0, u.exports } var t = {}; return r.m = e, r.c = t, r.p = "", r(0) }([function (e, r, t) { e.exports = t(1) }, function (e, r, t) { "use strict"; function n(e) { return e && e.__esModule ? e : { "default": e } } Object.defineProperty(r, "__esModule", { value: !0 }), r.stringifyUserSubscriptions = r.pickUserSubscriptionProperty = r.normalizeSlug = void 0; var u = t(2), i = n(u), o = t(3), s = n(o), c = t(4), l = n(c); r.normalizeSlug = i["default"], r.pickUserSubscriptionProperty = s["default"], r.stringifyUserSubscriptions = l["default"] }, function (e, r) { "use strict"; function t(e) { return e.split("-").map(function (e) { return n.includes(e.toUpperCase()) ? e.toUpperCase() : e.replace(/\b[a-z]/g, function (e) { return e.charAt(0).toUpperCase() }) }).join(" ") } Object.defineProperty(r, "__esModule", { value: !0 }), r["default"] = t; var n = ["AWS", "CC", "CCNA", "CCNP", "CSS", "IINS", "HTML", "JS", "SQL"] }, function (e, r) { "use strict"; function t(e, r) { var t = e && e.user && e.user.userSubscriptions || [], n = t.map(function (e) { return null !== e[r] && void 0 !== e[r] ? e[r] : "null" }); return n.join(",") } Object.defineProperty(r, "__esModule", { value: !0 }), r["default"] = t }, function (e, r) { "use strict"; function t(e, r) { var t = e && e.user && e.user.userSubscriptions || []; return t.map(function (e) { return n(e.offerCode) + "," + n(e.sku) }).join("|") } function n(e) { return null !== e && void 0 !== e ? e : "null" } Object.defineProperty(r, "__esModule", { value: !0 }), r["default"] = t }]);
+  </script>
+  <script>
+    !function () {
+      var analytics = window.analytics = window.analytics || []; if (!analytics.initialize) if (analytics.invoked) window.console && console.error && console.error("Segment snippet included twice."); else {
+        analytics.invoked = !0; analytics.methods = ["trackSubmit", "trackClick", "trackLink", "trackForm", "pageview", "identify", "group", "track", "ready", "alias", "page", "once", "off", "on"]; analytics.factory = function (t) { return function () { var e = Array.prototype.slice.call(arguments); e.unshift(t); analytics.push(e); return analytics } }; for (var t = 0; t < analytics.methods.length; t++) { var e = analytics.methods[t]; analytics[e] = analytics.factory(e) } analytics.load = function (t) { var e = document.createElement("script"); e.type = "text/javascript"; e.async = !0; e.src = ("https:" === document.location.protocol ? "https://" : "http://") + "cdn.segment.com/analytics.js/v1/" + t + "/analytics.min.js"; var n = document.getElementsByTagName("script")[0]; n.parentNode.insertBefore(e, n) }; analytics.SNIPPET_VERSION = "3.0.1";
+        analytics.load("n2LLbFI1MDxFKBLzI0es2Z7PrDhu6jEA");
+      }
+    }();</script>
+  <link rel="stylesheet" href="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/prism-13.0.0-prototype.3.min.css">
+  <link rel="stylesheet" href="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/main.9d0b1653922fc40ded1e.css">
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/prism-13.0.0-prototype.3.min.js.download"></script>
+  <style id="at-makers-style" class="at-flicker-control">
+
+    .mboxDefault {
+      visibility: hidden;
+    }
+  </style>
+  <style type="text/css" data-glamor="">
+    @-webkit-keyframes animation_ld1kkx {
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+        -webkit-transform: translateY(0);
+      }
+    }
+
+    @-moz-keyframes animation_ld1kkx {
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+        -webkit-transform: translateY(0);
+      }
+    }
+
+    @-o-keyframes animation_ld1kkx {
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+        -webkit-transform: translateY(0);
+      }
+    }
+
+    @keyframes animation_ld1kkx {
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+        -webkit-transform: translateY(0);
+      }
+    }
+  </style>
+  <script type="text/javascript">var learningRecommendations = {}</script>
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/smart-widget-1.4.26.js.download"></script>
+  <style type="text/css" data-glamor=""></style>
+  <style type="text/css">
+    ._1t9o0yyMDaxmhaskvAmUGo {
+      align-items: center;
+      background: #181818;
+      display: flex;
+      height: 160px;
+      justify-content: center;
+      min-width: 768px
+    }
+  </style>
+  <style type="text/css">
+    .cMooc0CXC_9x8v4aVVWCm {
+      margin-left: 2px;
+      position: relative;
+      top: 8px;
+      right: 8px
+    }
+
+    ._3gTCBLj93F0mFXt5dRkQI8 {
+      font-size: 11px
+    }
+  </style>
+  <style type="text/css">
+    ._3rzQWZqjnmWtmM2IDYNILT {
+      height: 29px;
+      margin: 0 0 -2px 3px
+    }
+
+    ._2YObQYplHNfejg75LphKMj {
+      stop-color: #f15b2b
+    }
+
+    ._1AzI99slgM4UfAh_YLGtSx {
+      stop-color: #e71389
+    }
+  </style>
+  <style type="text/css">
+    .KhNN485uiPWwPi93ms-nG {
+      color: #ccc;
+      display: inline-block;
+      font-size: 11px;
+      margin-right: 10px
+    }
+
+    .RAfvYQFiKG95SiH-UwaV1 {
+      color: #ccc;
+      font-size: 16px;
+      font-weight: 100;
+      margin: 5px 0 0
+    }
+
+    .sbjG8DAeROMEMVT010R39 {
+      display: grid;
+      grid-gap: 5px 15px;
+      grid-template-columns: 412px 159px;
+      justify-content: center;
+      margin: 20px 0 0;
+      z-index: 5
+    }
+
+    .lbOfKxMaK5U1hPTwUC--I {
+      max-height: 300px;
+      overflow: scroll
+    }
+
+    ._10CwGuSi6A8FPu_j_-sqr2 {
+      display: inline-block;
+      font-size: 26px;
+      font-weight: 100;
+      margin: 0
+    }
+
+    .lWgSaXTSXP4HMHzYYqM-i {
+      background: #181818;
+      height: 160px;
+      min-width: 768px
+    }
+
+    ._34MHT-LRlrxW3wHeCgZTGJ {
+      display: inline-block;
+      margin: 0 0 1px -5px
+    }
+
+    ._9I5oXjtVsxYHOx5tLcei_ {
+      margin-top: 5px
+    }
+
+    ._2q1uzi570BO3NwqcfvozTD {
+      align-items: center;
+      background: #181818;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 160px;
+      justify-content: center;
+      min-width: 768px
+    }
+  </style>
+  <style type="text/css">
+    ._3sXbrdXOBNc6clfKOqsdRS {
+      z-index: 1;
+      text-align: center;
+      vertical-align: middle;
+      margin-top: -77px;
+      font-size: 24px;
+      color: #fff
+    }
+
+    ._1rXcLiWvIjLgD80hKCR0Ra {
+      height: 118px;
+      width: 118px;
+      margin-top: 21px;
+      margin-right: 21px;
+      margin-bottom: 21px
+    }
+
+    ._2h2NbDHwSkGdsEBJyxALts {
+      height: 118px;
+      width: 118px
+    }
+  </style>
+  <style type="text/css">
+    ._2GnZW1qK0ZYFFAJwWdpR6m {
+      flex-basis: 1;
+      margin: 0;
+      padding: 0;
+      height: 100px;
+      width: 100px
+    }
+
+    ._3kEJCseVJEzVLQNQA1RZo6 {
+      color: #fff;
+      text-align: center;
+      margin-top: -10px;
+      z-index: 1;
+      font-weight: 200;
+      font-size: 12px;
+      line-height: 12px
+    }
+
+    ._2hho8gHEOO5HiRfq8DNuax {
+      width: 100px;
+      height: 100px
+    }
+  </style>
+  <style type="text/css">
+    .BvYsxenVj8y7pgNVk3Ebr {
+      position: relative;
+      top: 8px;
+      right: 8px
+    }
+
+    ._2MhVg0tN3b_CEjQCfBoU8W {
+      min-width: 0
+    }
+
+    ._2MhVg0tN3b_CEjQCfBoU8W, ._2w-NMCi9Xi5Jy2Vbuq9ckL {
+      height: inherit;
+      display: flex;
+      flex-grow: 1;
+      flex-shrink: 0;
+      flex-basis: 0
+    }
+
+    ._2w-NMCi9Xi5Jy2Vbuq9ckL {
+      box-sizing: border-box;
+      padding-top: 20px;
+      overflow: hidden;
+      justify-content: space-evenly
+    }
+
+    .lONO4PqpEO_EQekWJOIwA {
+      margin-top: 21px;
+      width: 90px
+    }
+
+    ._1n5bp0PfCvC3xD89Z4Hdl1 {
+      color: #fff;
+      font-size: 24px;
+      line-height: 24px;
+      font-weight: 300;
+      margin: 5px 0 0
+    }
+
+    .wISzCXMhWw5gVwOAkMFm8 {
+      min-width: 0
+    }
+
+    .voUzHTSBlGUycDuoksyTP {
+      margin-bottom: 0;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 300;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+      .voUzHTSBlGUycDuoksyTP em {
+        color: #fff;
+        font-style: normal
+      }
+
+    ._3bvfA2-UIVnQAiG2BXHMsN {
+      background: #181818;
+      height: 160px;
+      min-width: 768px;
+      display: flex;
+      cursor: pointer
+    }
+
+      ._3bvfA2-UIVnQAiG2BXHMsN:hover {
+        text-decoration: none
+      }
+
+    ._1rh9z3CLA0pZdByULB0Zbv {
+      display: block;
+      font-size: 11px;
+      margin-top: -5px
+    }
+
+    @media (max-width:1000px) {
+      ._1n5bp0PfCvC3xD89Z4Hdl1 {
+        font-size: 18px
+      }
+    }
+
+    @media (max-width:885px) {
+      ._1n5bp0PfCvC3xD89Z4Hdl1 {
+        font-size: 18px
+      }
+    }
+
+    ._2MhVg0tN3b_CEjQCfBoU8W, ._2w-NMCi9Xi5Jy2Vbuq9ckL, _:-ms-fullscreen {
+      flex-basis: auto
+    }
+
+    .voUzHTSBlGUycDuoksyTP, _:-ms-fullscreen {
+      width: 500px
+    }
+  </style>
+  <style data-emotion=""></style>
+  <script type="text/javascript">
+    /*T&T Metadata v3 ==>Response Plugin*/
+    window.ttMETA = (typeof (window.ttMETA) != "undefined") ? window.ttMETA : []; window.ttMETA.push({ "CampaignName": "", "CampaignId": "", "RecipeName": "", "RecipeId": "", "OfferId": "", "OfferName": "", "MboxName": "target-global-mbox" });
+  </script>
+  <style type="text/css">
+    .scrollarea-content {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      position: relative
+    }
+
+      .scrollarea-content:focus {
+        outline: 0
+      }
+
+    .scrollarea {
+      position: relative;
+      overflow: hidden
+    }
+
+      .scrollarea .scrollbar-container {
+        position: absolute;
+        background: none;
+        opacity: .1;
+        z-index: 9999;
+        -webkit-transition: all .4s;
+        transition: all .4s
+      }
+
+        .scrollarea .scrollbar-container.horizontal {
+          width: 100%;
+          height: 10px;
+          left: 0;
+          bottom: 0
+        }
+
+          .scrollarea .scrollbar-container.horizontal .scrollbar {
+            width: 20px;
+            height: 8px;
+            background: #000;
+            margin-top: 1px
+          }
+
+        .scrollarea .scrollbar-container.vertical {
+          width: 10px;
+          height: 100%;
+          right: 0;
+          top: 0
+        }
+
+          .scrollarea .scrollbar-container.vertical .scrollbar {
+            width: 8px;
+            height: 20px;
+            background: #000;
+            margin-left: 1px
+          }
+
+        .scrollarea .scrollbar-container.active, .scrollarea .scrollbar-container:hover {
+          background: gray;
+          opacity: .6 !important
+        }
+
+      .scrollarea:hover .scrollbar-container {
+        opacity: .3
+      }
+  </style>
+  <style type="text/css">
+    .author-link---17PQQ a {
+      color: #aaaaaa
+    }
+
+    .authors---96yJO {
+      display: inline-block;
+      max-width: 300px;
+      overflow: ellipsis
+    }
+
+    .cc---rlaBV {
+      padding-left: 5px;
+      top: 0
+    }
+
+    .noTopBorder---xQC0O {
+      border-top: none
+    }
+
+    .main---2ymHN {
+      position: relative
+    }
+  </style>
+  <style type="text/css" data-glamor=""></style>
+  <style type="text/css">
+    .span-link---37tMG {
+      cursor: pointer
+    }
+
+      .span-link---37tMG:hover {
+        text-decoration: underline
+      }
+  </style>
+  <style type="text/css">
+    .menu---2LJpb {
+      background: white;
+      border-radius: 2px;
+      list-style: none;
+      padding: 10px 0;
+      width: 220px;
+      font-weight: 400;
+      box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
+      z-index: 100;
+      position: absolute;
+      right: 0;
+      top: 80px
+    }
+
+    .navItem---2Esh1 {
+      line-height: 26px;
+      font-size: 14px;
+      position: relative;
+      cursor: pointer
+    }
+
+      .navItem---2Esh1 > a {
+        padding: 0 17px;
+        display: block;
+        width: 100%
+      }
+
+    .addToChannelNavItem---kuux2 {
+      line-height: 32px
+    }
+
+    .navItem---2Esh1:hover {
+      background: #f2f2f2
+    }
+
+      .navItem---2Esh1:hover > a {
+        color: #474747;
+        text-decoration: none
+      }
+
+    .navItem---2Esh1 a {
+      color: #474747;
+      text-decoration: none
+    }
+
+    .navItem---2Esh1 span {
+      color: #777
+    }
+
+    .separator---18oy2 {
+      background: #EFEFEF;
+      height: 1px;
+      margin: 5px 1px
+    }
+
+    .label---1-m2z {
+      padding: 0 17px;
+      font-size: 10px;
+      line-height: 23px;
+      color: #777;
+      text-transform: uppercase
+    }
+
+    .arrowRight---1cHNk {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 5px solid #777;
+      position: absolute;
+      top: 8px;
+      right: 17px
+    }
+
+    .learnerChannelsList---2a20q {
+      position: absolute;
+      top: -10px;
+      right: -280px;
+      border-radius: 2px;
+      width: 280px
+    }
+
+      .learnerChannelsList---2a20q.left---2Yvl5 {
+        left: -280px
+      }
+  </style>
+  <style type="text/css">
+    .wrapper---7jXFc {
+      box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
+      border-radius: 2px;
+      overflow: hidden;
+      z-index: 100;
+      background-color: white
+    }
+  </style>
+  <style type="text/css">
+    .link---16vTN {
+      cursor: pointer
+    }
+
+    .copied---jx9kY {
+      padding: 0 17px
+    }
+  </style>
+  <style type="text/css">
+    .main---2sjQQ {
+      position: absolute;
+      right: 0px;
+      z-index: 99;
+      top: 0px;
+      pointer-events: auto
+    }
+  </style>
+  <style type="text/css">
+    .courseDrawer---2okfm {
+      display: flex;
+      padding: 30px
+    }
+
+    .descriptionSection---3dAFy {
+      width: 50%;
+      font-size: 14px;
+      padding-right: 30px
+    }
+
+    .description---2j2ST {
+      color: #ffffff;
+      overflow-wrap: break-word
+    }
+
+    .tableOfContentsSection---28CeG {
+      width: 50%;
+      font-size: 14px
+    }
+
+    .sectionHeader---3ln8x {
+      font-size: 14px
+    }
+
+    .tableOfContents---3Gt4L {
+      list-style: none;
+      margin-left: 0;
+      border-bottom: 1px solid #363636
+    }
+
+      .tableOfContents---3Gt4L li {
+        display: flex;
+        vertical-align: middle;
+        border-top: 1px solid #363636;
+        padding: 15px;
+        justify-content: space-between;
+        color: #ffffff
+      }
+
+      .tableOfContents---3Gt4L .modulePlayIconAndTitle---2-vJp {
+        display: flex
+      }
+
+      .tableOfContents---3Gt4L .moduleTitle---2tl_t {
+        margin-left: 17px
+      }
+
+      .tableOfContents---3Gt4L .moduleDuration---WjHBs {
+        align-self: flex-end;
+        width: 60px;
+        text-align: left
+      }
+
+    .author---hpoJU {
+      margin-top: 15px;
+      color: #ffffff
+    }
+
+    .seeDetails---3Jy5L {
+      margin-top: 30px;
+      text-decoration: none !important
+    }
+
+    .playIcon---2Q_wz {
+      display: block;
+      transition: all 0.2s ease-in-out
+    }
+
+      .playIcon---2Q_wz:hover {
+        transform: scale(1.1)
+      }
+
+        .playIcon---2Q_wz:hover g {
+          fill: url(#playIconGradient)
+        }
+
+    .playIconFill---1828V {
+      fill: palette(neutral, light);
+      transition: all 0.2s ease-in-out
+    }
+  </style>
+  <style type="text/css">
+    .defaultFill---3BX80 {
+      fill: #fff
+    }
+
+    .defaultStyle---3Kp1I {
+      height: 21px;
+      width: 21px;
+      line-height: 1em;
+      display: inline-block
+    }
+  </style>
+  <style type="text/css">
+    .drawingLoadingSpinner---1V-6r {
+      display: flex;
+      padding: 30px 24px 34px 24px;
+      justify-content: center
+    }
+  </style>
+  <style type="text/css">
+    .star---38fvc {
+      margin-bottom: -1px
+    }
+  </style>
+  <style type="text/css">
+    .rating---2mqoh {
+      display: inline-block
+    }
+
+    .ratersCount---3i0E3 {
+      font-weight: normal;
+      margin-left: 5px
+    }
+  </style>
+  <style type="text/css">
+    .course-list-container---1idm6 {
+      margin-left: 0px;
+      list-style: none
+    }
+  </style>
+  <script charset="utf-8" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/vendors_course-18.9d0b1653922fc40ded1e.js.download"></script>
+  <script charset="utf-8" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/course-3.9d0b1653922fc40ded1e.js.download"></script>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/s-code-contents-63edaf0d7c691bf0403642343b813bf472548561.js.download"></script>
+  <style type="text/css">
+    .link---2FODB {
+      margin-right: 30px;
+      position: relative
+    }
+
+    .channelsList---KTTX8 {
+      position: absolute;
+      top: 30px;
+      transform: translateX(-50%);
+      left: 50%;
+      z-index: 100;
+      width: 280px
+    }
+
+    .channelsListPip---35uVm {
+      box-sizing: content-box;
+      width: 1px;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid white;
+      margin: 0 auto
+    }
+
+    .addToChannelIcon---3ag01 {
+      vertical-align: -8px;
+      margin-right: 10px
+    }
+  </style>
+  <style type="text/css">
+    .bookmark---wbyea {
+      cursor: pointer;
+      pointer-events: auto
+    }
+
+      .bookmark---wbyea:hover .bookmarkFill---24315 {
+        fill: #fff
+      }
+
+    .bookmarkFill---24315 {
+      fill: #aaa
+    }
+  </style>
+  <style type="text/css">
+    .bookmarkToggle---3alqX {
+      vertical-align: -8px;
+      margin-right: 10px;
+      height: 21px;
+      width: 21px;
+      line-height: 1em;
+      display: inline-block
+    }
+
+    .bookmarkWrapper---x8JqJ {
+      margin: 0 30px
+    }
+
+    .bookmarkFill---31Mz5 {
+      fill: #EFEFEF
+    }
+
+    .downloadCourseDialog---2sluJ {
+      position: absolute;
+      z-index: 999;
+      width: 375px;
+      cursor: default;
+      top: 30px;
+      left: 25px
+    }
+
+    .download---2i_9z {
+      position: relative;
+      cursor: pointer;
+      font-size: 12px
+    }
+
+    .downloadIcon---RTxcH {
+      vertical-align: -8px;
+      margin-right: 10px
+    }
+  </style>
+  <style type="text/css">
+    .downloadButton---2En9g {
+      margin-top: 20px;
+      text-decoration: none !important;
+      cursor: pointer
+    }
+
+    .dialog---2rFui {
+      width: 375px
+    }
+
+    .dialogHeader---WjAJV {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 5px
+    }
+
+    .dialogText---29KOy {
+      margin-bottom: 5px;
+      margin-right: 5px
+    }
+  </style>
+  <script charset="utf-8" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/vendors_home_search_tableOfContents-0.9d0b1653922fc40ded1e.js.download"></script>
+  <script charset="utf-8" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/tableOfContents-16.9d0b1653922fc40ded1e.js.download"></script>
+  <style type="text/css">
+    .sliceModal---xkTI2 {
+      font-size: 16px;
+      text-align: center
+    }
+
+      .sliceModal---xkTI2:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle
+      }
+
+    .body---_BETw {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: left;
+      max-width: 575px;
+      margin-top: auto;
+      margin: 0 auto;
+      text-align: center
+    }
+
+      .body---_BETw p {
+        width: 490px
+      }
+
+    .header---3jO0P {
+      font-size: 30px;
+      margin-bottom: 20px
+    }
+
+    .gradientBar---jfUCu {
+      margin: 27px auto 51px auto;
+      height: 4px;
+      width: 67px;
+      background-image: -webkit-linear-gradient(left, #F05A28 0%, #E80A89 100%);
+      background-image: -o-linear-gradient(left, #F05A28 0%, #E80A89 100%);
+      background-image: linear-gradient(to right, #F05A28 0%, #E80A89 100%);
+      background-repeat: repeat-x;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FFF05A28', endColorstr='#FFE80A89', GradientType=1)
+    }
+
+    .button---2AgE4 {
+      height: 40px;
+      width: 210px;
+      text-align: center;
+      padding: 0;
+      margin: 58px 8px 0 8px
+    }
+
+    .hidden---35WnS {
+      display: none
+    }
+
+    .businessPlansLink---2tJGe {
+      margin-top: 25px
+    }
+  </style>
+  <style type="text/css">
+    .playerLink---v3rwY {
+      margin-left: 5px;
+      margin-right: 10px
+    }
+
+    .playIcon---12u6Q {
+      display: inline-block;
+      vertical-align: -5px;
+      width: 21px;
+      height: 21px
+    }
+
+    .playIconActive---1G13J {
+      transition: all 0.2s ease-in-out
+    }
+
+      .playIconActive---1G13J:hover {
+        transform: scale(1.1)
+      }
+
+        .playIconActive---1G13J:hover g {
+          fill: #fff
+        }
+
+    .playIconActiveFill---24JYi {
+      fill: #aaa;
+      transition: all 0.2s ease-in-out
+    }
+
+    .playIconInactiveFill---1ODKO {
+      fill: #777
+    }
+
+    .moduleBookmarkToggle---1_sMQ {
+      height: 20px;
+      width: 20px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 173px
+    }
+
+    .bookmarkToggle---1EddN {
+      height: 20px;
+      width: 20px;
+      margin-left: 27px;
+      transform: translateY(5px)
+    }
+
+    .disclaimer---3UCvz {
+      color: #aaa
+    }
+  </style>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/satellite-57991a4f64746d57b50000e3.js.download"></script>
+  <iframe src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/saved_resource.html"></iframe>
+  <iframe src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/saved_resource(1).html"></iframe>
+  <iframe src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/saved_resource(2).html"></iframe>
+  <link rel="stylesheet" type="text/css" href="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/container.css">
+  <iframe src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/saved_resource(3).html"></iframe>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/satellite-588146d064746d619900308d.js.download"></script>
+  <script type="text/javascript" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/kowidget.v1.2.2.js.download"></script>
+  <style type="text/css">
+    body {
+      font-family: Gotham SSm A,Gotham SSm B,Helvetica Neue,Helvetica,Roboto,Arial,sans-serif
+    }
+  </style>
+  <style type="text/css">
+    .ko-icon--1c2AY {
+      display: block;
+      height: 24px;
+      width: 24px;
+      opacity: .4;
+      line-height: 1em;
+      position: fixed;
+      bottom: 12px;
+      left: 17px;
+      z-index: 1039;
+      cursor: pointer
+    }
+  </style>
+  <style type="text/css">
+    .ko-background--1itC4 {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0,0,0,.5);
+      height: 100%;
+      width: 100%;
+      z-index: 9998
+    }
+
+    .ko-modal--1KY6u {
+      background: #fff;
+      color: #000;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      font-weight: 300;
+      left: 50%;
+      line-height: 1.71429;
+      padding-left: 0;
+      padding-right: 0;
+      position: fixed;
+      top: 50%;
+      -webkit-transform: translate(-50%,-50%);
+      transform: translate(-50%,-50%);
+      width: 800px;
+      z-index: 9999
+    }
+  </style>
+  <style type="text/css">
+    .ko-bar--2w0EC {
+      background: linear-gradient(270deg,#ff7b39,#eb2a89);
+      height: 4px;
+      margin-left: 0;
+      margin-right: 0
+    }
+
+    .ko-container--2-QkS {
+      height: 100%;
+      width: 100%
+    }
+
+    .ko-content--2m52R {
+      margin: 50px 50px 10px;
+      min-height: 580px
+    }
+
+    .ko-form--3d6Zs {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+      flex-direction: row;
+      -ms-flex-line-pack: justify;
+      align-content: space-between;
+      height: 100%;
+      width: 100%
+    }
+
+      .ko-form--3d6Zs .ko-formLeftItem--1OiVm {
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -ms-flex-line-pack: start;
+        align-content: flex-start;
+        -ms-flex-pack: start;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto
+      }
+
+      .ko-form--3d6Zs .ko-formLeftItem--1OiVm, .ko-form--3d6Zs .ko-formRightItem--2KcD2 {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-box-pack: start;
+        justify-content: flex-start
+      }
+
+      .ko-form--3d6Zs .ko-formRightItem--2KcD2 {
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -ms-flex-line-pack: end;
+        align-content: flex-end;
+        -ms-flex-pack: start
+      }
+
+      .ko-form--3d6Zs .ko-formItem--1PNqj {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start;
+        max-width: 360px;
+        margin-bottom: 15px;
+        width: 100%
+      }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj label {
+          font-size: 10pt;
+          margin-bottom: 5px
+        }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj select {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background-color: #fafafa;
+          background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMTJweCIgeT0iMHB4IiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIzcHgiIHZpZXdCb3g9IjAgMCA2IDMiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDYgMyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHBvbHlnb24gcG9pbnRzPSI1Ljk5MiwwIDIuOTkyLDMgLTAuMDA4LDAgIi8+PC9zdmc+);
+          background-position: 100%;
+          background-repeat: no-repeat;
+          border: 1px solid #ccc;
+          border-radius: 0;
+          color: rgba(0,0,0,.75);
+          height: 40px;
+          min-width: 300px;
+          padding-left: 10px;
+          width: 300px
+        }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj select:hover {
+            background-color: #f3f3f3;
+            border-color: #999
+          }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj select:after, .ko-form--3d6Zs .ko-formItem--1PNqj select:before {
+            content: "";
+            position: absolute;
+            pointer-events: none
+          }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj select:after {
+            content: "\25BC";
+            height: 1em;
+            font-size: .625em;
+            line-height: 1;
+            right: 1.2em;
+            top: 50%;
+            margin-top: -.5em
+          }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj input[type=email], .ko-form--3d6Zs .ko-formItem--1PNqj input[type=text] {
+          box-sizing: border-box;
+          border: 1px solid #ccc;
+          border-radius: 0;
+          color: rgba(0,0,0,.75);
+          height: 40px;
+          min-width: 300px;
+          width: 300px;
+          padding-left: 10px
+        }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj input[type=file] {
+          display: none
+        }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj .ko-attach--2Nzdt {
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-flex: 1;
+          -ms-flex: 1 1 auto;
+          flex: 1 1 auto;
+          -webkit-box-orient: vertical;
+          -webkit-box-direction: normal;
+          -ms-flex-direction: column;
+          flex-direction: column
+        }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj .ko-attach--2Nzdt span {
+            width: 300px
+          }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj .ko-attach--2Nzdt .ko-attachLabel--1hvaT {
+            margin-bottom: 5px
+          }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj .ko-attach--2Nzdt .ko-attachButton--vRcGb {
+            cursor: pointer;
+            display: inline-block;
+            border: 1px solid #f96816;
+            box-sizing: border-box;
+            color: #f96816;
+            font-size: 11pt;
+            margin-right: 10px;
+            height: 40px;
+            width: 150px;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 2.5em
+          }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj textarea {
+          box-sizing: border-box;
+          border: 1px solid #ccc;
+          border-radius: 0;
+          color: rgba(0,0,0,.75);
+          height: 120px;
+          min-width: 300px;
+          max-width: 300px;
+          width: 300px;
+          padding: 10px
+        }
+
+          .ko-form--3d6Zs .ko-formItem--1PNqj textarea:after {
+            content: ""
+          }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj button {
+          -ms-flex-item-align: start;
+          align-self: flex-start;
+          background: #f96816;
+          border: 1px solid #f96816;
+          box-sizing: border-box;
+          color: #fff;
+          cursor: pointer;
+          font-size: 11pt;
+          height: 40px;
+          width: 150px
+        }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj a, .ko-form--3d6Zs .ko-formItem--1PNqj a:visited {
+          color: #f96816;
+          text-decoration: none
+        }
+
+        .ko-form--3d6Zs .ko-formItem--1PNqj ul {
+          list-style: none;
+          padding: 0
+        }
+
+    .ko-contactUs--F_8s7 {
+      font-size: 11pt;
+      line-height: 20px;
+      margin: auto 40px;
+      padding-bottom: 40px
+    }
+
+      .ko-contactUs--F_8s7 a {
+        color: #f96816;
+        text-decoration: none
+      }
+
+        .ko-contactUs--F_8s7 a:visited {
+          color: #f96816
+        }
+
+    .ko-success--za-vG {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      -webkit-box-align: center;
+      -ms-flex-align: center;
+      align-items: center;
+      -webkit-box-pack: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      margin-left: auto;
+      margin-right: auto;
+      width: 500px;
+      height: 100%
+    }
+
+      .ko-success--za-vG h3 {
+        font-size: 36px;
+        font-weight: 300;
+        letter-spacing: -.025em;
+        line-height: 1.3333;
+        text-align: center
+      }
+
+    .ko-message--1asmA {
+      text-align: center
+    }
+  </style>
+  <style type="text/css">
+    .ko-articles--1WILY {
+      overflow: scroll;
+      margin: 0;
+      height: 380px
+    }
+  </style>
+  <style type="text/css">
+    .ko-banner--oA0KP {
+      font-size: 10pt;
+      margin-bottom: 20px
+    }
+  </style>
+  <style type="text/css">
+    .ko-modalClose--2GYy4 {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      width: 15px;
+      height: 15px;
+      cursor: pointer
+    }
+  </style>
+  <meta name="pageObjectTag" content="CoursePage" data-react-helmet="true">
+</head>
+<body class="prism-has-loaded">
+  <div id="ps-banners"></div><div id="ps-container">
+    <div id="ps-chrome"><div class="root---2aZJk"><header class="root---u5wpL"><div class="root---16-ZO"><form class="form---2TNgv"><input aria-label="Search Input" tabindex="61" id="prism-search-input" placeholder="What do you want to learn?" type="search" class="input---VV7Gt"><label class="label---23L9A"><span class="root---1kBvU"><svg role="img" viewBox="0 0 24 24"><path d="M21.707 20.294L16.314 14.9C17.403 13.504 18 11.799 18 10c0-2.137-.833-4.144-2.344-5.656C14.145 2.832 12.137 2 10 2c-2.137 0-4.146.832-5.656 2.344C2.832 5.856 2 7.863 2 10c0 2.137.832 4.146 2.344 5.656C5.854 17.168 7.863 18 10 18c1.799 0 3.504-.596 4.9-1.685l5.393 5.393 1.414-1.414zM10 16c-1.603 0-3.109-.624-4.242-1.757C4.624 13.11 4 11.603 4 10c0-1.602.624-3.109 1.758-4.242C6.891 4.624 8.397 4 10 4c1.602 0 3.109.624 4.242 1.758C15.376 6.891 16 8.398 16 10c0 1.603-.624 3.11-1.758 4.243C13.109 15.376 11.602 16 10 16z"></path></svg></span></label></form></div><div class="root---XdVUf"><div class="rootOverride---1xlnH root---3iTWd"><a tabindex="71" href="https://app.pluralsight.com/profile" id="prism-profile-link" class="linkOverride---27bFd link---1a3R0"><div class="body---2Bd8I"><div class="firstName---3WiEb text---Q181U">Asp</div><div class="email---1vkoh text---Q181U">AspWebApi@dogbol.com</div></div><div aria-hidden="true" class="avatarOverride---16KFG avatar---3rQDU" style="background-image: url(&quot;https://www.gravatar.com/avatar/91d5ff66c48454e710176693972e1b21?r=g&amp;s=80&amp;d=https://s.pluralsight.com/sc/img/account/avatar-v2.png&quot;);"></div></a></div></div><div class="root---1TSzB"><a tabindex="72" id="prism-overflow-btn" class="btn---3An8A"><span class="moreIcon---cIygD"><svg role="img" viewBox="0 0 24 24"><path d="M6 14.5c-1.1046 0-2-.8954-2-2s.8954-2 2-2 2 .8954 2 2-.8954 2-2 2zm12 0c-1.1046 0-2-.8954-2-2s.8954-2 2-2 2 .8954 2 2-.8954 2-2 2zm-6 0c-1.1046 0-2-.8954-2-2s.8954-2 2-2 2 .8954 2 2-.8954 2-2 2z"></path></svg></span></a></div></header><div aria-expanded="false" role="navigation" class="root---2CZyk"><div class="root---2eugK"><button tabindex="1" class="root---3XOim"><span class="label---2tzjG">Skip to main content</span><span class="icon---2JwcP"></span></button><a aria-label="Pluralsight" tabindex="2" href="https://app.pluralsight.com/" class="link---10T1j"><div class="dontCollapseInIE---8M2sT"><span class="icon---3OCjk"><svg role="img" viewBox="0 0 24 24" version="1.1"><g><path d="M15.0722,1.6849 C9.6602,-0.2851 3.6552,2.5159 1.6852,7.9279 C-0.2848,13.3399 2.5152,19.3449 7.9272,21.3149 C13.3392,23.2849 19.3452,20.4839 21.3152,15.0729 C23.2852,9.6609 20.4842,3.6549 15.0722,1.6849 M11.5002,22.9999 C5.1592,22.9999 0.0002,17.8409 0.0002,11.4999 C0.0002,5.1589 5.1592,-0.0001 11.5002,-0.0001 C17.8412,-0.0001 23.0002,5.1589 23.0002,11.4999 C23.0002,17.8409 17.8412,22.9999 11.5002,22.9999"></path><path d="M8,5 L8,18 L19,11.5 L8,5 Z M9,7 L17,11.5 L9,16 L9,7 Z"></path><path d="M6,6.5 L6,16.5 L14,11.5 L6,6.5 Z M7,9 L12,11.5 L7,14 L7,9 Z"></path></g></svg></span></div><span class="title---3un-7 root---5lDdo"><svg role="img" viewBox="0 0 129 24"><g fill-rule="evenodd" transform="translate(0 5)"><path d="M0.378,1.045 L4.796,1.045 C7.421,1.045 9.054,2.534 9.054,4.791 L9.054,4.822 C9.054,7.335 7.037,8.648 4.572,8.648 L2.347,8.648 L2.347,12.25 L0.378,12.25 L0.378,1.045 L0.378,1.045 Z M4.636,6.871 C6.124,6.871 7.053,6.039 7.053,4.871 L7.053,4.838 C7.053,3.526 6.108,2.838 4.636,2.838 L2.347,2.838 L2.347,6.871 L4.636,6.871 L4.636,6.871 Z"></path><polyline points="12.346 1.045 14.314 1.045 14.314 10.457 20.205 10.457 20.205 12.25 12.346 12.25 12.346 1.045"></polyline><path d="M22.714 7.496L22.714 1.045 24.683 1.045 24.683 7.416C24.683 9.497 25.755 10.601 27.516 10.601 29.261 10.601 30.333 9.561 30.333 7.496L30.333 1.045 32.302 1.045 32.302 7.399C32.302 10.745 30.413 12.426 27.483 12.426 24.57 12.426 22.714 10.745 22.714 7.496M36.602 1.045L41.596 1.045C43.004 1.045 44.108 1.461 44.829 2.166 45.421 2.774 45.758 3.606 45.758 4.583L45.758 4.614C45.758 6.455 44.653 7.56 43.101 8.008L46.126 12.25 43.789 12.25 41.035 8.344 38.57 8.344 38.57 12.25 36.602 12.25 36.602 1.045 36.602 1.045zM41.452 6.599C42.86 6.599 43.757 5.863 43.757 4.727L43.757 4.694C43.757 3.494 42.893 2.838 41.436 2.838L38.57 2.838 38.57 6.599 41.452 6.599 41.452 6.599zM53.419.965L55.244.965 60.174 12.25 58.093 12.25 56.956 9.544 51.658 9.544 50.506 12.25 48.489 12.25 53.419.965 53.419.965zM56.236 7.8L54.3 3.318 52.379 7.8 56.236 7.8 56.236 7.8z"></path><polyline points="63.369 1.045 65.338 1.045 65.338 10.457 71.228 10.457 71.228 12.25 63.369 12.25 63.369 1.045"></polyline><path d="M74.121,10.617 L75.306,9.209 C76.378,10.137 77.466,10.665 78.843,10.665 C80.06,10.665 80.827,10.089 80.827,9.256 L80.827,9.224 C80.827,8.424 80.38,7.992 78.299,7.512 C75.914,6.936 74.569,6.231 74.569,4.166 L74.569,4.134 C74.569,2.213 76.17,0.885 78.394,0.885 C80.027,0.885 81.324,1.381 82.46,2.294 L81.404,3.782 C80.395,3.03 79.387,2.629 78.362,2.629 C77.21,2.629 76.538,3.222 76.538,3.958 L76.538,3.99 C76.538,4.855 77.05,5.239 79.211,5.751 C81.58,6.327 82.797,7.175 82.797,9.032 L82.797,9.064 C82.797,11.161 81.147,12.41 78.795,12.41 C77.082,12.41 75.466,11.817 74.121,10.617"></path><polygon points="86.825 1.045 88.794 1.045 88.794 12.25 86.825 12.25"></polygon><path d="M92.249,6.679 L92.249,6.647 C92.249,3.51 94.65,0.853 98.027,0.853 C99.98,0.853 101.181,1.397 102.333,2.374 L101.085,3.862 C100.221,3.126 99.372,2.662 97.947,2.662 C95.883,2.662 94.313,4.47 94.313,6.615 L94.313,6.647 C94.313,8.952 95.835,10.649 98.123,10.649 C99.18,10.649 100.141,10.312 100.828,9.8 L100.828,7.704 L97.963,7.704 L97.963,5.991 L102.733,5.991 L102.733,10.697 C101.629,11.641 100.044,12.441 98.06,12.441 C94.554,12.441 92.249,9.944 92.249,6.679"></path><polyline points="106.889 1.045 108.857 1.045 108.857 5.703 114.204 5.703 114.204 1.045 116.173 1.045 116.173 12.25 114.204 12.25 114.204 7.528 108.857 7.528 108.857 12.25 106.889 12.25 106.889 1.045"></polyline><polyline points="123.082 2.87 119.529 2.87 119.529 1.045 128.621 1.045 128.621 2.87 125.067 2.87 125.067 12.25 123.082 12.25 123.082 2.87"></polyline></g></svg></span></a></div><div class="outer---3ZBMH"><div class="frame---2qdlq"><div class="content---g4zrT"><div aria-expanded="true" role="tablist" class="root---375fR"><div class="listExpanded---3Hm9M list---cbxy7"><a aria-selected="false" role="tab" tabindex="21" href="https://app.pluralsight.com/library/" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M21 13.8558v8.1447h-7V17c0-1.1046-.8954-2-2-2s-2 .8954-2 2v5.0005H3v-8.1447l-1.2774 1.3354-1.4452-1.3824L12 1.5533l11.7226 12.2555-1.4452 1.3824L21 13.8558zM12.9234 5.412L12 4.5l-.9234.912L5 11.765v8.2355h3V17c0-2.209 1.791-4 4-4s4 1.791 4 4v3.0005h3V11.765l-6.0766-6.353z"></path></svg></span><span class="label---Ce9-Y">Home</span></a><a aria-selected="false" role="tab" tabindex="22" href="https://app.pluralsight.com/library/browse" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M4 8h16c1.1046 0 2 .8954 2 2v10c0 1.1046-.8954 2-2 2H4c-1.1046 0-2-.8954-2-2V10c0-1.1046.8954-2 2-2zm0 2v10h16V10H4zm6 2l5 3-5 3v-6zM6 5h12c1.1046 0 2 .8954 2 2H4c0-1.1046.8954-2 2-2zm2-3h8c1.1046 0 2 .8954 2 2H6c0-1.1046.8954-2 2-2z"></path></svg></span><span class="label---Ce9-Y">Browse</span></a><a aria-selected="false" role="tab" tabindex="23" href="https://app.pluralsight.com/paths" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M4.4113 10l3.5858 3.5858V22H6l-.003-7.5858L3 11.4172V14H1V8h6v2H4.4113zM21 11.4142l-3 3V22h-2v-8.4142L19.5858 10H17V8h6v6h-2v-2.5858zm-8-5.5884V22h-2V5.831L9.1742 7.657 7.76 6.2425 12.0026 2l4.2427 4.2426L14.831 7.657 13 5.8257z"></path></svg></span><span class="label---Ce9-Y">Paths</span></a><a aria-selected="false" role="tab" tabindex="24" href="https://app.pluralsight.com/channels" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M13 13.855V23h-2v-9.145c-1.4457-.4302-2.5-1.7695-2.5-3.355C8.5 8.567 10.067 7 12 7s3.5 1.567 3.5 3.5c0 1.5855-1.0543 2.9248-2.5 3.355zM5.0412 1.3437L6.2514 2.936C3.9716 4.6715 2.5 7.414 2.5 10.5s1.4716 5.8286 3.7514 7.564l-1.2102 1.5924C2.2814 17.5557.5 14.236.5 10.5c0-3.736 1.7814-7.0557 4.5412-9.1564zm13.9176 0C21.7186 3.4443 23.5 6.764 23.5 10.5c0 3.736-1.7814 7.0557-4.5412 9.1564l-1.2102-1.5925C20.0284 16.3284 21.5 13.586 21.5 10.5s-1.4716-5.8286-3.7514-7.564l1.2102-1.5924zM7.4616 4.5287l1.2104 1.592C7.352 7.1255 6.5 8.7133 6.5 10.5c0 1.7867.852 3.3745 2.172 4.379l-1.2104 1.5925C5.6618 15.1015 4.5 12.9365 4.5 10.5c0-2.4365 1.1618-4.6016 2.9616-5.9715zm9.0768 0C18.3382 5.8982 19.5 8.0634 19.5 10.5s-1.1618 4.6016-2.9616 5.9715L15.328 14.879c1.32-1.0045 2.172-2.5923 2.172-4.379 0-1.7867-.852-3.3745-2.172-4.379l1.2104-1.5925zM12 12c.8284 0 1.5-.6716 1.5-1.5S12.8284 9 12 9s-1.5.6716-1.5 1.5.6716 1.5 1.5 1.5z"></path></svg></span><span class="label---Ce9-Y">Channels</span></a><a aria-selected="false" role="tab" tabindex="25" href="https://app.pluralsight.com/library/bookmarks" id="prism-2nd-last-nav-link" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M17.5012 2H9C6.794 2 5 3.795 5 6v17l5.5-6 5.5 6V10h4c.552 0 1-.447 1-1V6c0-2.205-1.2918-4-3.4988-4zM14 6v12l-3.5-4L7 18V6c0-1.104.897-2 2-2h5.536c-.34.589-.536 1.272-.536 2zm5 2h-3V6c0-1.104.3982-2 1.5012-2C18.6032 4 19 4.896 19 6v2z"></path></svg></span><span class="label---Ce9-Y">Bookmarks</span></a><a aria-selected="false" role="tab" tabindex="26" href="https://app.pluralsight.com/notes" class="link---DxcJ0"><span class="icon---1he1r"><svg role="img" viewBox="0 0 24 24"><path d="M19 2c1.104 0 2 .896 2 2v16c0 1.103-.896 2-2 2H7c-1.104 0-2-.897-2-2v-2H3v-2h2v-3H3v-2h2V8H3V6h2V4c0-1.104.896-2 2-2h12zM7 20h12.002L19 4H7v2h1v2H7v3h1v2H7v3h1v2H7v2zm3-13h7v6h-7V7zm2 2v2h3V9h-3z"></path></svg></span><span class="label---Ce9-Y">Notes</span></a></div></div></div></div><div class="root---2budh"><div class="inner---eATkm"></div><div class="handle---1SIaq" style="top: 0px; height: 839px;"></div></div></div></div><div class=""></div></div></div><div id="ps-notifications"><div x="0" y="0" class="css-15pwbnd"></div></div><div id="ps-main" tabindex="-1">
+      <div>
+        <ul class="app-alerts"></ul><div class="l-course-page">
+          <section class="l-course-page__primary">
+            <div class="course-hero course-hero--has-course-image" style="background-image: linear-gradient(transparent 0%, black 100%), url(&quot;https://pluralsight.imgix.net/course-images/playbook-ef-core-2-1-whats-new-v2.png&quot;);">
+              <div class="course-hero__progress-bar"><div class="progress-bar progress-bar--white progress-bar--medium" aria-label="Percent Watched: 0"><div class="progress-bar__inner" style="width: 0%;"></div></div></div><div class="course-hero__contents">
+                <h1 class="course-hero__title">Entity Framework Core 2.1: What's New Playbook</h1><p title="by Julie Lerman" class="course-hero__byline"><span>by <a href="https://app.pluralsight.com/profile/author/julie-lerman">Julie Lerman</a></span></p><p class="course-hero__excerpt">The 2.1 update to EF Core brings over 500 changes since EF Core 2.0. In this course, you’ll learn how to take full advantage of the most impactful new features like view mapping, server-side GroupBy processing, seeding and more.</p><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=5f7c3902-b474-4eea-9ad5-90c758f1e2a5&amp;clip=0&amp;mode=live" class="button button--medium course-hero__button" target="psplayer">
+                  <span class="course-hero__play-button-icon">
+                    <svg viewBox="0 0 512 512" role="img" aria-label="Play Course">
+                      <title>Play Course</title>
+                      <g class="defaultFill---3BX80">
+                        <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                      </g>
+                    </svg>
+                  </span><span>Start Course</span>
+                </a><span class="course-hero__links"><span class="bookmarkWrapper---x8JqJ"><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---3alqX ui-course-bookmark-button"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315 bookmarkFill---31Mz5"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span>Bookmark</a></span><span class="link---2FODB"><a><span class="defaultStyle---3Kp1I addToChannelIcon---3ag01"><svg viewBox="0 0 512 512" role="img" aria-label="Channels"><title>Channels</title><g class="defaultFill---3BX80"><g id="Group-Copy-9" transform="translate(1.000000, 0.000000)"><g id="Stroke-351"><path d="M255,484.3c-6.8,0-12.3-5.5-12.3-12.3V283.7c0-6.8,5.5-12.3,12.3-12.3s12.3,5.5,12.3,12.3V472 C267.3,478.8,261.8,484.3,255,484.3z"></path></g><g id="Stroke-352"><path d="M424.1,412.6c-3.1,0-6.3-1.2-8.7-3.6c-4.8-4.8-4.8-12.6,0-17.4c45.8-45.8,71-106.7,71-171.4c0-64.8-25.2-125.7-71-171.5 c-4.8-4.8-4.8-12.6,0-17.4s12.6-4.8,17.4,0C483.2,81.8,511,148.8,511,220.2c0,71.4-27.8,138.4-78.2,188.8 C430.4,411.4,427.2,412.6,424.1,412.6z"></path></g><g id="Stroke-353"><path d="M361.4,350c-3.1,0-6.3-1.2-8.7-3.6c-4.8-4.8-4.8-12.6,0-17.4c29-29.1,45-67.7,45-108.8c0-41.1-16-79.8-45-108.8 c-4.8-4.8-4.8-12.6,0-17.4c4.8-4.8,12.6-4.8,17.4,0c33.7,33.7,52.3,78.5,52.3,126.2c0,47.7-18.6,92.5-52.3,126.2 C367.7,348.8,364.6,350,361.4,350z"></path></g><g id="Stroke-354"><path d="M85.9,412.6c-3.1,0-6.3-1.2-8.7-3.6C26.8,358.6-1,291.5-1,220.2c0-71.3,27.8-138.4,78.2-188.9c4.8-4.8,12.6-4.8,17.4,0 c4.8,4.8,4.8,12.6,0,17.4c-45.8,45.8-71,106.7-71,171.5c0,64.8,25.2,125.7,71,171.4c4.8,4.8,4.8,12.6,0,17.4 C92.2,411.4,89.1,412.6,85.9,412.6z"></path></g><g id="Stroke-355"><path d="M148.6,350c-3.1,0-6.3-1.2-8.7-3.6c-33.7-33.7-52.3-78.5-52.3-126.2c0-47.7,18.6-92.5,52.3-126.2 c4.8-4.8,12.6-4.8,17.4,0c4.8,4.8,4.8,12.6,0,17.4c-29.1,29-45,67.7-45,108.8c0,41.1,16,79.7,45,108.8c4.8,4.8,4.8,12.6,0,17.4 C154.9,348.8,151.7,350,148.6,350z"></path></g><g id="Stroke-356"><path d="M255,296c-43.4,0-78.8-35.3-78.8-78.8c0-43.4,35.3-78.8,78.8-78.8c43.4,0,78.8,35.3,78.8,78.8 C333.8,260.7,298.4,296,255,296z M255,163.1c-29.9,0-54.2,24.3-54.2,54.1c0,29.9,24.3,54.2,54.2,54.2s54.1-24.3,54.1-54.2 C309.1,187.4,284.9,163.1,255,163.1z"></path></g></g></g></svg></span>Add to Channel</a></span><span class="download---2i_9z"><span class="downloadIcon---RTxcH"><div aria-label="Download Course" class="css-1iwwm4u"><svg role="img" aria-label="download icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.707 9.707L12 14.415 7.293 9.707l1.414-1.414L11 10.586V2h2v8.586l2.293-2.293 1.414 1.414zM15.586 14H22v8H2v-8h6.414l2 2h3.172l2-2zM20 20v-4h-3.586l-2 2H9.586l-2-2H4v4h16z"></path></svg></div></span>Download Course<span class="downloadCourseDialog---2sluJ"></span></span></span>
+              </div>
+            </div><ul class="tab-list l-course-page__nav"><li><a class="tab-list__item tab-list__item--selected" aria-current="page" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/table-of-contents">Table of contents</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/description">Description</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/transcript">Transcript</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/exercise-files">Exercise files</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/discussion">Discussion</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/learning-check">Learning Check</a></li><li><a class="tab-list__item" href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/recommended-courses">Recommended</a></li></ul><div class="l-course-page__content">
+              <main>
+                <ul class="accordian">
+                  <div class="accordian__actions"><a class="accordian__action" aria-label="Select to show all clips in list">Expand all</a></div>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=5f7c3902-b474-4eea-9ad5-90c758f1e2a5&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=5f7c3902-b474-4eea-9ad5-90c758f1e2a5&amp;clip=0&amp;mode=live" class="" target="psplayer">Course Overview</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT108.1666670S" class="table-of-contents__module-time">1m 48s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=5f7c3902-b474-4eea-9ad5-90c758f1e2a5&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Course Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT108.1666670S">1m 48s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=0&amp;mode=live" class="" target="psplayer">Setting the Stage for the EF Core 2.1 Release</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT482.3840010S" class="table-of-contents__module-time">8m 2s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT51.4000000S">51s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Understanding EF Core Version Numbers</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT117.2666670S">1m 57s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Relating the EF Core Vision with EF6 Parity</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT125.0666670S">2m 5s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=54def224-0995-420a-8ed7-ab493ce9ccdd&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Setting Expectations for This Course</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT188.6506670S">3m 8s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=0&amp;mode=live" class="" target="psplayer">Seeding the Database and In-Memory Test Provider</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1766.6849980S" class="table-of-contents__module-time">29m 26s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT114.6453330S">1m 54s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introducing a New Way to Seed Data</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT93.1120220S">1m 33s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Seeding Your First Row of Data</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT222.3333330S">3m 42s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Understanding How HasData Treats Key Values</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT182.6249440S">3m 2s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Seeding Related Data</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT157.7813330S">2m 37s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Seeding with Anonymous Types When Properties Aren’t Exposed </a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT191.5646220S">3m 11s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Seeding Types with Client-generated Values</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT196.2086220S">3m 16s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=7&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Using Anonymous Types to Solve Some More Seeding Problems</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT236.2398220S">3m 56s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=8&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Seeding InMemory Test Databases at Runtime</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT279.6666670S">4m 39s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=ea6526f1-a968-40e7-b48f-f368524c7a91&amp;clip=9&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT92.5083000S">1m 32s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=0&amp;mode=live" class="" target="psplayer">Exerting More Control Over Saving with System Transactions</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1087.4983230S" class="table-of-contents__module-time">18m 7s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT47.9333330S">47s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Understanding Transactions in EF Core</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT258.0666670S">4m 18s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Looking at the Starting Point Solution</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT92.6244000S">1m 32s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Observing EF Core’s Existing Transaction Behavior</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT283.5388670S">4m 43s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Simplifying the Customized Transaction with TransactionScope</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT302.0683890S">5m 2s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=62651348-7c30-482c-9120-c883929a396b&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT103.2666670S">1m 43s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=0&amp;mode=live" class="" target="psplayer">Tapping into the Pipeline with New Tracking Events </a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1302.6433670S" class="table-of-contents__module-time">21m 42s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT46.5333330S">46s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introducing the Tracked and StateChanged Events</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT108.8783670S">1m 48s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Creating Tracked and StateChanged EventHandlers in the DbContext</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT100.8442670S">1m 40s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Looking at the Starting Point Solution</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT85.0082560S">1m 25s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Watching the Event Handlers in Action</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT248.4767330S">4m 8s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Exploring Some More Event Behavior</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT127.6666670S">2m 7s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Tying the Events to Specific DbContext Instances</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT193.0971440S">3m 13s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=7&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Relaying Events with the .NET Core ILoggerFactory </a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT291.9677110S">4m 51s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d4e338b8-7e36-4dad-aba1-3b4c4ad5e0f5&amp;clip=8&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT100.1708890S">1m 40s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=0&amp;mode=live" class="" target="psplayer">Lazy Loading With and Without Proxies </a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1824.2955660S" class="table-of-contents__module-time">30m 24s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT101.4712000S">1m 41s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">The Return of Lazy Loading</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT87.2373670S">1m 27s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Technical Setup</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT76.6955110S">1m 16s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Examining the Starting Point of Our Project</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT157.6666670S">2m 37s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Implementing Lazy Loading with Proxies</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT280.4041780S">4m 40s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Watching the Lazy Loading in the SQL Logs</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT123.6927000S">2m 3s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Making Owned Entity Properties Virtual When Using Lazy Loading Proxies</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT92.2993220S">1m 32s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=7&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Noting Important Details About Lazy Loading Proxies</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT185.5333330S">3m 5s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=8&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Avoiding Lazy Loading and Proxies in UWP, Xamarin, &amp; Web Apps</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT134.6000000S">2m 14s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=9&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Why You May Want to Use Proxyless Lazy Loading</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT184.9173330S">3m 4s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=10&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Implementing Lazy Loading without Proxies</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT178.6311110S">2m 58s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=11&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Enabling Lazy Loading in Entities without Proxies or References to EF Core</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT115.4728330S">1m 55s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=d51a9d95-028c-4711-9a84-958fe1667be6&amp;clip=12&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT105.6740110S">1m 45s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=0&amp;mode=live" class="" target="psplayer">Mapping More .NET Types and Enums with Value Conversions</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1106.4076770S" class="table-of-contents__module-time">18m 26s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT60.9333330S">1m 0s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Why Value Conversions?</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT166.1620000S">2m 46s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Using the Built-in Value Converters</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT273.7632670S">4m 33s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Storing Enums as Strings</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT150.5117440S">2m 30s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Converting Types on the Fly</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT126.1866670S">2m 6s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Creating Your Own ValueConverters</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT203.1333330S">3m 23s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=21b0604c-6b5d-4fa5-8059-8116d98652ae&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT125.7173330S">2m 5s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=0&amp;mode=live" class="" target="psplayer">Transferring the GroupBy Effort to the Server</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1241.8818790S" class="table-of-contents__module-time">20m 41s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT142.6666670S">2m 22s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Looking at the Starting Point Solution</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT97.3612670S">1m 37s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Looking at Simple GroupBy and the SQL Generated by EF Core 2.0 and 2.1</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT281.7044890S">4m 41s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Checking Out Some More GroupBy Patterns</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT278.2720000S">4m 38s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Being Aware of Currently Unsupported GroupBy Patterns</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT317.2774560S">5m 17s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=b0d4dd14-1534-4336-a737-ddaf8834491a&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT124.6000000S">2m 4s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=0&amp;mode=live" class="" target="psplayer">Introducing Query Types for More Flexible Data Models</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1500.2648230S" class="table-of-contents__module-time">25m 0s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT62.2294780S">1m 2s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Enabling New Patterns with Query Types</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT188.0351890S">3m 8s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Looking at the Starting Point Solution</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT121.9333330S">2m 1s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Mapping to Database Views</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT296.1920000S">4m 56s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Handling Unconventional Query Mappings</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT175.6666670S">2m 55s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Defining Queries in the Data Model</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT192.9346000S">3m 12s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Pre-defining Raw SQL Queries</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT150.1402220S">2m 30s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=7&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Capturing FromSql Results</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT185.0666670S">3m 5s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=f1461e69-dc08-4aa5-b019-4dee876eef4d&amp;clip=8&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT128.0666670S">2m 8s</time></span></div></li></ul></div>
+                  </li>
+                  <li class="accordian__section">
+                    <div class="accordian__header table-of-contents__header">
+                      <a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=0&amp;mode=live" class="playerLink---v3rwY" target="psplayer">
+                        <span class="defaultStyle---3Kp1I playIcon---12u6Q playIconActive---1G13J">
+                          <svg viewBox="0 0 512 512" role="img" aria-label="Play">
+                            <title>Play</title>
+                            <g class="defaultFill---3BX80 playIconActiveFill---24JYi">
+                              <path d="M255.5,512c-141.2,0-256-114.8-256-256S114.3,0,255.5,0s256,114.8,256,256S396.7,512,255.5,512z M255.5,24.4
+C127.8,24.4,23.9,128.3,23.9,256s103.9,231.6,231.6,231.6c127.7,0,231.6-103.9,231.6-231.6S383.2,24.4,255.5,24.4z M194.5,134.1
+v243.8L365.2,256L194.5,134.1z"></path>
+                            </g>
+                          </svg>
+                        </span>
+                      </a><h3 class="table-of-contents__title"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=0&amp;mode=live" class="" target="psplayer">Benefiting from Minor Changes with Major Impact</a></h3><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea moduleBookmarkToggle---1_sMQ"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><time datetime="PT1743.7585440S" class="table-of-contents__module-time">29m 3s</time><i class="accordian__toggle-icon ps-i-down-arrow"></i>
+                    </div><div class="accordian__content"><ul class="table-of-contents__clip-list"><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=0&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introduction and Overview</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT65.8285670S">1m 5s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=1&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Introducing a Minimum for Batched Commands</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT263.9412220S">4m 23s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=2&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Noting a Change to Column Ordering</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT115.8907890S">1m 55s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=3&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Simplifying Access to the EF Core CLI</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT189.0104330S">3m 9s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=4&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Getting Compiler Warnings on Risky SQL with a Built-in Code Analyzer</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT399.2439000S">6m 39s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=5&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Materializing Entities with Class Constructors That Actually Have Parameters</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT458.0000000S">7m 38s</time></span></div></li><li class="table-of-contents__clip-list-item"><a href="https://app.pluralsight.com/player?course=playbook-ef-core-2-1-whats-new&amp;author=julie-lerman&amp;name=e06ad2bf-2218-49a3-9239-2999a2364709&amp;clip=6&amp;mode=live" class="table-of-contents__clip-list-title" target="psplayer">Review and Resources</a><div class="table-of-contents__clip-list-right-items"><span class="table-of-contents__checkmark-container"></span><a aria-label="Add Bookmark"><span class="defaultStyle---3Kp1I bookmark---wbyea bookmarkToggle---1EddN"><svg viewBox="0 0 512 512" role="img" aria-label="Bookmark"><title>Bookmark</title><g class="defaultFill---3BX80 bookmarkFill---24315"><path d="M371.2,25.6c28.3,0.1,51.2,23.2,51.2,51.1v25.7h-77V128H448V77c0-42.6-34.4-77-76.9-77H140.9 C98.4,0,64,34.5,64,77v435l128-128l128,128l0.1-435.3C320.1,48.6,343,25.8,371.2,25.6z M294.5,77v25.4L294.4,448L192,345.6 L89.6,448V76.7c0-28.2,23.1-51.1,51.4-51.1h173.1C301.9,39.2,294.5,57.3,294.5,77z"></path></g></svg></span></a><span class="table-of-contents__time"><time datetime="PT251.8436330S">4m 11s</time></span></div></li></ul></div>
+                  </li>
+                </ul><p class="fine-print disclaimer---3UCvz">The trademarks and trade names of third parties mentioned in this course are the property of their respective owners, and Pluralsight is not affiliated with or endorsed by these parties.<br></p>
+              </main>
+            </div>
+          </section><aside class="l-course-page__secondary course-aside"><div class="aside-section"><h2 class="aside-section__title">Course author</h2><div class="author-tease"><div class="author-tease__aside"><img class="author-tease__avatar" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/julie-lerman-v2.jpg"></div><div class="author-tease__main"><a href="https://app.pluralsight.com/profile/author/julie-lerman" class="author-tease__name">Julie Lerman</a></div></div><p>Julie Lerman is a Microsoft MVP, .NET mentor and consultant who lives in the hills of Vermont. You can find Julie presenting on data access and other Microsoft .NET topics at user groups and...</p></div><div class="aside-section"><h2 class="aside-section__title">Course info</h2><ul class="detail-list"><li class="detail-list__item"><span class="detail-list__title">Level</span><span class="detail-list__desc">Intermediate</span></li><li class="detail-list__item"><span class="detail-list__title">Rating</span><span class="detail-list__desc"><div class="rating" aria-label="Course Rating: 5 stars with 14 raters."><i class="ps-i-star star__full" aria-label="1 stars is selected"></i><i class="ps-i-star star__full" aria-label="2 stars is selected"></i><i class="ps-i-star star__full" aria-label="3 stars is selected"></i><i class="ps-i-star star__full" aria-label="4 stars is selected"></i><i class="ps-i-star star__full" aria-label="5 stars is selected"></i><span class="rating__raters-count">(14)</span></div></span></li><li class="detail-list__item"><span class="detail-list__title">Duration</span><span class="detail-list__desc">3h 22m</span></li><li class="detail-list__item"><span class="detail-list__title">Released</span><span class="detail-list__desc">9 Oct 2018</span></li></ul></div><div class="aside-section"><h2 class="aside-section__title">Share course</h2><ul class="course-social"><li aria-label="Share on Facebook" class="course-social__item"><a tabindex="0" class="link---16vTN"><i class="course-social__icon ps-i-facebook"></i></a></li><li aria-label="Share on Twitter" class="course-social__item"><a tabindex="0" class="link---16vTN"><i class="course-social__icon ps-i-twitter"></i></a></li><li aria-label="Share on Google+" class="course-social__item"><a tabindex="0" class="link---16vTN"><i class="course-social__icon ps-i-google-plus"></i></a></li><li aria-label="Share on LinkedIn" class="course-social__item"><a tabindex="0" class="link---16vTN"><i class="course-social__icon ps-i-linkedin"></i></a></li></ul></div></aside>
+        </div>
+      </div>
+    </div><div id="ps-footer"></div>
+  </div>
+  <script type="text/javascript">
+    __INITIAL_STATE__ = { "currentUser": { "cohort": 212, "id": "18589196-d6e8-4d2d-a4bf-b10e46a1c4e7", "userId": "18589196-d6e8-4d2d-a4bf-b10e46a1c4e7", "firstName": "Asp", "lastName": "Api", "username": "asp-api", "email": "AspWebApi@dogbol.com", "createdAt": "2018-10-31T20:31:58.156Z", "prismPayload": "{\"claims\":[],\"planId\":null,\"isRestrictedPlanId\":false,\"planRoles\":{},\"hasInternalMentoring\":false,\"hasExternalMentoring\":false,\"features\":[],\"privacyUpdatedDate\":\"2018-05-24\"}", "hasInterests": true, "shouldRedirectToOnboarding": false, "hasWatchedWelcomeVideo": true, "permissions": { "libraries": ["free", "pluralsight"], "projects": [], "assessments": ["*"], "learningChecks": ["*"], "discussions": ["*"], "notes": ["*"], "downloadableLibraries": ["pluralsight"], "internalMentoring": [], "transcender": [], "interactiveCourses": [], "externalCertifications": [], "externalMentoring": [], "piiAccess": ["*"], "earlyAccess": ["*"], "featureToggleGroups": [] }, "customHomePages": [{ "id": "12f53a6a-0434-47ee-8c3b-3108a08b2730", "status": "published", "name": "Visual Studio Dev Essentials", "title": "Visual Studio Dev Essentials", "batchNumber": 820, "libraryId": "pluralsight", "whiteLogoUrl": "//pluralsight2.imgix.net/learner/351dc19ab208e31bd93175257730beb1.svg", "darkLogoUrl": "", "heroImageUrl": "//pluralsight2.imgix.net/learner/e4f04a2cb3da5724e1c97d255bcb9a08.jpg", "heroText": "Build intelligent apps\nof the future", "heroTextItalics": null, "pathUrlSlugs": ["microsoft-azure-solutions-architect", "nodejs-developer-on-microsoft-azure", "python", "mvc5", "angular"], "pathsEnabled": false, "pathsHeader": "Featured Paths", "channelIds": ["440fc1d5-a29a-42d8-9cb5-dbcd3d14d20e", "b575296b-7be5-4cf0-b4cd-4573ec78b209", "b7298541-424d-452c-8dff-acfab8f63f42"], "channelsEnabled": false, "channelsHeader": "Expert Channels", "courseListHeader": "Course list", "courseListEnabled": true, "customCarouselsEnabled": true, "customCarousels": [{ "title": "RoleIQ", "viewAllUrl": "https://app.pluralsight.com/roleiq", "tiles": [{ "title": "Microsoft Azure Administrator", "imageUrl": "//pluralsight2.imgix.net/custom-home/visual-studio-dev-essentials-tile-0-ebb2ea2f06ab3a2a214fbd995cc0d74c", "linkUrl": "https://app.pluralsight.com/roleiq/roles/2dff9be4-04ef-454f-9a4c-0279aff97b4e", "sortIndex": 0 }, { "title": "Microsoft Azure Solution Architect", "imageUrl": "//pluralsight2.imgix.net/custom-home/visual-studio-dev-essentials-tile-1-6445b27c3978f7a5ca7129932ea70fd9", "linkUrl": "https://app.pluralsight.com/roleiq/roles/4adb1a19-3e60-43b3-aaf6-b0aeaf892720", "sortIndex": 1 }, { "title": "Microsoft Azure Developer", "imageUrl": "//pluralsight2.imgix.net/custom-home/visual-studio-dev-essentials-tile-2-585bbc2fd9ad5b047dc2fcb919bf51fd", "linkUrl": "https://app.pluralsight.com/roleiq/roles/9bb6d491-d1a8-4f76-be35-f453851c268d", "sortIndex": 2 }] }], "isPriority": true }] }, "userFeatures.v3": { "all": { "collection": { "prism-beta": { "id": "prism-beta", "displayName": "Global nav beta", "description": "comprehensive nav", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "assessments-home-integration": { "id": "assessments-home-integration", "displayName": "Assessments Home 2.0 Feature", "description": "New Assessments flow for Home 2.0", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "learner-home-channels-row": { "id": "learner-home-channels-row", "displayName": "Channels on Home page", "description": "Allow the channels carousel to show on the learner's home page.", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "learner-primary-atomic-tags-in-search": { "id": "learner-primary-atomic-tags-in-search", "displayName": "Primary Atomic Tags In Search", "description": "search and tagging experiment", "isAvailableForOptIn": false, "isEnabledForUser": false, "canToggle": false }, "data-camp-paths": { "id": "data-camp-paths", "displayName": "data-camp-paths", "description": "Include Data Camp paths in search results that include the Python path.", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "learner-exclude-blacklisted-plans": { "id": "learner-exclude-blacklisted-plans", "displayName": "learner-exclude-blacklisted-plans", "description": "Handle features excluded for blacklisted plans", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "learner-create-new-channel-card": { "id": "learner-create-new-channel-card", "displayName": "learner-create-new-channel-card", "description": "Display `Create New Channel` card on channels carousel on home", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false }, "assessments-pathless-assessments": { "id": "assessments-pathless-assessments", "displayName": "Pathless Assessments", "description": "Changes to support assessments beyond their relationship with paths.", "isAvailableForOptIn": false, "isEnabledForUser": true, "canToggle": false } } } }, "config": { "contexts": { "assessments": { "baseUrl": "app.pluralsight.com/score" }, "profile": { "baseUrl": "https://app.pluralsight.com/profile" } }, "discussions": { "disqusForumShortName": "pluralsight-1", "baseUrl": "http://pluralsight.com" }, "features": { "dashboardModal": false }, "monolithBaseUrl": "app.pluralsight.com", "authorizeUrl": "https://app.pluralsight.com/id/signin", "courseImageUrlTemplateString": "//pluralsight-res.cloudinary.com/image/upload/w_{width}/pluralsight-static/course-images/{courseId}-v{imageVersion}.jpg", "notificationsWidgetUrl": "https://s2.pluralsight.com/communications/notifications.js", "launchDarklyClientId": "5a7c7b5afd95332db01686a1", "wwwBaseUrl": "https://www.pluralsight.com" } }
+  </script>
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/notifications.js.download"></script>
+  <script src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/main.9d0b1653922fc40ded1e.js.download"></script><div id="_webengage_script_tag"></div>
+  <script type="text/javascript">
+    if (window._satellite) {
+      window._satellite.pageBottom();
+    }</script>
+  <script type="text/javascript" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/sidebar.min.js.download" async=""></script><div class="ReactModalPortal"></div><webengagedata>
+    <style type="text/css">
+      #webklipper-publisher-widget-container, #webklipper-publisher-widget-container * {
+        overflow: visible;
+        -webkit-box-sizing: content-box;
+        -moz-box-sizing: content-box;
+        box-sizing: content-box;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+    </style><div id="webklipper-publisher-widget-container">
+      <iframe name="webengage-engagement-callback-frame" id="webengage-engagement-callback-frame" frameborder="0" marginheight="0" marginwidth="0" style="position: absolute; background-color: transparent; bottom: 0px; right: 0px; border: none; overflow: hidden; visibility: hidden; display: none;" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/saved_resource(4).html"></iframe>
+      <script type="text/javascript" charset="UTF-8" async="" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/v4.js.download"></script>
+    </div>
+  </webengagedata><div></div><div></div><iframe sandbox="allow-scripts allow-same-origin" title="Adobe ID Syncing iFrame" id="destination_publishing_iframe_pluralsight_0" src="./Entity Framework Core 2.1_ What&#39;s New Playbook _ Pluralsight_files/dest5.html" class="aamIframeLoaded" style="display: none; width: 0px; height: 0px;"></iframe><div id="koWidget"><div><a href="https://app.pluralsight.com/library/courses/playbook-ef-core-2-1-whats-new/table-of-contents#"><svg class="ko-icon--1c2AY" viewBox="0 0 36 36" role="img" aria-label="Help"><title>Help</title><path d="M32.4 33.9c-.1 0-.1 0-.2-.1l-8.7-4.3c-1.7.5-3.5.8-5.4.8-8.8 0-16-6.3-16-14s7.2-14 16-14 16 6.3 16 14c0 3.7-1.6 7.2-4.5 9.8l3.3 7.1c.1.2 0 .4-.1.6-.2.1-.3.1-.4.1z" style="fill: rgb(35, 31, 32);"></path><path d="M32.8 34.4c-.1 0-.2 0-.2-.1l-9-4.5c-1.8.6-3.7.8-5.6.8-9.1 0-16.5-6.5-16.5-14.5S8.9 1.6 18 1.6s16.5 6.5 16.5 14.5c0 3.8-1.7 7.4-4.7 10.1l3.4 7.4c.1.2 0 .4-.1.6 0 .2-.1.2-.3.2zm-9.2-5.6c.1 0 .2 0 .2.1l7.9 3.9-3-6.4c-.1-.2 0-.4.1-.6 3-2.6 4.6-6 4.6-9.6 0-7.4-7-13.5-15.5-13.5-8.6 0-15.5 6-15.5 13.5s7 13.5 15.5 13.5c1.9 0 3.7-.3 5.5-.9.1.1.2 0 .2 0z" style="fill: rgb(255, 255, 255);"></path><path d="M16.2 15.6l.1-.1c3.1-.1 4.5-1.1 4.5-2.7 0-1.4-1.1-2.3-2.8-2.3-1.5 0-2.8.7-4 1.9l-1.8-2c1.4-1.6 3.3-2.7 5.9-2.7 3.4 0 5.8 1.9 5.8 5s-2.2 4.5-4.9 4.9l-.2 2h-2l-.6-4zm-.2 6h3.3V25H16v-3.4z" style="fill: rgb(255, 255, 255);"></path></svg></a></div></div>
+</body>
+</html>
