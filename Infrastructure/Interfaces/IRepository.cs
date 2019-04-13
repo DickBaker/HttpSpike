@@ -12,6 +12,7 @@ namespace Infrastructure.Interfaces
         //IEnumerable<Host> GetHosts();
         //IEnumerable<WebPage> GetWebPages();
         //IEnumerable<WebPage> GetWebPagesToDownload();
+        //WebPage GetWebPageById(int id);
         //WebPage GetWebPageByUrl(string url);
         //WebPage PutWebPage(WebPage webpage);
 
@@ -19,10 +20,8 @@ namespace Infrastructure.Interfaces
 
         Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15);
 
-        Task<bool> AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict);
+        Task AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict);
 
         Task<int> SaveChangesAsync();
-
-        WebPage GetWebPageById(int id);
     }
 }

@@ -10,7 +10,7 @@ namespace Infrastructure.Models
     public class WebPage : IEquatable<WebPage>, IComparable<WebPage>
     {
         public const int URLSIZE = 450,
-            FILESIZE = 511;
+            FILESIZE = 511;     // but cf. MAX_PATH=260 for most NTFS volumes (W10 optionally more)
 
         public WebPage() { }
 
@@ -30,9 +30,9 @@ namespace Infrastructure.Models
         public int? HostId { get; set; }
 
         [NotMapped]
-        private Uri Uri { get; set; }                           // reference so can discover individual members like Host
+        Uri Uri { get; set; }                           // reference so can discover individual members like Host
 
-        private string _url;                            // private backing field (saves having to invoke Uri.AbsoluteUri everytime)
+        string _url;                                    // backing field (saves having to invoke Uri.AbsoluteUri and NoTrailSlash everytime)
 
         [Required]
         [StringLength(URLSIZE)]
@@ -56,14 +56,14 @@ namespace Infrastructure.Models
         }
 
         //[NotMapped]
-        private string _draftFilespec;
+        string _draftFilespec;
 
         [StringLength(FILESIZE)]
         public string DraftFilespec             // filename.extn ONLY (no dev/folder path) - if blank/null will read as "unknown.txt"
         {
             get =>
                 _draftFilespec ??
-                (_draftFilespec = Utils.MakeValid(Utils.FilespecLastSegment(Uri.Segments[Uri.Segments.Length - 1])));   // includes .Trim()
+                (_draftFilespec = Utils.MakeValid(Utils.FileExtnFix(Uri.Segments[Uri.Segments.Length - 1])));   // includes .Trim()
 
             set
             {
@@ -92,7 +92,7 @@ namespace Infrastructure.Models
         public virtual ICollection<WebPage> SupplyTo { get; set; } = new HashSet<WebPage>();
 
         //[NotMapped]
-        private int HashCode { get; set; }                                          // PERFORMANCE: write once read many
+        int HashCode { get; set; }                                          // PERFORMANCE: write once read many
 
         #region IEquatable<WebPage> for Fetch operation
         public override bool Equals(object obj) => (obj is WebPage other) && Equals(other);
@@ -101,7 +101,7 @@ namespace Infrastructure.Models
         #endregion
 
         #region IComparable<WebPage>
-        public int CompareTo(WebPage other) => throw new NotImplementedException();
+        public int CompareTo(WebPage other) => string.Compare(this.Url, other.Url, StringComparison.InvariantCultureIgnoreCase);
         #endregion
     }
 }

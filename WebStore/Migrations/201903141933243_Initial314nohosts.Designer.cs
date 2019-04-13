@@ -9,7 +9,7 @@ namespace WebStore.Migrations
     [GeneratedCode("EntityFramework.Migrations", "6.2.0-61023")]
     public sealed partial class Initial314nohosts : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(Initial314nohosts));
+        readonly ResourceManager Resources = new ResourceManager(typeof(Initial314nohosts));
         
         string IMigrationMetadata.Id
         {

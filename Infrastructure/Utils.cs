@@ -3,109 +3,52 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using Infrastructure.Models;
 
 namespace Infrastructure
 {
     public static class Utils
     {
-        static readonly char[] CRLF = { '\r', '\n' };
         static readonly char[] BadChars = Path.GetInvalidFileNameChars();
+        const string EXTN_SEPARATOR = ".";
 
-        // TODO: or use SortedList<TKey,TValue>() ??
-        public static Dictionary<string, string> MimeToExtn { get; } = new Dictionary<string, string>();
-        // MimeToExtn has 637 entries, whereas distinct Extns number only 78 so more efficient search
-        // cf. SortedList or Hash or HashSet
-        static readonly Lazy<HashSet<string>> ValidExtns = new Lazy<HashSet<string>>(() =>
+        public static (string filename, string extn) FileExtSplit(string instr)
         {
-            //return new HashSet<string>(MimeToExtn.Values.Distinct());
-            //var grp = MimeToExtn.Values
-            //.GroupBy(extn => extn)
-            //.OrderByDescending(g => g.Count())
-            //.ThenBy(g => g.Key)
-            //.Select(g => g.Key);
-            return new HashSet<string>(
-                MimeToExtn.Values
-                .GroupBy(extn => extn.ToLowerInvariant())   // rogue "XML" present in data
-                .OrderByDescending(g => g.Count())          // favour popular extn's first (e.g. xml)
-                .ThenBy(g => g.Key)                         //  then aphabetic
-                .Select(g => g.Key)
-                );
-        });
-
-        public static (string filename, string extn) FileExtLastSegment(string instr)
-        {
-            if (!string.IsNullOrWhiteSpace(instr))
+            string fname = null, extn = null;
+            var proto = MakeValid(instr);       // will remove any trailing "/". finally does .Trim() but not TrimOrNull()
+            if (!string.IsNullOrWhiteSpace(proto))
             {
-                var lastSegment = instr.Trim().ToLowerInvariant();
-#pragma warning disable CA1307 // Specify StringComparison
-                if (lastSegment.EndsWith("/"))
-#pragma warning restore CA1307 // Specify StringComparison
+                //#pragma warning disable CA1307 // Specify StringComparison
+                //                if (proto[proto.Length - 1] == '/')             // proto.EndsWith("/")
+                //#pragma warning restore CA1307 // Specify StringComparison
+                //                {
+                //                    proto = proto.Substring(0, proto.Length - 1).TrimEnd();
+                //                }
+                fname = Path.GetFileNameWithoutExtension(proto);
+                if (!string.IsNullOrWhiteSpace(fname))          // MUST be a filename (otherwise caller _may_ substitute "unknown")
                 {
-                    lastSegment = lastSegment.Substring(0, lastSegment.Length - 1).TrimEnd();
-                }
-                if (lastSegment.Length > 0)
-                {
-#pragma warning disable CA1307 // Specify StringComparison
-                    var dlim = lastSegment.LastIndexOf(".");
-#pragma warning restore CA1307 // Specify StringComparison
-                    if (dlim < 0)
+                    extn = Path.GetExtension(proto);
+                    if (extn.Length > 0 && extn[0] == '.')
                     {
-                        return (lastSegment, null);
+                        extn = extn.Substring(1);
                     }
-                    var fname = TrimOrNull(lastSegment.Substring(0, dlim));
-                    var extn = TrimOrNull(lastSegment.Substring(dlim + 1));
-                    // if (extn == null || extn == "html" || ValidExtns.Value.Contains(extn))   // ANY match (e.g. "xml" occurs 498 times!)
-                    if (extn == null || extn == "html" || ValidExtns.Value.Contains(extn))   // ANY match (e.g. "xml" occurs 498 times!)
-
-                    {
-                        return (fname, extn);               // yes. pass extn as-is
-                    }
-                    return (fname, "html");                 // no. substitute HTML extn (especially from asp/aspx etc)
+                    return (MimeCollection.IsValidExtn(extn))   // ANY match ?
+                    ? (fname, extn)                             // yes. pass extn as-is
+                    : (fname, null);                            // no. makes no guesses (content/type will prevail later)
                 }
             }
             return (null, null);
         }
 
-        public static string FilespecLastSegment(string instr)
+        public static string FileExtnFix(string instr)
         {
             string filename, extn;
-            (filename, extn) = FileExtLastSegment(instr);
+            (filename, extn) = FileExtSplit(instr);
             return (filename == null && extn == null)
                 ? null
-                : (filename ?? "unknown") + ((extn == null) ? "" : "." + extn);
+                : (filename ?? "unknown") + ((extn == null) ? "" : EXTN_SEPARATOR + extn);
         }
-
-        /*
-        public static string LookupExtnFromMime(string mime)
-        {
-            if (MimeToExtn.TryGetValue(mime, out var extn))
-            {
-                return extn;
-            }
-            Console.WriteLine($"LookupExtnFromMime({mime}) failed");
-                "image/x-icon"
-                "application/rss+xml"
-                "application/json+oembed"
-                "application/opensearchdescription+xml", "jpg"
-                "button"    http://www.youtube.com/LigonierMinistries
-                            http://www.youtube.com/user/LigonierMinistries
-                            http://www.youtube.com/user/LigonierMinistries/about?disable_polymer=1
-                            http://www.youtube.com/user/LigonierMinistries/channels?disable_polymer=1
-                            http://www.youtube.com/user/LigonierMinistries/community?disable_polymer=1
-                            http://www.youtube.com/user/LigonierMinistries/playlists?disable_polymer=1
-                            http://www.youtube.com/user/LigonierMinistries/videos?disable_polymer=1
-                            https://m.youtube.com/user/LigonierMinistries
-                            https://m.youtube.com/user/LigonierMinistries/about?disable_polymer=1
-                            https://m.youtube.com/user/LigonierMinistries/channels?disable_polymer=1
-                            https://m.youtube.com/user/LigonierMinistries/community?disable_polymer=1
-                            https://m.youtube.com/user/LigonierMinistries/playlists?disable_polymer=1
-                            https://m.youtube.com/user/LigonierMinistries/videos?disable_polymer=1
-                "text/xml+oembed", "json"
-                "application/x-javascript"
-                "application/rss+xml"
-            return null;
-        }
-        */
 
         /// <summary>
         ///     replace any characters within param by space, but elliding any multiple spaces
@@ -116,39 +59,43 @@ namespace Infrastructure
         /// <returns>
         ///     either valid filespec or null
         /// </returns>
+        /// <remarks>
+        ///     avoids any string.Trim() that would involve string alloc+copy (and GC L0)
+        /// </remarks>
         public static string MakeValid(string rawstr)
         {
-            const char SPACE = ' ';
-            if (string.IsNullOrWhiteSpace(rawstr))
+            var sb = new StringBuilder(rawstr.Length);      // assume capacity for every character
+            for (var i = 0; i < rawstr.Length; i++)
+            {
+                var c = rawstr[i];
+                if (c == '\r' || c == '\n')
+                {
+                    break;                                  // only accept the first line
+                }
+                if (char.IsWhiteSpace(c))
+                {
+                    if (sb.Length == 0 || char.IsWhiteSpace(sb[sb.Length - 1]))
+                    {
+                        continue;                           // suppress any leading whitespace [i.e.TrimStart] or secondary whitespace
+                    }
+                }
+                if (BadChars.Contains(c))
+                {
+                    if (sb.Length > 0 && !char.IsWhiteSpace(sb[sb.Length - 1])) // ignore any illegal chars where previous char was whitespace
+                    {
+                        sb.Append(' ');                         // otherwise insert single space instead of the bad char
+                    }
+                    continue;
+                }
+                sb.Append(c);                                   // append valid char (N.B. may be whitespace)
+            }
+            if (sb.Length == 0)
             {
                 return null;
             }
-            var copy = rawstr.Trim() + CRLF[0];
-            var eolIndex = copy.IndexOfAny(CRLF, 2);
-            var sb = new StringBuilder(copy.Substring(0, eolIndex).TrimEnd());    // first line only
-            for (var i = sb.Length - 1; i >= 0; --i)
-            {
-                if (!BadChars.Contains(sb[i]))
-                {
-                    continue;
-                }
-                // reduce 2 or 3 spaces to 1
-                if (i < sb.Length - 1 && sb[i + 1] == SPACE)
-                {
-                    sb.Remove(i + 1, 1);            // remove following space
-                }
-                sb[i] = SPACE;                      // substitute char for illegal char
-                if (i > 0 && sb[i - 1] == SPACE)
-                {
-                    sb.Remove(i - 1, 1);            // remove prior space (BTW next iter will re-review the new space)
-                }
-            }
-            var endspec = sb.ToString().Trim();
-            //if (rawstr != endspec)
-            //{
-            //    Console.WriteLine($"MakeValid: {rawstr} -> {endspec}");
-            //}
-            return (endspec.Length == 0) ? null : endspec;
+            return char.IsWhiteSpace(sb[sb.Length - 1])         // final char is whitespace ?
+                ? sb.ToString(0, sb.Length - 1)                 // yes. remove final whitespace, i.e. acts like TrimEnd()
+                : sb.ToString();                                // no. pass the whole builder content
         }
 
         // eliminate any fragment, but don't standardise e.g. to lowercase (caller should employ StringComparison.InvariantCultureIgnoreCase)
@@ -207,6 +154,27 @@ namespace Infrastructure
         public static string TrimOrNull(string raw) =>
             raw == null || string.IsNullOrWhiteSpace(raw)
                 ? null
-                : raw.Trim();
+                : raw.Trim();                   // removes leading/trailing whitespace (incl CR/LF)
+
+        public static void BombIf(this Task t)
+        {
+            if (t.IsFaulted)
+            {
+                throw new Exception($"task failed with exception {t.Exception}");
+            }
+        }
+
+        public static void WaitBombIf(this Task t)
+        {
+            try
+            {
+                t.Wait();
+                t.BombIf();
+            }
+            catch (Exception excp)
+            {
+                Console.WriteLine(excp);
+            }
+        }
     }
 }

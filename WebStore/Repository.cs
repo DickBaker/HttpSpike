@@ -12,7 +12,7 @@ namespace WebStore
 {
     public class Repository : IRepository
     {
-        private readonly Webstore.WebModel EfDomain;
+        readonly Webstore.WebModel EfDomain;
 
         public Repository(Webstore.WebModel dbctx)
         {
@@ -21,17 +21,17 @@ namespace WebStore
             //  ObjCtx.SavingChanges += OnSavingChanges;
         }
 
-        public async Task<bool> AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict)
+        public async Task AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict)
         {
             //var frig = 0.8d;
             //var initSize = (int)Math.Ceiling(linksDict.Count * frig);
             //var anoUrls = new List<string>(initSize);
             //var anoPages = new List<WebPage>(initSize);
-            foreach (var link in linksDict)                         // .OrderBy(lnk => lnk.Key)
+            foreach (var kvp in linksDict)                         // .OrderBy(lnk => lnk.Key)
             {
-                var linkedUrl = link.Key;                           // Utils.NoTrailSlash()
-                var linkfilespec = link.Value;                      // Utils.MakeValid()
-                Console.WriteLine($"\t[{linkedUrl}]\t:=\t{link.Value}");
+                var linkedUrl = kvp.Key;                           // Utils.NoTrailSlash()
+                var linkfilespec = kvp.Value;                      // Utils.MakeValid()
+                Console.WriteLine($"\t[{linkedUrl}]\t:=\t{linkfilespec}");
                 //var wpneeded = Dataserver.PutWebPage(new WebPage(linkedUrl, linkfilespec));
                 //var wpneeded = new WebPage(linkedUrl, linkfilespec);
                 var wptemp =
@@ -71,11 +71,10 @@ namespace WebStore
                     }
                 }
             }
-            return true;
         }
 
         /*
-        private void OnSavingChanges(object sender, EventArgs e)
+        void OnSavingChanges(object sender, EventArgs e)
         {
             if (!(sender is ObjectContext ObjCtx))
             {
@@ -86,7 +85,7 @@ namespace WebStore
             WebPageChanging(ObjCtx, EntityState.Modified, "updating");
         }
 
-        private static void WebPageChanging(ObjectContext ObjCtx, EntityState changeType, string action)
+        static void WebPageChanging(ObjectContext ObjCtx, EntityState changeType, string action)
         {
             Console.WriteLine($"{action}");
             foreach (var stateitem in ObjCtx.ObjectStateManager.GetObjectStateEntries(changeType))
@@ -106,14 +105,14 @@ namespace WebStore
         /// <returns>
         ///     enumerable of ContentTypeToExtn entities sorted by ContentTypeToExtn.Template
         /// </returns>
-        public async Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync() =>
-            await EfDomain.ContentTypeToExtns
+        public Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync() =>
+            EfDomain.ContentTypeToExtns
             .Where(row => !string.IsNullOrEmpty(row.Template) && !string.IsNullOrEmpty(row.Extn))   // WHERE ((LEN([Extent1].[Template])) <> 0) AND ((LEN([Extent1].[Extn])) <> 0)
             .OrderBy(row => row.Template)
             .Distinct()
             .ToListAsync();
 
-        public WebPage GetWebPageById(int id) => EfDomain.WebPages.FirstOrDefault(row => row.PageId == id);
+        //public WebPage GetWebPageById(int id) => EfDomain.WebPages.FirstOrDefault(row => row.PageId == id);
         //public WebPage GetWebPageByUrl(string url) => EfDomain.WebPages.FirstOrDefault(row => row.Url == url);
         //public IEnumerable<WebPage> GetWebPages() => EfDomain.WebPages;
 
@@ -167,7 +166,7 @@ namespace WebStore
         }
 
         /*
-        private WebPage PutWebPage(WebPage webpage)
+        WebPage PutWebPage(WebPage webpage)
         {
             if (EfDomain.WebPages.Local.Count == 0)             // read entire table on first call
             {

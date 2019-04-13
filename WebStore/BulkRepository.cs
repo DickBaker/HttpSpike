@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Infrastructure;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
 
@@ -14,14 +15,26 @@ namespace WebStore
 {
     public class BulkRepository : IRepository
     {
-        private readonly Webstore.WebModel EfDomain;
+        /*
+        These are done by EF using EfWip to enforce sequentiality
+            Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync()          READONLY so .AsNoTracking() 
+            Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15);   DbSet<WebPage> restarted every cycle (batch of 15 requests) so won't grow huge
+            Task<int> SaveChangesAsync();                                       AWAIT after #i so #i+1 can't catchup
+        These are done by independent ADO using AdoWip to enforce sequentiality
+            ctor trigger initiated
+                SqlConnection Open + createCmd SqlCommand
+            Task<bool> AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict);
+                truncateCmd SqlCommand + _bulk SqlBulkCopy + sprocCmd SqlCommand
+        */
+
+        readonly Webstore.WebModel EfDomain;
 
         public enum Staging_enum        // columns within Staging table
         {
             Url,
             DraftFilespec,
             //  Filespec,               // NB this is omitted from Staging as unknown at link-extract time
-            NeedDownload,
+            //  NeedDownload,           //  ditto no client-side sense if wanted
             NumberOfColumns
         }
 
@@ -35,12 +48,19 @@ namespace WebStore
             NumberOfColumns
         }
 
-        enum WipEnum
+        enum EfWipEnum
         {
             Idle = 0,
-            CreateStaging,
             GetContentTypeToExtns,
             GetWebPagesToDownload,
+            SaveChangesAsync
+        }
+
+        enum AdoWipEnum
+        {
+            Idle = 0,
+            Open,
+            CreateStaging,
             Truncate,
             Bulk,
             Action
@@ -59,11 +79,23 @@ namespace WebStore
 
         const string TGTTABLE = "#WebpagesStaging";
 
-        readonly string[] stagingNames = new string[] { "Url", "DraftFilespec", "NeedDownload" },
-            stagingTypes = new string[] { "System.String", "System.String", "System.Boolean" };
+        readonly string[] stagingNames = new string[] { "Url", "DraftFilespec" },
+            stagingTypes = new string[] { "System.String", "System.String" };
 
-        readonly SqlConnection _conn;            // SQL is single-threaded (forget MARS for this actor connection)
+        readonly SqlConnection _conn;               // SQL is single-threaded (forget MARS for this actor connection)
 
+#if WIP
+#pragma warning disable CS0414          // The field 'BulkRepository.LastEfCmd' is assigned but its value is never used.
+        EfWipEnum LastEfCmd = EfWipEnum.Idle;       // most recent EF operation
+        AdoWipEnum LastAdoCmd = AdoWipEnum.Idle;    // most recent ADO operation
+#pragma warning restore CS0414          // The field 'BulkRepository.LastEfCmd' is assigned but its value is never used.
+#endif
+        // SINGLE concurrency with single spid doing ONE thing (forget MARS or equivalent). always fatal if any exception thrown (back to caller)
+        Task EfWip = Task.FromResult<int>(12345);   // currently idle (cf. relates to GetContentTypeToExtnsAsync/GetWebPagesToDownloadAsync/SaveChangesAsync)
+        Task AdoWip = Task.FromResult<int>(67890);  // currently idle
+        readonly SqlCommand truncateCmd;
+        readonly SqlBulkCopy _bulk;
+        readonly SqlCommand addLinksCmd;
         readonly DbParameter[] p_ActionWebPageParams = new SqlParameter[]
                 {
                     new SqlParameter("@PageId", SqlDbType.Int),
@@ -72,13 +104,6 @@ namespace WebStore
                     new SqlParameter("@Filespec", SqlDbType.NVarChar, WebPage.FILESIZE),
                     new SqlParameter("@NeedDownload", SqlDbType.Bit)
                 };
-
-#if DEBUG
-        WipEnum LastCmd = WipEnum.Idle;                     // most recent SQL operation
-#endif
-        // SINGLE concurrency with single spid doing ONE thing (forget MARS or equivalent)
-        Task SqlInProgress;                                 // currently idle
-        readonly SqlBulkCopy _bulk;
 
         const int CACHELEN = 2;                             // size of DataTable array (i.e. double-buffering)
         int ActiveData = 0;                                 // start with zero-th cache table
@@ -91,25 +116,53 @@ namespace WebStore
                 "Staging_enum metadata is incorrect");
             Debug.Assert(p_ActionWebPageParams.Length == (int)Action_enum.NumberOfColumns, "Action_enum metadata is incorrect");
 
+            //EF component (single context, but SaveChangesAsync after request[I] can overlap request[I+1] doing its Downloader work in parallel
             EfDomain = dbctx;
             //  var ObjCtx = (EfDomain as IObjectContextAdapter).ObjectContext;
             //  ObjCtx.SavingChanges += OnSavingChanges;
+            //LastEfCmd = EfWipEnum.Idle;
 
-            SqlInProgress = CreateStagingAsync();           // OPEN() then create remote table on SQL asynchronously
+            // ADO component
+            //LastAdoCmd = AdoWipEnum.Idle;
+            var csb = new SqlConnectionStringBuilder(EfDomain.Database.Connection.ConnectionString)
+            {
+                ApplicationName = "DICKBULKSPROC",
+                AsynchronousProcessing = false,
+                ConnectRetryCount = 10,
+                ConnectRetryInterval = 2,
+                ConnectTimeout = 60,
+                MultipleActiveResultSets = false,
+                Pooling = false
+            };
+            _conn = new SqlConnection(csb.ConnectionString);       // independent so EF & ADO can free-run
 
-            _conn = (SqlConnection)EfDomain.Database.Connection;
-            _bulk = new SqlBulkCopy(_conn) { DestinationTableName = TGTTABLE };
+            truncateCmd = new SqlCommand("truncate table " + TGTTABLE, _conn);
+            addLinksCmd = new SqlCommand("exec dbo.p_ActionWebPage @PageId,@Url,@DraftFilespec,@Filespec,@NeedDownload", _conn);
+            addLinksCmd.Parameters.AddRange(p_ActionWebPageParams);
+            _bulk = new SqlBulkCopy(_conn) { DestinationTableName = TGTTABLE, BatchSize = 1000, BulkCopyTimeout = 15 };
+
+#if WIP
+            LastAdoCmd = AdoWipEnum.Open;
+#endif
+            AdoWip = (_conn.State != ConnectionState.Open)
+                ? _conn.OpenAsync()                         // start the OPEN handshake async so we can do setup stuff in parallel
+                : Task.FromResult<bool>(true);
 
             dataCaches[0] = MakeStagingTable();             // does not need _conn to be open yet run
-
             for (var i = 1; i < CACHELEN; i++)
             {
                 dataCaches[i] = dataCaches[0].Clone();      // copy structure (but not data)
             }
+            // wait for OPEN then create remote table on SQL asynchronously
+            AdoWip = AdoWip.ContinueWith(t =>
+            {
+                t.BombIf();
+                CreateStagingAsync();
+            }, TaskContinuationOptions.ExecuteSynchronously);
         }
 
         /*
-        private void OnSavingChanges(object sender, EventArgs e)
+        void OnSavingChanges(object sender, EventArgs e)
         {
             if (!(sender is ObjectContext ObjCtx))
             {
@@ -120,7 +173,7 @@ namespace WebStore
             WebPageChanging(ObjCtx, EntityState.Modified, "updating");
         }
 
-        private static void WebPageChanging(ObjectContext ObjCtx, EntityState changeType, string action)
+        static void WebPageChanging(ObjectContext ObjCtx, EntityState changeType, string action)
         {
             Console.WriteLine($"{action}");
             foreach (var stateitem in ObjCtx.ObjectStateManager.GetObjectStateEntries(changeType))
@@ -134,52 +187,90 @@ namespace WebStore
         }
         */
 
-        public async Task<bool> AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict)
+        /// <summary>
+        ///     upload all links to SQL and execute dbo.p_ActionWebPage sproc
+        /// </summary>
+        /// <param name="webpage">
+        ///     the dependent webpage (contains links to independent pages)
+        /// </param>
+        /// <param name="linksDict">
+        ///     Dictionary of links found
+        /// </param>
+        /// <returns>
+        ///     Task representing executing dbo.p_ActionWebPage sproc
+        /// </returns>
+        /// <remarks>
+        ///     by using ContinueWith TAP methods there are not await markers so compiler warns CS1998, but this is intentional
+        /// </remarks>
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             // 1.   simply return if no links found
             if (linksDict.Count == 0)
             {
-                return await Task.FromResult<bool>(true);
+                return;
             }
 
-            // 2.   populate the DataTable ready for upload
-            var activeCache = dataCaches[ActiveData];
-            activeCache.Clear();                         // hose all local data from any previous operation
-            foreach (var lnk in linksDict)
+            // TODO: research if breaking out TRUNCATE here (instead of in 3-phase CW in Upload) would improve performance
+            try
             {
-                // Once a table has been created, use the NewRow to create a DataRow.
-                var row = activeCache.NewRow();
-
-                // Then add the new row to the collection.
-                row[(int)Staging_enum.Url] = lnk.Key;
-                row[(int)Staging_enum.DraftFilespec] = lnk.Value;
-                row[(int)Staging_enum.NeedDownload] = 0;
-                activeCache.Rows.Add(row);
-
-                for (var i = 0; i < activeCache.Columns.Count; i++)
+                // 2.   populate the DataTable ready for upload
+                var activeCache = dataCaches[ActiveData];
+                activeCache.Clear();                         // hose all local data from any previous operation
+                foreach (var lnk in linksDict)
                 {
-                    Console.WriteLine("{0,-10}\t{1}", activeCache.Columns[i].ColumnName, row[i].ToString());
+                    // Once a table has been created, use the NewRow to create a DataRow.
+                    var row = activeCache.NewRow();
+
+                    // Then add the new row to the collection.
+                    row[(int)Staging_enum.Url] = lnk.Key;
+                    row[(int)Staging_enum.DraftFilespec] = lnk.Value;
+                    //row[(int)Staging_enum.NeedDownload] = 0;
+                    activeCache.Rows.Add(row);
+
+                    /*
+                    for (var i = 0; i < activeCache.Columns.Count; i++)
+                    {
+                        Console.WriteLine("{0,-10}\t{1}", activeCache.Columns[i].ColumnName, row[i].ToString());
+                    }
+                    */
                 }
+
+                // 3.   actual upload
+                //AdoWip.WaitBombIf();
+                //AdoWip = _bulk.WriteToServerAsync(dataCaches[ActiveData]);   // upload current batch of {called[0]..[n-1] rows}
+                var junk = Upload(webpage);
             }
-            // 3.   actual upload
-            SqlInProgress.Wait();
-            if (_conn.State != ConnectionState.Open)
+            catch (Exception excp)
             {
-                _conn.Open();
+                Console.WriteLine($"AddLinksAsync EXCEPTION:\t{excp}");
             }
-            await _bulk.WriteToServerAsync(dataCaches[ActiveData]).ConfigureAwait(true);  // upload current batch of {called[0]..[n-1] rows}
-            return true;
+        }
+
+        Task CreateStagingAsync()                         // EF will OPEN() then initiate [but DON'T WAIT for] CREATE
+        {
+#if WIP
+            LastAdoCmd = AdoWipEnum.CreateStaging;
+#endif
+
+#pragma warning disable CA2100      // "Review SQL queries for security vulnerabilities" has been done
+            var createCmd = new SqlCommand(
+                $"CREATE TABLE {TGTTABLE}\n" +
+                $"(\t[Url]\t\tnvarchar({WebPage.URLSIZE})\tNOT NULL\tPRIMARY KEY,\n" +     // N.B. PKCI on Url for Staging (noPageId column here)
+                $"\tDraftFilespec\tnvarchar({WebPage.FILESIZE})\tNULL)", _conn);
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
+            return createCmd.ExecuteNonQueryAsync();
         }
 
         public Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync()
         {
-            SqlInProgress.Wait();                               // wait for CREATE TABLE to finish
-#if DEBUG
-            LastCmd = WipEnum.GetContentTypeToExtns;
+#if WIP
+            LastEfCmd = EfWipEnum.GetContentTypeToExtns;
 #endif
+            EfWip.WaitBombIf();                               // wait for <nothing> to finish
             Task<List<ContentTypeToExtn>> rslt;
-            SqlInProgress = rslt =
-                EfDomain.ContentTypeToExtns
+            EfWip = rslt = EfDomain.ContentTypeToExtns
                     .AsNoTracking()                             // read-only here
                     .Where(row => !string.IsNullOrEmpty(row.Template) && !string.IsNullOrEmpty(row.Extn))   // WHERE ((LEN([Extent1].[Template])) <> 0) AND ((LEN([Extent1].[Extn])) <> 0)
                     .OrderBy(row => row.Template)
@@ -187,73 +278,29 @@ namespace WebStore
             return rslt;
         }
 
-        public WebPage GetWebPageById(int id) => EfDomain.WebPages.FirstOrDefault(row => row.PageId == id);
+        //public WebPage GetWebPageById(int id) => EfDomain.WebPages.FirstOrDefault(row => row.PageId == id);
         //public WebPage GetWebPageByUrl(string url) => EfDomain.WebPages.FirstOrDefault(row => row.Url == url);
         //public IEnumerable<WebPage> GetWebPages() => EfDomain.WebPages;
 
         public Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15)
         {
-            SqlInProgress.Wait();                               // wait for GetContentTypeToExtnsAsync to finish
-#if DEBUG
-            LastCmd = WipEnum.GetWebPagesToDownload;
+            EfWip.WaitBombIf();                                 // wait for GetContentTypeToExtnsAsync / SaveChangesAsync to finish
+            AdoWip.WaitBombIf();                                // *** TEMP ***
+
+            //Debug.Assert(EfDomain.SaveChanges() == 0, "verify no unwritten changes in DbContext");
+
+            // sadly this results in setting change-tracking for all rows to EnumEntityState.Deleted so don't enable !
+            // imho best to live with the gradual growth of this collection - else incur high cost to cycle in a new DbContext as replacement
+            //EfDomain.WebPages.Local.Clear();                  // toss all previous locally cached rows to improve search speed (cf. big-O!)
+
+#if WIP
+            LastEfCmd = EfWipEnum.GetWebPagesToDownload;
 #endif
             Task<List<WebPage>> rslt;
-            SqlInProgress = rslt = EfDomain.WebPages
+            EfWip = rslt = EfDomain.WebPages
                 .SqlQuery("exec p_ToDownload @Take=@TakeN", new SqlParameter("@TakeN", SqlDbType.Int) { Value = maxrows })
                 .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution)
             return rslt;
-        }
-
-        /*
-        public WebPage PutWebPage(WebPage webpage)
-        {
-            if (EfDomain.WebPages.Local.Count == 0)             // read entire table on first call
-            {
-                var webPages = EfDomain.WebPages.ToList();
-                Console.WriteLine($"pagecnt={EfDomain.WebPages.Local.Count}");
-            }
-
-            // try local cache before external trip to DB
-            var wptemp =
-                //EfDomain.WebPages.Local.FirstOrDefault(row => row.Url.Equals(webpage.Url, StringComparison.InvariantCultureIgnoreCase))
-                EfDomain.WebPages.FirstOrDefault(row => row.Url.Equals(webpage.Url, StringComparison.InvariantCultureIgnoreCase));
-            if (wptemp == null)
-            {
-                return EfDomain.WebPages.Add(webpage);
-            }
-            if (!webpage.DraftFilespec.Equals(wptemp.DraftFilespec, StringComparison.InvariantCultureIgnoreCase))
-            {
-                if (wptemp.DraftFilespec == null || wptemp.DraftFilespec == "unknown")
-                {
-                    Console.WriteLine($"PutHost[DraftFilespec] {wptemp.DraftFilespec} -> {webpage.Filespec}");
-                    wptemp.DraftFilespec = webpage.DraftFilespec;
-                }
-                else
-                {
-                    Console.WriteLine($"===> check {wptemp.DraftFilespec} -> {webpage.DraftFilespec}");
-                }
-            }
-            if (webpage.Filespec != null && wptemp.Filespec != webpage.Filespec)
-            {
-                Console.WriteLine($"PutHost[Filespec] {wptemp.Filespec} -> {webpage.Filespec}");
-                wptemp.Filespec = webpage.Filespec;
-            }
-            return wptemp;
-        }
-        */
-
-        public Task<int> SaveChangesAsync() => EfDomain.SaveChangesAsync();
-
-        Task CreateStagingAsync()                         // EF will OPEN() then initiate [but DON'T WAIT for] CREATE
-        {
-#if DEBUG
-            LastCmd = WipEnum.CreateStaging;
-#endif
-            return EfDomain.Database.ExecuteSqlCommandAsync(
-                $"CREATE TABLE {TGTTABLE}\n" +
-                $"(\t[Url]\t\tnvarchar({WebPage.URLSIZE})\tNOT NULL\tPRIMARY KEY,\n" +     // N.B. PKCI on Url for Staging (noPageId column here)
-                $"\tDraftFilespec\tnvarchar({WebPage.FILESIZE})\tNULL,\n" +
-                $"\tNeedDownload\tbit\t\tNULL)");
         }
 
         DataTable MakeStagingTable()
@@ -275,27 +322,43 @@ namespace WebStore
             return stagingTable;                                // Return the new DataTable
         }
 
-        public async Task Upload(WebPage webpage)
+        public Task<int> SaveChangesAsync()
+        {
+#if WIP
+            LastEfCmd = EfWipEnum.SaveChangesAsync;
+#endif
+            EfWip.WaitBombIf();                               // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
+            Task<int> rslt;
+            EfWip = rslt = EfDomain.SaveChangesAsync();
+            return rslt;
+        }
+
+        public Task Upload(WebPage webpage)
         {
             // 1.   wait for previous operation (either CREATE TABLE or EXEC p_ActionWebPage) to complete, then perform TRUNCATE
             //await DoAsync(truncateCmd, truncateCmd.ExecuteNonQueryAsync).ConfigureAwait(true);    // trash all our #WebPagesStaging table data at Sql Server
-            SqlInProgress.Wait();               // wait for previous operation (e.g. "CREATE TABLE #WebpagesStaging" or "exec dbo.p_ActionWebPage"). fatal if exception thrown (back to caller)
-#if DEBUG
-            LastCmd = WipEnum.Truncate;
-#endif
-            await EfDomain.Database.ExecuteSqlCommandAsync("TRUNCATE TABLE " + TGTTABLE);           // TRUNCATE TABLE must complete before we can do BULK INSERT
+            AdoWip.WaitBombIf();               // wait for previous operation (e.g. "CREATE TABLE #WebpagesStaging" or "exec dbo.p_ActionWebPage")
+#if WIP
+            LastAdoCmd = AdoWipEnum.Truncate;
+            AdoWip = truncateCmd.ExecuteNonQueryAsync();                    // TRUNCATE TABLE must complete before we can do BULK INSERT
 
             // 2.    wait for TRUNCATE, then perform BULK INSERT and advance pointer so caller can continue
-            SqlInProgress.Wait();               // wait for previous TRUNCATE operation. fatal if exception thrown (back to caller)
-#if DEBUG
-            LastCmd = WipEnum.Bulk;
+            AdoWip.WaitBombIf();                                            // wait for previous TRUNCATE operation to complete
+            LastAdoCmd = AdoWipEnum.Bulk;
+            AdoWip = _bulk.WriteToServerAsync(dataCaches[ActiveData]);      // upload current batch of {called[0]..[n-1] rows}
+#else
+            AdoWip = AdoWip
+                .ContinueWith(t =>
+                {
+                    t.BombIf();                                             // .Wait() for any previous operation to complete (CREATE TABLE #WebpagesStaging or EXEC dbo.p_ActionWebPage)
+                    truncateCmd.ExecuteNonQueryAsync();                     // TRUNCATE TABLE #WebpagesStaging
+                }, TaskContinuationOptions.ExecuteSynchronously)
+                .ContinueWith(t =>
+                {
+                    t.BombIf();                                             // wait for previous TRUNCATE operation to complete
+                    _bulk.WriteToServerAsync(dataCaches[ActiveData]);       //  then upload current batch of {called[0]..[n-1] rows}
+                }, TaskContinuationOptions.ExecuteSynchronously);
 #endif
-
-            if (_conn.State!=ConnectionState.Open)
-            {
-                _conn.Open();
-            }
-            await _bulk.WriteToServerAsync(dataCaches[ActiveData]);   // upload current batch of {called[0]..[n-1] rows}
 
             // 3.   prepare sproc params, wait for INSERT BULK to complete, then exec dbo.p_ActionWebPage
             p_ActionWebPageParams[(int)Action_enum.PageId].Value = webpage.PageId;
@@ -305,18 +368,19 @@ namespace WebStore
             p_ActionWebPageParams[(int)Action_enum.NeedDownload].Value = webpage.NeedDownload;
 
             ActiveData = ++ActiveData % CACHELEN;                   // round-robin advance to next DataTable
-            //dataCaches[ActiveData].Clear();                       // hose all local data from any previous operation
-            //                                                      // the caller is now free to re-use this zeroed dataCache (i.e. invoke AddDataRow)
+            dataCaches[ActiveData].Clear();                         // hose all local data from any previous operation
+                                                                    // the caller is now free to re-use this zeroed dataCache (i.e. invoke AddDataRow)
 
-#if DEBUG
-            LastCmd = WipEnum.Action;
+#if WIP
+            LastAdoCmd = AdoWipEnum.Action;
 #endif
-            var sq = EfDomain.Database.ExecuteSqlCommandAsync("exec dbo.p_ActionWebPage", p_ActionWebPageParams);
-            var qty = sq.Result;                                    // async until completed
-
-            // await DoAsync(sprocCmd, sprocCmd.ExecuteNonQueryAsync).ConfigureAwait(true); // import #WebStaging data into WebPages and Depends tables
+            AdoWip.WaitBombIf();                                    // .Wait for previous BULK INSERT operation to complete
+            Task<int> sq;
+            AdoWip = sq = addLinksCmd.ExecuteNonQueryAsync();       // import #WebStaging data into WebPages and Depends tables
+            //var qty = sq.Result;                                    // async until completed ***** TEMPORARY *****
 
             // drop out here so task wrapper completes, thus allows caller to populate next buffer in the ring (whilst SqlServer runs dbo.p_ActionWebPage sproc)
+            return AdoWip;
         }
     }
 }

@@ -124,7 +124,7 @@ INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec)
 			case when W.HostId = @PrefHostId then 0 else 1 end	-- @PrefHostId is null
 	   ,	N desc
 	   ,	isnull(A.ANO, 0)
-	   ,	isnull(M, 0) desc, HostId, PageId
+	   ,	isnull(M, 0) desc, HostId, W.PageId
 
  -- 4.	record the batch returning to calling agent to process
 MERGE INTO  dbo.Downloading as TGT

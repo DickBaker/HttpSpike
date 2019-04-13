@@ -4,6 +4,7 @@ using Infrastructure.Models;
 using System;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Webstore;
 using WebStore;
@@ -42,20 +43,26 @@ namespace KissFW
             {
                 foreach (var webpage in list15)                     // iterate through [re-]obtained List
                 {
+                    Console.WriteLine($"<<<{webpage.Url}>>>");
                     try
                     {
                         await download.FetchFileAsync(webpage);
                     }
                     catch (Exception excp)
                     {
-                        Console.WriteLine(excp.Message);
+                        Console.WriteLine($"Main EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
+                        webpage.NeedDownload = false;
                         continue;
                     }
                 }
-                list15 = await repo.GetWebPagesToDownloadAsync();   // get next batch
+                list15 = await repo.GetWebPagesToDownloadAsync();               // get next batch
             }
-            await repo.SaveChangesAsync();                          // final flush to SQL
+            var finalcnt = await repo.SaveChangesAsync();                       // final flush to SQL (update any "webpage.NeedDownload = false" rows)
             Console.WriteLine("*** FINISHED ***");
+            foreach (var extn in MimeCollection.MissingExtns.OrderBy(e => e))
+            {
+                Console.WriteLine($"missing extn\t{extn}");
+            }
             Console.ReadLine();
         }
     }
