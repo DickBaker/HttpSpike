@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,7 +25,7 @@ namespace Infrastructure
                 //                    proto = proto.Substring(0, proto.Length - 1).TrimEnd();
                 //                }
                 fname = Path.GetFileNameWithoutExtension(proto);
-                if (!string.IsNullOrWhiteSpace(fname))          // MUST be a filename (otherwise caller _may_ substitute "unknown")
+                if (!string.IsNullOrWhiteSpace(fname))          // MUST be a filename
                 {
                     extn = Path.GetExtension(proto);
                     if (extn.Length > 0 && extn[0] == '.')
@@ -45,9 +44,9 @@ namespace Infrastructure
         {
             string filename, extn;
             (filename, extn) = FileExtSplit(instr);
-            return (filename == null && extn == null)
+            return (filename == null)
                 ? null
-                : (filename ?? "unknown") + ((extn == null) ? "" : EXTN_SEPARATOR + extn);
+                : filename + ((extn == null) ? "" : EXTN_SEPARATOR + extn);
         }
 
         /// <summary>
@@ -64,6 +63,10 @@ namespace Infrastructure
         /// </remarks>
         public static string MakeValid(string rawstr)
         {
+            if (string.IsNullOrWhiteSpace(rawstr))
+            {
+                return null;
+            }
             var sb = new StringBuilder(rawstr.Length);      // assume capacity for every character
             for (var i = 0; i < rawstr.Length; i++)
             {
@@ -105,10 +108,20 @@ namespace Infrastructure
 
         public static string NoTrailSlash(string value)
         {
-            var _url = value.Trim();
-            return _url.EndsWith("/")
-            ? _url.Substring(0, _url.Length - 1).TrimEnd()        // standardise to strip any trailing "/"
-            : _url;
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                var idx = value.Length;
+                while (--idx >= 0)
+                {
+                    var c = value[idx];
+                    if (c != '/' && !char.IsSeparator(c)                // trailing "/" or blank [i.e. TrimEnd()]
+                        && (c != '?' || idx != value.IndexOf('?')))     // remove trailing queryparam delimiter (i.e.first and only"?")
+                    {
+                        return value.Substring(0, idx + 1);
+                    }
+                }
+            }
+            return null;
         }
 
         public static (string extn, bool isString) ParseType(string contentType)

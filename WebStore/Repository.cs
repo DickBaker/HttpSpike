@@ -57,9 +57,9 @@ namespace WebStore
                 else
                 {
                     var draftFilespec = wptemp.DraftFilespec;
-                    if (!draftFilespec.Equals(linkfilespec, StringComparison.InvariantCultureIgnoreCase) && (linkfilespec != null && linkfilespec != "unknown"))
+                    if (!draftFilespec.Equals(linkfilespec, StringComparison.InvariantCultureIgnoreCase) && (linkfilespec != null))
                     {
-                        if (draftFilespec == null || draftFilespec == "unknown")
+                        if (draftFilespec == null)
                         {
                             Console.WriteLine($"PutHost[DraftFilespec] {draftFilespec} -> {linkfilespec}");
                         }
@@ -184,7 +184,7 @@ namespace WebStore
             }
             if (!webpage.DraftFilespec.Equals(wptemp.DraftFilespec, StringComparison.InvariantCultureIgnoreCase))
             {
-                if (wptemp.DraftFilespec == null || wptemp.DraftFilespec == "unknown")
+                if (wptemp.DraftFilespec == null)
                 {
                     Console.WriteLine($"PutHost[DraftFilespec] {wptemp.DraftFilespec} -> {webpage.Filespec}");
                     wptemp.DraftFilespec = webpage.DraftFilespec;

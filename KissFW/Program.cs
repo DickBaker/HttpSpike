@@ -1,11 +1,11 @@
-﻿using HapLib;
-using Infrastructure.Interfaces;
-using Infrastructure.Models;
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using HapLib;
+using Infrastructure.Interfaces;
+using Infrastructure.Models;
 using Webstore;
 using WebStore;
 
@@ -27,6 +27,10 @@ namespace KissFW
             //var ct = new CancellationToken();
             var htmldir = ConfigurationManager.AppSettings["htmldir"] ?? @"C:\Ligonier\webcache";
             var otherdir = ConfigurationManager.AppSettings["otherdir"] ?? (htmldir + Path.DirectorySeparatorChar + OTHFOLDER);
+            if (!int.TryParse(ConfigurationManager.AppSettings["batchsize"], out var batchSize))
+            {
+                batchSize = 15;
+            }
             if (!Directory.Exists(htmldir))
             {
                 Directory.CreateDirectory(htmldir);
@@ -38,26 +42,25 @@ namespace KissFW
 
             var download = new Downloader(HParser, repo, htmldir, otherdir);
 
-            var list15 = await repo.GetWebPagesToDownloadAsync();   // get first batch (as IList<WebPage>)
-            while (list15.Count > 0)
+            var batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as IList<WebPage>)
+            while (batch.Count > 0)
             {
-                foreach (var webpage in list15)                     // iterate through [re-]obtained List
+                foreach (var webpage in batch)                                 // iterate through [re-]obtained List
                 {
                     Console.WriteLine($"<<<{webpage.Url}>>>");
                     try
                     {
-                        await download.FetchFileAsync(webpage);
+                        await download.FetchFileAsync(webpage);                 // complete current page before starting the next
                     }
-                    catch (Exception excp)
+                    catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
                         Console.WriteLine($"Main EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
-                        webpage.NeedDownload = false;
-                        continue;
+                        webpage.NeedDownload = false;                           // prevent any [infinite] retry loop
                     }
                 }
-                list15 = await repo.GetWebPagesToDownloadAsync();               // get next batch
+                var finalcnt = await repo.SaveChangesAsync();                   // flush to update any pending "webpage.NeedDownload = false" rows (else p_ToDownload will repeat)
+                batch = await repo.GetWebPagesToDownloadAsync(batchSize);       // get next batch
             }
-            var finalcnt = await repo.SaveChangesAsync();                       // final flush to SQL (update any "webpage.NeedDownload = false" rows)
             Console.WriteLine("*** FINISHED ***");
             foreach (var extn in MimeCollection.MissingExtns.OrderBy(e => e))
             {

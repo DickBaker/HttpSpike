@@ -53,7 +53,16 @@ namespace KissFW
         {
             var hashOld = GetHash(filespecA);
             var hashNew = GetHash(filespecB);
-            if (hashOld == hashNew)
+            var same = true;
+            for (var i = 0; i < hashOld.Length; i++)
+            {
+                if (hashOld[i] != hashNew[i])
+                {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
             {
                 File.Delete(filespecB);         // delete the new copy, but keep the old one (retain creation datetime)
                 return true;
@@ -63,87 +72,71 @@ namespace KissFW
 
         public async Task<bool> FetchFileAsync(WebPage webpage)
         {
-            string ct2extn, filespec3;
+            string filenameOnly, extn = null, filespec3;
             var url = Utils.TrimOrNull(webpage?.Url) ?? throw new InvalidOperationException("FetchFileAsync(webpage.Url) cannot be null");
             using (var req = new HttpRequestMessage(HttpMethod.Get, url))
             using (var rsp = await Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(continueOnCapturedContext: true))  // false
             {
                 Console.WriteLine($"{rsp.StatusCode} {rsp.ReasonPhrase}");
 
-                if (!rsp.IsSuccessStatusCode)
+                if (!rsp.IsSuccessStatusCode)                                       // timeout will be thrown directly to caller [no catch here]
                 {
-                    webpage.NeedDownload = false;                                   // prevent any [infinite] retry loop
+                    //webpage.NeedDownload = false;                                 // prevent any [infinite] retry loop
                     webpage.Filespec = $"~{rsp.StatusCode}({rsp.ReasonPhrase})";
-                    await Dataserver.SaveChangesAsync();                            // do it NOW !
-                                                                                    //await Task.FromResult(result: false);                           // on error ignore (no exception)
+                    //await Dataserver.SaveChangesAsync();                          // do it NOW !
+                    //await Task.FromResult(result: false);                         // on error ignore (no exception)
                     throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
-                    /*
-                    https://tabletalkmagazine.com/wp-content/themes/launchframe/favicons/touch-icon-ipad-76x76.png
-                    https://tabletalkmagazine.com/wp-content/themes/launchframe/favicons/touch-icon-ipad-retina-152x152.png
-                    https://tabletalkmagazine.com/wp-content/themes/launchframe/favicons/touch-icon-iphone-60x60.png
-                    https://tabletalkmagazine.com/wp-content/themes/launchframe/favicons/touch-icon-iphone-retina-120x120.png
-                    https://d1nve9bnh93d5n.cloudfront.net/static/images/ligonier_touch.png
-
-                    https://www.ligonier.org/about/who-we-are/Ligonier.org
-                    https://www.ligonier.org/academics
-                    https://www.ligonier.org/about/Ligonier.org
-                    https://www.ligonier.org/account
-                    http://reformationtrust.com/about
-                    "http://reformationtrust.com/account/login"
-                    */
                 }
                 //rsp.EnsureSuccessStatusCode();
 
-                var mtyp = rsp.Content.Headers.ContentType.MediaType;                                   // "application/json"
+                filenameOnly = Utils.TrimOrNull(Path.GetFileNameWithoutExtension(webpage.DraftFilespec));
+                extn = Utils.TrimOrNull(Path.GetExtension(webpage.DraftFilespec));
 
-                try
+                var contdisp = rsp.Content.Headers.ContentDisposition;
+                if (contdisp != null)
                 {
-                    var DispositionType = rsp.Content.Headers.ContentDisposition?.DispositionType;      // "attachment"
-                    var FileName = rsp.Content.Headers.ContentDisposition?.FileName;                    // "json.json"
-                    var FileNameStar = rsp.Content.Headers.ContentDisposition?.FileNameStar;
-                    var CreationDate = rsp.Content.Headers.ContentDisposition?.CreationDate;
-                    var ModificationDate = rsp.Content.Headers.ContentDisposition?.ModificationDate;
-                    var ReadDate = rsp.Content.Headers.ContentDisposition?.ReadDate;
-                    var Name = rsp.Content.Headers.ContentDisposition?.Name;
-                    //FileName = rsp.Content.Headers.ContentDisposition?.Parameters.Name == "filename" ? rsp.Content.Headers.ContentDisposition?.Parameters[0].Value : null;
+                    var DispositionType = contdisp.DispositionType;      // "attachment"
+                    var FileName = contdisp.FileName;                    // "json.json"
+                    var FileNameStar = contdisp.FileNameStar;
+                    var CreationDate = contdisp.CreationDate;
+                    var ModificationDate = contdisp.ModificationDate;
+                    var ReadDate = contdisp.ReadDate;
+                    var Name = contdisp.Name;
+                    //FileName = contdisp.Parameters.Name == "filename" ? contdisp.Parameters[0].Value : null;
                     if (DispositionType != null || FileName != null || FileNameStar != null || CreationDate != null || ModificationDate != null || ReadDate != null || Name != null)
                     {
                         Console.WriteLine($"DispositionType={DispositionType}");
                     }
+                    if (FileName != null)
+                    {
+                        (filenameOnly, extn) = Utils.FileExtSplit(FileName);    // ContentDisposition.FileName takes priority over webpage.DraftFilespec for file NAME
+                    }
                 }
-                catch (Exception exc)
-                {
-                    Console.WriteLine(exc);
-                }
-                ct2extn = MimeCollection.LookupExtnFromMime(mtyp);
-                if (ct2extn == null)
+                var mtyp = rsp.Content.Headers.ContentType.MediaType;           // "application/json", "application/manifest+json"
+                extn = MimeCollection.LookupExtnFromMime(mtyp);                 // MediaType takes priority over ContentDisposition for EXTN
+
+                if (extn == null)                                               // abort if no explicit content (i.e. ignore extn in caller's DraftFilespec)
                 {
                     //  || !ct2extn.IsText TODO: write non-UTF-8 file code
-                    // *** accept original extn as worst-case ?? ***
                     /*
                     "application/manifest+json"
                     */
-                    await Task.FromResult(result: false);                           // abort if no explicit content (i.e. ignore extn in caller's DraftFilespec)
+                    throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
                 }
-                var filenameOnly = Utils.TrimOrNull(Path.GetFileNameWithoutExtension(webpage.DraftFilespec));
-                if (filenameOnly == null || filenameOnly == "unknown")
+                if (filenameOnly == null)
                 {
                     filenameOnly = RandomFilenameOnly();                            // NB this produces a file5678.ext4 format but real extn added 3 lines below
                 }
-                var folder = (ct2extn == "html") ? HtmlPath : OtherPath;            // device & folder path
-                var filespec1 = filenameOnly + EXTN_SEPARATOR + ct2extn;            // filename & extension (ignore any extn in DraftFilespec)
-                var filespec2 = Path.Combine(folder, filespec1);                    // full spec of intended target
-                var colliding = (filespec2.Length > MAX_PATH) || File.Exists(filespec2);    // does target already pre-exist ?
-                if (colliding)
+                var folder = (extn == "html") ? HtmlPath : OtherPath;            // device & folder path
+                var filespec1 = filenameOnly + EXTN_SEPARATOR + extn;            // filename & extension (ignore any extn in DraftFilespec)
+                var filespec2 = filespec3 = Path.Combine(folder, filespec1);        // full spec of intended target
+                var colliding = File.Exists(filespec2);                             // does target already pre-exist ?
+                if (colliding || filespec2.Length > MAX_PATH)
                 {
                     webpage.DraftFilespec = filespec1;                              // keep our 2nd choice of fn.extn [simple debug aid]
-                    var filext = RandomFilenameOnly() + EXTN_SEPARATOR + ct2extn;   // use alternate file target
+                    var filext = RandomFilenameOnly() + EXTN_SEPARATOR + extn;   // use alternate file target
                     filespec3 = Path.Combine(folder, filext);
                     Debug.Assert(filespec3.Length <= MAX_PATH, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
-                }
-                else
-                {
-                    filespec3 = filespec2;                                          // final target spec (either as filespec2 or a generated file spec)
                 }
 
                 //var charset = rsp.Content.Headers.ContentType.CharSet;
@@ -153,7 +146,7 @@ namespace KissFW
                 try
                 {
                     using (var strm = await rsp.Content.ReadAsStreamAsync().ConfigureAwait(continueOnCapturedContext: false))
-                    using (var fs = File.Create(filespec3))
+                    using (var fs = File.Create(filespec3))             // TODO: write non-UTF - 8 file code
                     {
                         await strm.CopyToAsync(fs).ConfigureAwait(continueOnCapturedContext: false);
                         fs.Flush();
@@ -167,7 +160,7 @@ namespace KissFW
                             filespec3 = filespec2;                                  // revert to pre-existing filespec after delete
                         }
                     }
-                    webpage.Filespec = filespec3;                                   // persist the ultimate filespec
+                    webpage.Filespec = filespec3;                                   // persist the ultimate filespec [N.B. may change by Title later]
                     Console.WriteLine($"{webpage.DraftFilespec}\t{filespec3}");
                 }
                 catch (Exception excp)
@@ -181,7 +174,7 @@ namespace KissFW
                 }
             }       // termination of using req, rsp for Dispose()
 
-            if (ct2extn == "html")
+            if (extn == "html")
             {
                 Httpserver.LoadFromFile(url, filespec3);
                 //await Httpserver.LoadFromWebAsync("http://stackoverflow.com/questions/2226554/c-class-for-decoding-quoted-printable-encoding", CancellationToken.None);
@@ -207,13 +200,23 @@ namespace KissFW
                             }
                             else
                             {
-                                File.Move(filespec3, filespec4);
-                                Console.WriteLine($"moved {filespec3} => {filespec4}");
+                                var len3 = filespec3.Length - HtmlPath.Length;
+                                var len4 = filespec4.Length - HtmlPath.Length;
+                                var swapYN = (len3 < 15 || len3 > 50) && (len4 > 12 && len4 < 50);
+                                if (swapYN)
+                                {
+                                    File.Move(filespec3, filespec4);
+                                    Console.WriteLine($"moved {filespec3} => {filespec4}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"NOT moved {filespec3} => {filespec4}");
+                                }
                             }
                         }
                         catch (Exception excp)
                         {
-                            Console.WriteLine($"moved {filespec3} => {filespec4} failed with {excp.Message}");
+                            Console.WriteLine($"moving {filespec3} => {filespec4} failed with {excp.Message}");
                         }
                     }
                 }

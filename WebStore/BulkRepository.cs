@@ -42,13 +42,10 @@ namespace WebStore
         {
             PageId,
             Url,
-            DraftFilespec,
-            Filespec,
-            NeedDownload,
             NumberOfColumns
         }
 
-        enum EfWipEnum
+        enum EfWipEnum                  // states for async ADO activity
         {
             Idle = 0,
             GetContentTypeToExtns,
@@ -56,7 +53,7 @@ namespace WebStore
             SaveChangesAsync
         }
 
-        enum AdoWipEnum
+        enum AdoWipEnum                 // states for async EF activity
         {
             Idle = 0,
             Open,
@@ -79,8 +76,8 @@ namespace WebStore
 
         const string TGTTABLE = "#WebpagesStaging";
 
-        readonly string[] stagingNames = new string[] { "Url", "DraftFilespec" },
-            stagingTypes = new string[] { "System.String", "System.String" };
+        readonly string[] stagingNames = { "Url", "DraftFilespec" },
+            stagingTypes = { "System.String", "System.String" };
 
         readonly SqlConnection _conn;               // SQL is single-threaded (forget MARS for this actor connection)
 
@@ -96,14 +93,14 @@ namespace WebStore
         readonly SqlCommand truncateCmd;
         readonly SqlBulkCopy _bulk;
         readonly SqlCommand addLinksCmd;
+
         readonly DbParameter[] p_ActionWebPageParams = new SqlParameter[]
-                {
-                    new SqlParameter("@PageId", SqlDbType.Int),
-                    new SqlParameter("@Url", SqlDbType.NVarChar, WebPage.URLSIZE),
-                    new SqlParameter("@DraftFilespec", SqlDbType.NVarChar, WebPage.FILESIZE),
-                    new SqlParameter("@Filespec", SqlDbType.NVarChar, WebPage.FILESIZE),
-                    new SqlParameter("@NeedDownload", SqlDbType.Bit)
-                };
+            {
+                new SqlParameter("@PageId", SqlDbType.Int),
+                new SqlParameter("@Url", SqlDbType.NVarChar, WebPage.URLSIZE)
+            };
+
+        //readonly SqlParameter MoreParameter = new SqlParameter("@TakeN", SqlDbType.Int);      // HAVE TO RECREATE EACH TIME (cf. anoprm)
 
         const int CACHELEN = 2;                             // size of DataTable array (i.e. double-buffering)
         int ActiveData = 0;                                 // start with zero-th cache table
@@ -120,10 +117,8 @@ namespace WebStore
             EfDomain = dbctx;
             //  var ObjCtx = (EfDomain as IObjectContextAdapter).ObjectContext;
             //  ObjCtx.SavingChanges += OnSavingChanges;
-            //LastEfCmd = EfWipEnum.Idle;
 
             // ADO component
-            //LastAdoCmd = AdoWipEnum.Idle;
             var csb = new SqlConnectionStringBuilder(EfDomain.Database.Connection.ConnectionString)
             {
                 ApplicationName = "DICKBULKSPROC",
@@ -137,7 +132,7 @@ namespace WebStore
             _conn = new SqlConnection(csb.ConnectionString);       // independent so EF & ADO can free-run
 
             truncateCmd = new SqlCommand("truncate table " + TGTTABLE, _conn);
-            addLinksCmd = new SqlCommand("exec dbo.p_ActionWebPage @PageId,@Url,@DraftFilespec,@Filespec,@NeedDownload", _conn);
+            addLinksCmd = new SqlCommand("exec dbo.p_ActionWebPage @PageId,@Url", _conn);
             addLinksCmd.Parameters.AddRange(p_ActionWebPageParams);
             _bulk = new SqlBulkCopy(_conn) { DestinationTableName = TGTTABLE, BatchSize = 1000, BulkCopyTimeout = 15 };
 
@@ -218,14 +213,14 @@ namespace WebStore
                 // 2.   populate the DataTable ready for upload
                 var activeCache = dataCaches[ActiveData];
                 activeCache.Clear();                         // hose all local data from any previous operation
-                foreach (var lnk in linksDict)
+                foreach (var kvp in linksDict)
                 {
                     // Once a table has been created, use the NewRow to create a DataRow.
                     var row = activeCache.NewRow();
 
                     // Then add the new row to the collection.
-                    row[(int)Staging_enum.Url] = lnk.Key;
-                    row[(int)Staging_enum.DraftFilespec] = lnk.Value;
+                    row[(int)Staging_enum.Url] = kvp.Key;
+                    row[(int)Staging_enum.DraftFilespec] = kvp.Value;
                     //row[(int)Staging_enum.NeedDownload] = 0;
                     activeCache.Rows.Add(row);
 
@@ -238,8 +233,6 @@ namespace WebStore
                 }
 
                 // 3.   actual upload
-                //AdoWip.WaitBombIf();
-                //AdoWip = _bulk.WriteToServerAsync(dataCaches[ActiveData]);   // upload current batch of {called[0]..[n-1] rows}
                 var junk = Upload(webpage);
             }
             catch (Exception excp)
@@ -287,8 +280,6 @@ namespace WebStore
             EfWip.WaitBombIf();                                 // wait for GetContentTypeToExtnsAsync / SaveChangesAsync to finish
             AdoWip.WaitBombIf();                                // *** TEMP ***
 
-            //Debug.Assert(EfDomain.SaveChanges() == 0, "verify no unwritten changes in DbContext");
-
             // sadly this results in setting change-tracking for all rows to EnumEntityState.Deleted so don't enable !
             // imho best to live with the gradual growth of this collection - else incur high cost to cycle in a new DbContext as replacement
             //EfDomain.WebPages.Local.Clear();                  // toss all previous locally cached rows to improve search speed (cf. big-O!)
@@ -296,10 +287,12 @@ namespace WebStore
 #if WIP
             LastEfCmd = EfWipEnum.GetWebPagesToDownload;
 #endif
+            var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
+            { Value = maxrows };                                //  "The SqlParameter is already contained by another SqlParameterCollection" error
             Task<List<WebPage>> rslt;
             EfWip = rslt = EfDomain.WebPages
-                .SqlQuery("exec p_ToDownload @Take=@TakeN", new SqlParameter("@TakeN", SqlDbType.Int) { Value = maxrows })
-                .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution)
+                .SqlQuery("exec p_ToDownload @Take=@TakeN", anoprm)
+                .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
             return rslt;
         }
 
@@ -327,7 +320,7 @@ namespace WebStore
 #if WIP
             LastEfCmd = EfWipEnum.SaveChangesAsync;
 #endif
-            EfWip.WaitBombIf();                               // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
+            EfWip.WaitBombIf();                                 // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
             Task<int> rslt;
             EfWip = rslt = EfDomain.SaveChangesAsync();
             return rslt;
@@ -363,9 +356,6 @@ namespace WebStore
             // 3.   prepare sproc params, wait for INSERT BULK to complete, then exec dbo.p_ActionWebPage
             p_ActionWebPageParams[(int)Action_enum.PageId].Value = webpage.PageId;
             p_ActionWebPageParams[(int)Action_enum.Url].Value = webpage.Url;
-            p_ActionWebPageParams[(int)Action_enum.DraftFilespec].Value = webpage.DraftFilespec;
-            p_ActionWebPageParams[(int)Action_enum.Filespec].Value = webpage.Filespec;
-            p_ActionWebPageParams[(int)Action_enum.NeedDownload].Value = webpage.NeedDownload;
 
             ActiveData = ++ActiveData % CACHELEN;                   // round-robin advance to next DataTable
             dataCaches[ActiveData].Clear();                         // hose all local data from any previous operation

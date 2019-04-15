@@ -4,7 +4,7 @@ namespace Infrastructure.Models
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.IO;
+    using System.Text;
     using Infrastructure;
 
     public class WebPage : IEquatable<WebPage>, IComparable<WebPage>
@@ -42,16 +42,29 @@ namespace Infrastructure.Models
 
             set
             {
-                Uri = new Uri(value.Contains(Uri.SchemeDelimiter) ? value : Uri.UriSchemeHttp + Uri.SchemeDelimiter + value, UriKind.Absolute);  // caller must present as absolute, e.g. by convert(base,relative)
-                while (Uri.AbsoluteUri.Length > URLSIZE)        //TODO: progressively remove fragment qs bits, UserInfo, Scheme
+                _url = value.Contains(Uri.SchemeDelimiter)
+                    ? value
+                    : Uri.UriSchemeHttp + Uri.SchemeDelimiter + value;
+                if (_url.Length > URLSIZE)
                 {
-                    throw new InvalidOperationException($"url length({Uri.AbsoluteUri.Length}) exceeds max({URLSIZE}) [[{Uri.AbsoluteUri}]");
+                    _url = SlimQP(_url);
+                    //throw new InvalidOperationException($"url length({Uri.AbsoluteUri.Length}) exceeds max({URLSIZE}) [[{Uri.AbsoluteUri}]");
                     /*
                     "https://pathwright.imgix.net/https%3A%2F%2Fpathwright.imgix.net%2Fhttps%253A%252F%252Fcdn.filestackcontent.com%252Fapi%252Ffile%252Fz7fu32BwSZWBZUkWs7WR%253Fsignature%253D888b9ea3eb997a4d59215bfbe2983c636df3c7da0ff8c6f85811ff74c8982e34%2526policy%253DeyJjYWxsIjogWyJyZWFkIiwgInN0YXQiLCAiY29udmVydCJdLCAiZXhwaXJ5IjogNDYyMDM3NzAzMX0%25253D%3Ffit%3Dcrop%26ixlib%3Dpython-1.1.0%26w%3D500%26s%3Dc6e9844e60c8f6003fb2670004259423?fit=crop&amp;h=114&amp;ixlib=python-1.1.0&amp;w=114&amp;s=ad2749ee67694cc1c00868afcaa1c61f"
                     */
                 }
-                _url = Utils.NoTrailSlash(Uri.AbsoluteUri.ToLowerInvariant());   // PERFORMANCE: do this once (immutable and is read often)
-                HashCode = _url.GetHashCode();                          //  and cache the signature
+                Uri = new Uri(_url, UriKind.Absolute);      // caller must present as absolute, e.g. by convert(base,relative)
+                //_url = Utils.NoTrailSlash(Uri.AbsoluteUri.ToLowerInvariant());  // PERFORMANCE: do this once (immutable and is read often)
+                HashCode = _url.GetHashCode();                                  //  and cache the signature
+                var numsegs = Uri.Segments.Length - 1;
+                if (numsegs >= 0)
+                {
+                    if (Uri.Segments[numsegs] == "/" && --numsegs < 0)
+                    {
+                        return;
+                    }
+                    DraftFilespec = Uri.Segments[numsegs];
+                }
             }
         }
 
@@ -59,20 +72,10 @@ namespace Infrastructure.Models
         string _draftFilespec;
 
         [StringLength(FILESIZE)]
-        public string DraftFilespec             // filename.extn ONLY (no dev/folder path) - if blank/null will read as "unknown.txt"
+        public string DraftFilespec             // filename.extn ONLY (no dev/folder path)
         {
-            get =>
-                _draftFilespec ??
-                (_draftFilespec = Utils.MakeValid(Utils.FileExtnFix(Uri.Segments[Uri.Segments.Length - 1])));   // includes .Trim()
-
-            set
-            {
-                _draftFilespec = Utils.TrimOrNull(value);
-                if (_draftFilespec != null)
-                {
-                    _draftFilespec = Path.GetFileName(_draftFilespec);      // strip off any device/folder part
-                }
-            }
+            get => _draftFilespec;
+            set => _draftFilespec = Utils.TrimOrNull(Utils.FileExtnFix(value)); // strip off any device/folder part and remove any dodgy chars
         }
 
         [StringLength(FILESIZE)]
@@ -103,5 +106,41 @@ namespace Infrastructure.Models
         #region IComparable<WebPage>
         public int CompareTo(WebPage other) => string.Compare(this.Url, other.Url, StringComparison.InvariantCultureIgnoreCase);
         #endregion
+
+        public static string SlimQP(string url)
+        {
+            const string AMP = "&amp;", QUEST = "?";
+            string[] DELIM = { AMP };
+
+            if (url.Length <= URLSIZE)
+            {
+                return url;
+            }
+#pragma warning disable CA1307 // Specify StringComparison
+            var qpstart = url.IndexOf(QUEST);                       // first "?" indicates start of queryparams (any subsequent is simple ASCII)
+#pragma warning restore CA1307 // Specify StringComparison
+            if (qpstart < 0)
+            {
+                return url.Substring(0, WebPage.URLSIZE);           // crude truncate at max width (may not be at word-break)
+            }
+            var sb = new StringBuilder(url.Substring(0, qpstart));
+            var qryprns = url.Substring(qpstart + 1).Split(DELIM, StringSplitOptions.RemoveEmptyEntries);
+            var special = QUEST;                                    // 1st delimiter introducing QueryParams is a "?"
+            for (var i = 0; i < qryprns.Length; i++)
+            {
+#pragma warning disable CA1307 // Specify StringComparison
+                if (!qryprns[i].EndsWith("="))
+#pragma warning restore CA1307 // Specify StringComparison
+                {
+                    var qpn = special + qryprns[i];
+                    if (sb.Length + qpn.Length <= WebPage.URLSIZE)
+                    {
+                        sb.Append(qpn);                             // may not be left-significant (e.g. ignore QP[i] but copy QP[i+1])
+                        special = AMP;                              // subsequent delimiter for QS params is the "&"
+                    }
+                }
+            }
+            return sb.ToString();
+        }
     }
 }
