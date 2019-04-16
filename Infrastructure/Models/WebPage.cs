@@ -26,8 +26,8 @@ namespace Infrastructure.Models
         [Key]
         public int PageId { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public int? HostId { get; set; }
+        //[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        //public int? HostId { get; set; }
 
         [NotMapped]
         Uri Uri { get; set; }                           // reference so can discover individual members like Host
