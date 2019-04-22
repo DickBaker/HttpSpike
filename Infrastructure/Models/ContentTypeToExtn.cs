@@ -3,7 +3,7 @@ namespace Infrastructure.Models
     using System;
     using System.ComponentModel.DataAnnotations;
 
-    public class ContentTypeToExtn : IEquatable<ContentTypeToExtn>
+    public class ContentTypeToExtn // : IEquatable<ContentTypeToExtn>
     {
         public ContentTypeToExtn() { }
 
@@ -24,10 +24,10 @@ namespace Infrastructure.Models
 
         public bool IsText { get; set; }
 
-        #region IEquatable<ContentTypeToExtn>
-        public override bool Equals(object obj) => (obj is ContentTypeToExtn other) && Equals(other);
-        public bool Equals(ContentTypeToExtn other) => Template.Equals(other.Template, StringComparison.InvariantCultureIgnoreCase);
-        public override int GetHashCode() => Template.GetHashCode();
-        #endregion
+        //#region IEquatable<ContentTypeToExtn>
+        //public override bool Equals(object obj) => (obj is ContentTypeToExtn other) && Equals(other);
+        //public bool Equals(ContentTypeToExtn other) => Template.Equals(other.Template, StringComparison.InvariantCultureIgnoreCase);
+        //public override int GetHashCode() => Template.GetHashCode();
+        //#endregion
     }
 }

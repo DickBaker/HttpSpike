@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Infrastructure
     {
         static readonly char[] BadChars = Path.GetInvalidFileNameChars();
         const string EXTN_SEPARATOR = ".";
+        static readonly char[] DIRSEP = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
         public static (string filename, string extn) FileExtSplit(string instr)
         {
@@ -47,6 +49,66 @@ namespace Infrastructure
             return (filename == null)
                 ? null
                 : filename + ((extn == null) ? "" : EXTN_SEPARATOR + extn);
+        }
+
+        public static string GetRelativePath(string fromPath, string toPath)
+        {
+            //return path;                // TODO: [write later] if CORE use Path.GetRelativePath, else cf https://stackoverflow.com/questions/275689/how-to-get-relative-path-from-absolute-path/1599260#1599260
+
+            #region StackOverflow solution
+
+            if (string.IsNullOrEmpty(fromPath))
+            {
+                throw new ArgumentNullException(nameof(fromPath));
+            }
+
+            if (string.IsNullOrEmpty(toPath))
+            {
+                throw new ArgumentNullException(nameof(toPath));
+            }
+
+            var fromUri = new Uri(fromPath);
+            var toUri = new Uri(toPath);
+
+            if (fromUri.Scheme != toUri.Scheme) { return toPath; } // path can't be made relative.
+
+            var relativePath = Uri.UnescapeDataString(fromUri.MakeRelativeUri(toUri).ToString());
+
+            if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+            {
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+            #endregion
+
+            #region Dick 
+            Debug.Assert(fromPath == Path.GetFullPath(fromPath), "fromPath not normalised");
+            Debug.Assert(toPath == Path.GetFullPath(toPath), "toPath not normalised");
+            var subdirs = fromPath.Split(DIRSEP, StringSplitOptions.RemoveEmptyEntries);
+            var subdirs2 = toPath.Split(DIRSEP, StringSplitOptions.RemoveEmptyEntries);
+            if (subdirs[0] != subdirs2[0])
+            {
+                return toPath;
+            }
+            var sb = new StringBuilder();
+            for (var i = 1; i < subdirs2.Length - 1; i++)
+            {
+                if (sb.Length > 0 || (i >= subdirs.Length - 1))
+                {
+                    sb.Append(subdirs2[i] + Path.DirectorySeparatorChar);
+                }
+                else
+                if (subdirs[i] != subdirs2[i])
+                {
+                    sb.Append(".." + Path.DirectorySeparatorChar);
+                }
+            }
+            sb.Append(subdirs2[subdirs2.Length - 1]);
+            var rslt = sb.ToString();
+            #endregion
+
+            Debug.Assert(relativePath == rslt, "SO and Dick solution disagree!");
+            return relativePath;
+
         }
 
         /// <summary>

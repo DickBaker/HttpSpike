@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using HtmlAgilityPack;
 using Infrastructure;
@@ -11,10 +12,11 @@ namespace HapLib
     public class HapParser : IHttpParser
     {
         static readonly char[] CRLF = { '\r', '\n' };
+        static readonly char[] DIRSEP = { Path.DirectorySeparatorChar };
+
         const string EXTN_SEPARATOR = ".";
         static readonly string[] LinkAttList = { "cite", "data", "href", "src", "srcset" };
         static readonly char[] DELIMS = { '/', '?', '&', '=' };         // candidate break chars for finding last segment for DraftFilespec
-        const int MAX_PATH = 260;                                       // max size for device+directory+file spec but cf. WebPage.FILESIZE
 
         public HtmlDocument HtmlDoc { get; set; }
 
@@ -54,42 +56,35 @@ namespace HapLib
             }
         }
 
-        void AlterLinks(string att, Dictionary<string, string> oldNewLinks)
+        void AlterLinks(string dirname, string[] subdirs, string att, IDictionary<string, string> oldNewLinks)
         {
-            foreach (var href in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
+            foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
-                var url = href.Attributes[att].Value;
+                var url = hnode.Attributes[att].Value;
 #if DEBUG
                 if (url.StartsWith("//"))
                 {
                     Console.WriteLine("observe relative scheme!");
                 }
 #endif
-                var uri = new Uri(BaseAddress, url);                        // this handles relative scheme e.g.
-                                                                            //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
-                if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)         // ignore "mailto" "javascript" etc
-                    || href.Attributes["rel"]?.Value == "nofollow")
-                {
-                    continue;
-                }
                 // attempt extracting the [next] url, but ignore any exceptions
                 try
                 {
+                    var uri = new Uri(BaseAddress, url);                        // this handles relative scheme e.g.
+                                                                                //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
+                    if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)         // ignore "mailto" "javascript" etc
+                        || hnode.Attributes["rel"]?.Value == "nofollow")
+                    {
+                        continue;
+                    }
                     url = uri.AbsoluteUri.ToLower();                        // convert back to basic string
-                    if (!oldNewLinks.TryGetValue(url, out var replurl))     // ContainsKey does not have ignoreCase but Repository.PutWebPage does
+                    if (url.Length > WebPage.URLSIZE                        // oversize URL ?
+                        || !oldNewLinks.TryGetValue(url, out var fsabs))  // ContainsKey does not have ignoreCase but Repository.PutWebPage does
                     {
                         continue;                                           // don't change any uninteresting link (not even make relative)
                     }
-                    uri = new Uri(replurl, UriKind.RelativeOrAbsolute);
-                    if (uri.IsAbsoluteUri)
-                    {
-                        var reluri = BaseAddress.MakeRelativeUri(uri);
-                        if (replurl != reluri.AbsoluteUri)
-                        {
-                            replurl = reluri.AbsoluteUri;
-                            href.Attributes[att].Value = replurl;
-                        }
-                    }
+                    var fsrel = Utils.GetRelativePath(dirname, fsabs);
+                    hnode.Attributes[att].Value = fsrel;
                 }
                 catch (Exception)
                 {
@@ -187,7 +182,7 @@ namespace HapLib
                     if (filename != null)
                     {
                         if (string.IsNullOrWhiteSpace(extn))                        // #1 if explicit extn given then we use it
-                        {                           
+                        {
                             var atribType = hnode.Attributes["type"]?.Value;        // #2 explicit "type" ?
                             if (atribType != null)
                             {
@@ -209,10 +204,10 @@ namespace HapLib
                         }
                     }
                     //filename = Utils.MakeValid(filename);       // remove any spurious chars ***now done by FileExtsplit***
-                    if (filename?.Length > MAX_PATH)
+                    if (filename?.Length > WebPage.FILESIZE)
                     {
                         Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
-                        filename = filename.Substring(0, MAX_PATH);
+                        filename = filename.Substring(0, WebPage.FILESIZE);
                     }
                     if (!Links.ContainsKey(url))                // IDictionary.ContainsKey does not have ignoreCase overload, but concrete derived
                     {                                           //   SortedDictionary | SortedList embeds StringComparer.InvariantCultureIgnoreCase in ctor
@@ -311,12 +306,14 @@ namespace HapLib
             }
         }
 
-        public void ReworkLinks(string url, string filespec, Dictionary<string, string> oldNewLinks)
+        public void ReworkLinks(string url, string filespec, IDictionary<string, string> oldNewLinks)
         {
             LoadDoc(url, filespec);                 // load file into HtmlDoc, and set ReqUri, BaseAddress
+            var dirname = Path.GetDirectoryName(filespec);
+            var subdirs = dirname.Split(DIRSEP, System.StringSplitOptions.RemoveEmptyEntries);
             foreach (var att in LinkAttList)
             {
-                AlterLinks(att, oldNewLinks);
+                AlterLinks(dirname, subdirs, att, oldNewLinks);
             }
         }
 

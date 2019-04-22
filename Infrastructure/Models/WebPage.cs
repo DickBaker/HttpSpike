@@ -7,10 +7,10 @@ namespace Infrastructure.Models
     using System.Text;
     using Infrastructure;
 
-    public class WebPage : IEquatable<WebPage>, IComparable<WebPage>
+    public class WebPage : IEquatable<WebPage>      // , IComparable<WebPage>
     {
-        public const int URLSIZE = 450,
-            FILESIZE = 511;     // but cf. MAX_PATH=260 for most NTFS volumes (W10 optionally more)
+        public const int URLSIZE = 900 / 2,   // UTF-8 unicode=2bytes/char * 450 = 900 [max index size for CI_WebPages]
+            FILESIZE = 260;                 // cf. MAX_PATH=260 for most NTFS volumes (W10 optionally more)
 
         public WebPage() { }
 
@@ -82,11 +82,16 @@ namespace Infrastructure.Models
         public string Filespec { get; set; }
 
         /// <summary>
-        /// null means WebPages_trIU will determine extn then update from Host.IsXXX setting default
+        ///     null means WebPages_trIU will determine extn then update from Host.IsXXX setting default
         /// </summary>
         public bool? NeedDownload { get; set; }
 
-        //public virtual Host Host { get; set; }
+        /// <summary>
+        ///     true means downloaded file should be localised [when most/all independent pages also downloaded]
+        /// </summary>
+        public bool NeedLocalise { get; set; }
+
+        //public virtual Host Host { get; set; }            // not implemented here (i.e. server-side only usage)
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<WebPage> ConsumeFrom { get; set; } = new HashSet<WebPage>();
@@ -103,8 +108,8 @@ namespace Infrastructure.Models
         public override int GetHashCode() => HashCode;
         #endregion
 
-        #region IComparable<WebPage>
-        public int CompareTo(WebPage other) => string.Compare(this.Url, other.Url, StringComparison.InvariantCultureIgnoreCase);
+        #region IComparable<WebPage> *unused*
+        //public int CompareTo(WebPage other) => string.Compare(this.Url, other.Url, StringComparison.InvariantCultureIgnoreCase);
         #endregion
 
         public static string SlimQP(string url)

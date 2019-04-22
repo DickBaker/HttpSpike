@@ -7,6 +7,8 @@ PURPOSE
 
 HISTORY
 	20190320 dbaker created
+	20190417 dbaker	ignore Filespec when considering downloadability (may want re-download)
+	20190419 dbaker	remove HostId and add NeedLocalise column from resultset
 
 EXAMPLES
 	exec dbo.p_ToDownload
@@ -21,6 +23,7 @@ NOTES
 4.	once agent[i] have been given a batch of Urls the majority HostId is remembered and takes precedence next call (encourages sticky cookies etc)
 5.	then other agent[j] should not be given Urls for that HostId
 6.	precedence given to download Urls that other Urls depend on (so we can satisfy complete local autonomy)
+7.	this takes no account of NeedLocalise (cf. dbo.p_ToLocalise)
 */
 (	@Url			nvarchar(450)	= NULL		-- this is a LIKE value (e.g. 'http%://%DICK.com%') or NULL but makes EXPENSIVE query
 ,	@Extn			nvarchar(20)	= NULL
@@ -44,11 +47,13 @@ if @PrefHostId is NULL
 	INSERT INTO dbo.Agents
 	(	Spid
 	,	[Url]
+	--,	FirstCall
 	--,	LastCall
 	)
 	values
 	(	@Spid
 	,	@Url
+	--,	getdate()
 	--,	getdate()
 	)
   end
@@ -69,31 +74,32 @@ if @PrefHostId is NULL
 				from	dbo.Downloading (nolock)
 				where	Spid	= @Spid
 			)
- end
+  end
 
 -- 2.	create temporary table to hold results, then use it to populate Downloading table and return WebPages entity
 -- declare @Take smallint = 20, @SPID smallint = @@SPID, @PrefHostId int = 0
 declare @results TABLE
-(	N				int,
-	M				int,
-	M0				int,
-	PageId			int,
-	HostId			int,
-	[Url]			nvarchar(450),
-	DraftFilespec	nvarchar(511),
-	Filespec		nvarchar(511)	default NULL,
-	NeedDownload	bit				default 1
+(	N				int
+,	M				int
+,	M0				int
+,	PageId			int
+,	HostId			int
+,	[Url]			nvarchar(450)
+,	DraftFilespec	nvarchar(260)
+,	Filespec		nvarchar(260)	default NULL
+,	NeedDownload	bit				default 1
+,	NeedLocalise	bit
 )
 
 -- 3.	populate interim results table
-INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec)
-	SELECT top (@Take)  N, M, isnull(M,0) as M0, W.PageId, W.HostId, W.[Url], DraftFilespec	--, Filespec, NeedDownload, DraftExtn, FinalExtn
+INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec, Filespec, NeedDownload, NeedLocalise)
+	SELECT top (@Take)	N, M, isnull(M,0) as M0, W.PageId, W.HostId, W.[Url], DraftFilespec, Filespec, NeedDownload, NeedLocalise	--, DraftExtn, FinalExtn
 	from	dbo.WebPages		W
 	join
 	(	select	count(*) as N, HostId			-- N: count # items by sub-domain yet to download
 		from	dbo.WebPages (nolock)
-		where	Filespec		is NULL
-		 and	NeedDownload	= 1
+		where	NeedDownload	= 1
+		-- and	Filespec		is NULL
 		group by HostId
 	)							H			ON		H.HostId		= W.HostId
 	left join
@@ -101,6 +107,7 @@ INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec)
 		from	dbo.Downloading	(nolock)	D2
 		join	dbo.WebPages				W2	on	W2.PageId		= D2.PageId
 		where	Spid		!=	@SPID
+		 and	D2.LastCall	>	@retrytime		-- still busy ?
 		group by HostId
 	)							A			ON	A.HostId	= W.HostId
 	left join	dbo.Downloading	D (nolock)	ON		D.PageId		= W.PageId		-- eligible for new download
@@ -110,8 +117,8 @@ INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec)
 		from	dbo.Depends (nolock)
 		group by ParentId
 	)							Z			ON		Z.ParentId		= W.PageId
-	where	W.Filespec		is NULL			-- not already downloaded
-	 and	W.NeedDownload	= 1				--  but should be
+	where	W.NeedDownload	= 1				-- to be downloaded [again] ?
+	-- and	W.Filespec		is NULL			--  already downloaded
 -- these 2 criteria are commented-out as too expensive (i.e. currently ignoring 2 input params)
 	 --and	(	W.[Url]		like	@Url
 		--	or	@Url		is NULL
@@ -121,24 +128,26 @@ INSERT @results (N, M, M0, PageId, HostId, [Url], DraftFilespec)
 		--	)
 	 and	D.PageId		is NULL
 	 order by
-			case when W.HostId = @PrefHostId then 0 else 1 end	-- @PrefHostId is null
-	   ,	N desc
-	   ,	isnull(A.ANO, 0)
-	   ,	isnull(M, 0) desc, HostId, W.PageId
+			case when W.HostId = @PrefHostId then 0 else 1 end	-- agent should stay with same [preferred] Host
+	,	N desc					-- # pages from this host waiting
+	,	isnull(A.ANO, 0)		-- # agents also working on this Host
+	,	isnull(M, 0) desc		-- # pages dependent on this page
+	,	HostId					-- favour older Host
+	,	W.PageId				-- favour older request
 
  -- 4.	record the batch returning to calling agent to process
-MERGE INTO  dbo.Downloading as TGT
+MERGE INTO	dbo.Downloading as TGT
 USING
 (	SELECT	PageId, @Spid as Spid, @clock as Clock
 	from	@results
 )							as	SRC		ON	SRC.PageId = TGT.PageId
 when matched then
 	UPDATE set
-		LastCall = @clock
+		LastCall = Clock
 	,	Spid	= SRC.Spid
 when NOT matched then
 	INSERT (PageId, Spid, FirstCall, LastCall)
-	values (SRC.PageId, SRC.Spid, Clock, Clock)
+		values (SRC.PageId, SRC.Spid, Clock, Clock)
 ;
 
 -- 5.	determine majority subdomain and establish as agent's PrefHostId
@@ -146,7 +155,7 @@ SET @PrefHostId = isnull
 (	(	select top 1 HostId
 		from	@results
 		group by HostId
-		order by count(*) desc
+		order by count(*) desc, HostId
 	)
 	, 0											-- ensure don't carry forward from any previous batch
 )
@@ -160,7 +169,7 @@ where	Spid	= @SPID
 -- SELECT * from @results			-- DISABLE for PROD
 
 -- 8.	return exact entity rows to client app
-SELECT	PageId, HostId, [Url], DraftFilespec, Filespec, NeedDownload
+SELECT	PageId, [Url], DraftFilespec, Filespec, NeedDownload, NeedLocalise
 from	@results
 
 END

@@ -1,40 +1,39 @@
-namespace Infrastructure.Models
+namespace Data7
 {
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using System.Data.Entity.Spatial;
 
-    public class WebPage : IEquatable<WebPage>
+    public partial class WebPage
     {
-        public WebPage() { }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public WebPage(string url, string draftFilespec = null, string filespec = null)
-        {
-            Url = url;                                  // caller must present as absolute, e.g. by convert(base,relative)
-            DraftFilespec = draftFilespec;
-            Filespec = filespec;
-        }
-
         [Key]
         public int PageId { get; set; }
 
-        public int? HostId { get; set; }
+        //public int? HostId { get; set; }
 
         [Required]
         [StringLength(450)]
         public string Url { get; set; }
 
-        [StringLength(511)]
+        [StringLength(260)]
         public string DraftFilespec { get; set; }
 
-        [StringLength(511)]
+        [StringLength(260)]
         public string Filespec { get; set; }
 
-        /// <summary>
-        /// null means WebPages_trIU will determine extn then update from Host.IsXXX setting default
-        /// </summary>
         public bool? NeedDownload { get; set; }
+
+        public bool NeedLocalise { get; set; }
+
+        //[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        //[StringLength(99)]
+        //public string DraftExtn { get; set; }
+
+        //[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        //[StringLength(99)]
+        //public string FinalExtn { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<WebPage> ConsumeFrom { get; set; } = new HashSet<WebPage>();

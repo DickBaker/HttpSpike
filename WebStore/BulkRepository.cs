@@ -50,6 +50,7 @@ namespace WebStore
             Idle = 0,
             GetContentTypeToExtns,
             GetWebPagesToDownload,
+            GetWebPagesToLocalise,
             SaveChangesAsync
         }
 
@@ -261,13 +262,17 @@ namespace WebStore
 #if WIP
             LastEfCmd = EfWipEnum.GetContentTypeToExtns;
 #endif
-            EfWip.WaitBombIf();                               // wait for <nothing> to finish
+            EfWip.WaitBombIf();                                 // wait for <nothing> to finish
             Task<List<ContentTypeToExtn>> rslt;
             EfWip = rslt = EfDomain.ContentTypeToExtns
-                    .AsNoTracking()                             // read-only here
-                    .Where(row => !string.IsNullOrEmpty(row.Template) && !string.IsNullOrEmpty(row.Extn))   // WHERE ((LEN([Extent1].[Template])) <> 0) AND ((LEN([Extent1].[Extn])) <> 0)
+                    //.AsNoTracking()                             // read-only here
+                    //.Where(row => !string.IsNullOrEmpty(row.Template) && !string.IsNullOrEmpty(row.Extn))   // WHERE ((LEN([Extent1].[Template])) <> 0) AND ((LEN([Extent1].[Extn])) <> 0)
                     .OrderBy(row => row.Template)
                     .ToListAsync();
+
+            EfWip.WaitBombIf();                                 // wait for <***> to finish
+            var xxx = EfDomain.ContentTypeToExtns.ToList();
+
             return rslt;
         }
 
@@ -288,10 +293,26 @@ namespace WebStore
             LastEfCmd = EfWipEnum.GetWebPagesToDownload;
 #endif
             var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
-            { Value = maxrows };                                //  "The SqlParameter is already contained by another SqlParameterCollection" error
+            { Value = maxrows };                                    //  "The SqlParameter is already contained by another SqlParameterCollection" error
             Task<List<WebPage>> rslt;
             EfWip = rslt = EfDomain.WebPages
                 .SqlQuery("exec p_ToDownload @Take=@TakeN", anoprm)
+                .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
+            return rslt;
+        }
+
+        public Task<List<WebPage>> GetWebPagesToLocaliseAsync(int maxrows = 15)
+        {
+            EfWip.WaitBombIf();                                 // wait for GetContentTypeToExtnsAsync / SaveChangesAsync to finish
+
+#if WIP
+            LastEfCmd = EfWipEnum.GetWebPagesToLocalise;
+#endif
+            var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
+            { Value = maxrows };                                    //  "The SqlParameter is already contained by another SqlParameterCollection" error
+            Task<List<WebPage>> rslt;
+            EfWip = rslt = EfDomain.WebPages
+                .SqlQuery("exec dbo.p_ToLocalise @Take=@TakeN", anoprm)
                 .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
             return rslt;
         }
@@ -371,6 +392,12 @@ namespace WebStore
 
             // drop out here so task wrapper completes, thus allows caller to populate next buffer in the ring (whilst SqlServer runs dbo.p_ActionWebPage sproc)
             return AdoWip;
+        }
+
+        public int SaveChanges()
+        {
+            EfWip.WaitBombIf();                                 // wait for any previous SQL traffic to finish
+            return EfDomain.SaveChanges();
         }
     }
 }

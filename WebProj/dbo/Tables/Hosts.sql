@@ -8,9 +8,14 @@
     [IsJson]   BIT            CONSTRAINT [DF_Host_IsJson] DEFAULT ((1)) NOT NULL,
     [IsXml]    BIT            CONSTRAINT [DF_Host_IsXml] DEFAULT ((1)) NOT NULL,
     [IsOther]  BIT            CONSTRAINT [DF_Host_IsOther] DEFAULT ((1)) NOT NULL,
+    [IsImage]  BIT            CONSTRAINT [DF_Hosts_IsDownload] DEFAULT ((1)) NOT NULL,
     CONSTRAINT [PK_Hosts] PRIMARY KEY NONCLUSTERED ([HostId] ASC),
     CONSTRAINT [FK_Hosts_ParentHost] FOREIGN KEY ([ParentId]) REFERENCES [dbo].[Hosts] ([HostId])
 );
+
+
+
+
 
 
 GO
@@ -55,7 +60,7 @@ BEGIN
 	order by HostName
 	-- for update of ParentId (done in loop and not "where current of")
 	open domcur
-	declare @HostId int, @ParentId int, @ParentId2 int, @delim1 int, @HostName nvarchar(255), @ParentName  nvarchar(255)
+	declare @HostId int, @ParentId int, @ParentId2 int, @delim1 int, @HostName nvarchar(255), @ParentName nvarchar(255)
 	fetch next from domcur into @HostId, @ParentId, @HostName
 	while @@FETCH_STATUS=0
 	  begin
@@ -82,7 +87,7 @@ BEGIN
 					,	IsOther
 					)
 					SELECT	@ParentName								-- e.g. sub1.dom.tld
-						,	IsHtml									--but clone other settings  
+						,	IsHtml									--  but clone other settings
 						,	IsCss
 						,	IsJs
 						,	[IsJson]
@@ -111,3 +116,8 @@ BEGIN
 	deallocate domcur
 
 END
+
+GO
+DISABLE TRIGGER [dbo].[Hosts_trIU]
+    ON [dbo].[Hosts];
+

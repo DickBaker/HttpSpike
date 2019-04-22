@@ -7,7 +7,7 @@ namespace Infrastructure.Models
     public static class MimeCollection
     {
         // TODO: or use SortedList<TKey,TValue>() ??
-        //public static Dictionary<string, string> MimeToExtn { get; } = new Dictionary<string, string>();
+        //public static IDictionary<string, string> MimeToExtn { get; } = new Dictionary<string, string>();
         // MimeToExtn has 637 entries, whereas distinct Extns number only 78 so more efficient search
         // cf. SortedList or Hash or HashSet
 
@@ -46,7 +46,7 @@ namespace Infrastructure.Models
             Debug.Assert(MimeDict.Except(MimeSorted).ToList().Count == 0, "different ValidExtns !!");     // uses IEqualityComparer<ContentTypeToExtn>
             ValidExtns = new HashSet<string>(MimeDict.Values.Distinct().Select(ctte => ctte.Extn));
             var ValidExtns2 = new HashSet<string>(MimeSorted.Values.Distinct().Select(ctte => ctte.Extn));
-            Debug.Assert(ValidExtns.Except(ValidExtns2).ToList().Count == 0, "different ValidExtns !!");
+            Debug.Assert(ValidExtns.SetEquals(ValidExtns2), "different ValidExtns !!");
             ValidExtns.Add("asp");              // these commonplace extns found in real-world but not listed in ContentTypeToExtns
             ValidExtns.Add("aspx");
             ValidExtns.Add("htm");

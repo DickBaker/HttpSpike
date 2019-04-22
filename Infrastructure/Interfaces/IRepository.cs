@@ -16,12 +16,15 @@ namespace Infrastructure.Interfaces
         //WebPage GetWebPageByUrl(string url);
         //WebPage PutWebPage(WebPage webpage);
 
+        Task AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict);
+
         Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync();
 
         Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15);
 
-        Task AddLinksAsync(WebPage webpage, IDictionary<string, string> linksDict);
+        Task<List<WebPage>> GetWebPagesToLocaliseAsync(int maxrows = 15);
 
         Task<int> SaveChangesAsync();
+        int SaveChanges();
     }
 }

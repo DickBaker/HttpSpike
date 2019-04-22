@@ -1,35 +1,39 @@
-namespace Data3
+namespace Data7
 {
-    using Infrastructure.Models;
+    using System;
     using System.Data.Entity;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using System.Linq;
 
-    public class WebModel : DbContext
+    public partial class Model1 : DbContext
     {
-        public WebModel()
+        public Model1()
             : base("name=DefaultConnection")
         {
         }
 
         public virtual DbSet<ContentTypeToExtn> ContentTypeToExtns { get; set; }
-        //public virtual DbSet<Host> Hosts { get; set; }
         public virtual DbSet<WebPage> WebPages { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<WebModel>());      // default
-
             modelBuilder.Entity<ContentTypeToExtn>()
                 .Property(e => e.Template)
-                .IsUnicode(unicode: false);
+                .IsUnicode(false);
 
             modelBuilder.Entity<ContentTypeToExtn>()
                 .Property(e => e.Extn)
-                .IsUnicode(unicode: false);
+                .IsUnicode(false);
 
             modelBuilder.Entity<WebPage>()
                 .HasMany(e => e.ConsumeFrom)
                 .WithMany(e => e.SupplyTo)
                 .Map(m => m.ToTable("Depends").MapLeftKey("ChildId").MapRightKey("ParentId"));
+
+            //modelBuilder.Entity<WebPage>()
+            //     .HasMany(e => e.ConsumeFrom)
+            //     .WithMany(e => e.SupplyTo)
+            //     .Map(m => m.ToTable("Depends").MapLeftKey("ChildId").MapRightKey("ParentId"));
         }
     }
 }

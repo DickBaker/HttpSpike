@@ -2,10 +2,14 @@
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using HapLib;
+using Infrastructure;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
+using Polly;
 using Webstore;
 using WebStore;
 
@@ -13,20 +17,37 @@ namespace KissFW
 {
     static class Program
     {
-        const string OTHFOLDER = "assets";
+        const string OTHFOLDER = "assets", LOCALFOLDER = "locals";
+        enum Recovery
+        {
+            idle,
+            gensaved,
+            backupsaved,
+            completed
+        }
+
         static IHttpParser HParser;
+        static string htmldir, localdir;
 
         static async Task Main(string[] _)
         {
+
+            string fs1 = @"C:\Ligonier\webcache\state - theology - does - sin - deserve - damnation.html",
+                fs2 = @"C:\Ligonier\webcache\assets\bible - plan.pdf";
+            var rel = Utils.GetRelativePath(fs1, fs2);
+            Console.WriteLine(rel);
+
             var dbctx = new WebModel();
             //IRepository repo = new Repository(dbctx);
             IRepository repo = new BulkRepository(dbctx);
+
             MimeCollection.Load(await repo.GetContentTypeToExtnsAsync());
 
             HParser = new HapParser();
             //var ct = new CancellationToken();
-            var htmldir = ConfigurationManager.AppSettings["htmldir"] ?? @"C:\Ligonier\webcache";
+            htmldir = ConfigurationManager.AppSettings["htmldir"] ?? @"C:\Ligonier\webcache";
             var otherdir = ConfigurationManager.AppSettings["otherdir"] ?? (htmldir + Path.DirectorySeparatorChar + OTHFOLDER);
+            localdir = ConfigurationManager.AppSettings["otherdir"] ?? (htmldir + Path.DirectorySeparatorChar + LOCALFOLDER);
             if (!int.TryParse(ConfigurationManager.AppSettings["batchsize"], out var batchSize))
             {
                 batchSize = 15;
@@ -39,10 +60,114 @@ namespace KissFW
             {
                 Directory.CreateDirectory(otherdir);
             }
+            if (!Directory.Exists(localdir))
+            {
+                Directory.CreateDirectory(localdir);
+            }
 
-            var download = new Downloader(HParser, repo, htmldir, otherdir);
+            IAsyncPolicy<HttpResponseMessage> HttpRetryPolicy =                                // TODO: probably should configure based on App.config
+                Policy.HandleResult<HttpResponseMessage>(rsp => !rsp.IsSuccessStatusCode)
+                    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));  // i.e. 1, 2, 4 seconds
 
-            var batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as IList<WebPage>)
+#pragma warning disable GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
+            //TODO: plug-in Polly as MessageProcessingHandler / whatever !
+            var Client = new HttpClient(
+                new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate })
+            { Timeout = new TimeSpan(0, 0, 20) };
+#pragma warning restore GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
+
+            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir);
+
+            await DownloadAndParse(repo, batchSize, download);
+            Console.WriteLine("*** FINISHED ***");
+
+            var localise = new Localiser(repo, HParser, htmldir, localdir);
+            var success = await HtmlLocalise(repo, batchSize, localise);
+
+#if DEBUG
+            foreach (var extn in MimeCollection.MissingExtns.OrderBy(e => e))
+            {
+                Console.WriteLine($"missing extn\t{extn}");
+            }
+#endif
+
+            Console.ReadLine();
+        }
+
+        /// <summary>
+        ///     localise specified x.html file
+        /// </summary>
+        /// <param name="repo">
+        ///     IRepository to perform database work
+        /// </param>
+        /// <param name="batchSize">
+        ///     number of files in request from db
+        /// </param>
+        /// <param name="localise">
+        ///     object that actually performs the localise (find+alter each link)
+        /// </param>
+        /// <returns>
+        ///     Task although activity is heavily CPU-bound and HAP methods all sync, there is some database I/O conducted async
+        /// </returns>
+        static async Task<bool> HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
+        {
+            string genfile, backupFile;
+            Recovery state;
+            bool success = true;
+            var batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
+            while (batch.Count > 0)
+            {
+                foreach (var webpage in batch)                                  // iterate through [re-]obtained List
+                {
+                    state = Recovery.idle;
+                    var htmlFile = webpage.Filespec;
+                    backupFile = localdir + Path.DirectorySeparatorChar + Path.GetFileName(htmlFile);
+
+                    Console.WriteLine($"<<<{webpage.Url}\t~~>\t{htmlFile }>>>");
+                    try
+                    {
+                        await localise.Translate(webpage);                      // complete current page before starting the next
+
+                        /*
+                        1.  save revised file to generated.xyz
+                        2.  move original A.html to backup\A.html
+                        3.  rename generated.xyz from A.html
+                        */
+                        genfile = htmldir + Path.DirectorySeparatorChar + Path.GetRandomFileName();
+                        HParser.SaveFile(genfile);
+                        state = Recovery.gensaved;
+                        File.Move(htmlFile, backupFile);
+                        state = Recovery.backupsaved;
+                        File.Move(genfile, htmlFile);
+                        state = Recovery.completed;
+                        webpage.NeedLocalise = false;                           // clear NeedLocalise bit on success
+                    }
+                    catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
+                    {
+                        Console.WriteLine($"HtmlLocalise{state} EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
+                        switch (state)
+                        {
+                            case Recovery.backupsaved:                          // failed during rename genfile -> htmlFile
+                                File.Move(backupFile, htmlFile);                // restore the backup to main folder (but if fails have to manually fixup later)
+                                break;
+                            case Recovery.idle:
+                            case Recovery.gensaved:                             // move htmlFile -> backup failed (presumably still in as-was folder) so NO-OP
+                            case Recovery.completed:
+                            default:
+                                success = false;
+                                break;
+                        }
+                    }
+                }
+                var finalcnt = repo.SaveChanges();                              // flush to update any pending "webpage.NeedLocalise = false" rows
+                batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get next batch
+            }
+            return success;
+        }
+
+        private static async Task DownloadAndParse(IRepository repo, int batchSize, Downloader download)
+        {
+            var batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as List<WebPage>)
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                 // iterate through [re-]obtained List
@@ -55,18 +180,12 @@ namespace KissFW
                     catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
                         Console.WriteLine($"Main EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
-                        webpage.NeedDownload = false;                           // prevent any [infinite] retry loop
+                        webpage.NeedDownload = false;                           // prevent any [infinite] retry loop; although Downloading table should delay
                     }
                 }
                 var finalcnt = await repo.SaveChangesAsync();                   // flush to update any pending "webpage.NeedDownload = false" rows (else p_ToDownload will repeat)
                 batch = await repo.GetWebPagesToDownloadAsync(batchSize);       // get next batch
             }
-            Console.WriteLine("*** FINISHED ***");
-            foreach (var extn in MimeCollection.MissingExtns.OrderBy(e => e))
-            {
-                Console.WriteLine($"missing extn\t{extn}");
-            }
-            Console.ReadLine();
         }
     }
 }

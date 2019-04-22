@@ -5,6 +5,7 @@ namespace Webstore
 
     public class WebModel : DbContext
     {
+        //public WebModel() { }           // to satisfy PM else get "The target context 'Webstore.WebModel' is not constructible. Add a default constructor or provide an implementation of IDbContextFactory."
         public WebModel(string config = "name=DefaultConnection") : base(config)
         { }
 

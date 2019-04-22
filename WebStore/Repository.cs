@@ -151,12 +151,12 @@ namespace WebStore
         }
         */
 
-        public Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15)
+        public Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 20)
         {
             var wantedIds = EfDomain.WebPages
                     .SqlQuery("exec p_ToDownload @Take=@TakeN", new SqlParameter("@TakeN", SqlDbType.Int) { Value = maxrows })   // DbSqlQuery<WebPage>
                     .Select(wp => wp.PageId)
-                    .ToList();          // solidify as List<int> (i.e. no deferred execution)
+                    .ToList();                                  // solidify as List<int> (i.e. no deferred execution)
             var wanteds2 = EfDomain.WebPages
                             .Include("ConsumeFrom")             // acquire all pages that this page is [already] known to reference
                             .Where(wp => wantedIds.Contains(wp.PageId))
@@ -164,6 +164,8 @@ namespace WebStore
                             .ToListAsync();
             return wanteds2;
         }
+
+        public Task<List<WebPage>> GetWebPagesToLocaliseAsync(int maxrows = 15) => throw new NotImplementedException();
 
         /*
         WebPage PutWebPage(WebPage webpage)
@@ -204,5 +206,8 @@ namespace WebStore
         */
 
         public Task<int> SaveChangesAsync() => EfDomain.SaveChangesAsync();
+
+
+        public int SaveChanges() => EfDomain.SaveChanges();
     }
 }

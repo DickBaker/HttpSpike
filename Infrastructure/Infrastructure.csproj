@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.NetCore.Analyzers.2.9.2\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.2\build\Microsoft.NetCore.Analyzers.props')" />
+  <Import Project="..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\build\Microsoft.CodeQuality.Analyzers.props')" />
+  <Import Project="..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\build\Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\build\Microsoft.CodeAnalysis.Analyzers.props')" />
   <Import Project="..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\build\Microsoft.NetCore.Analyzers.props" Condition="Exists('..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\build\Microsoft.NetCore.Analyzers.props')" />
   <Import Project="..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\build\Microsoft.CodeQuality.Analyzers.props" Condition="Exists('..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\build\Microsoft.CodeQuality.Analyzers.props')" />
   <Import Project="..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\build\Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\build\Microsoft.CodeAnalysis.Analyzers.props')" />
@@ -65,13 +68,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\analyzers\dotnet\cs\Humanizer.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.NetCore.Analyzers.2.9.2\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -81,5 +84,8 @@
     <Error Condition="!Exists('..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\build\Microsoft.CodeAnalysis.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\temp\BulkIns\packages\Microsoft.CodeAnalysis.Analyzers.2.9.1\build\Microsoft.CodeAnalysis.Analyzers.props'))" />
     <Error Condition="!Exists('..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\temp\BulkIns\packages\Microsoft.CodeQuality.Analyzers.2.9.1\build\Microsoft.CodeQuality.Analyzers.props'))" />
     <Error Condition="!Exists('..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\temp\BulkIns\packages\Microsoft.NetCore.Analyzers.2.9.1\build\Microsoft.NetCore.Analyzers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\build\Microsoft.CodeAnalysis.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.Analyzers.2.9.2\build\Microsoft.CodeAnalysis.Analyzers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.2\build\Microsoft.CodeQuality.Analyzers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.2\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.2\build\Microsoft.NetCore.Analyzers.props'))" />
   </Target>
 </Project>

@@ -7,13 +7,13 @@ namespace WebStore.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.2.0-61023")]
-    public sealed partial class Initial314nohosts : IMigrationMetadata
+    public sealed partial class NeedLocalise : IMigrationMetadata
     {
-        readonly ResourceManager Resources = new ResourceManager(typeof(Initial314nohosts));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(NeedLocalise));
         
         string IMigrationMetadata.Id
         {
-            get { return "201903141933243_Initial314nohosts"; }
+            get { return "201904180905286_NeedLocalise"; }
         }
         
         string IMigrationMetadata.Source

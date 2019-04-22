@@ -52,12 +52,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Migrations\201903141933243_Initial314nohosts.cs" />
-    <Compile Include="Migrations\201903141933243_Initial314nohosts.Designer.cs">
-      <DependentUpon>201903141933243_Initial314nohosts.cs</DependentUpon>
+    <Compile Include="BulkRepository.cs" />
+    <Compile Include="Migrations\201904180905286_NeedLocalise.cs" />
+    <Compile Include="Migrations\201904180905286_NeedLocalise.Designer.cs">
+      <DependentUpon>201904180905286_NeedLocalise.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
-    <Compile Include="BulkRepository.cs" />
     <Compile Include="Repository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebModel.cs" />
@@ -75,8 +75,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201903141933243_Initial314nohosts.resx">
-      <DependentUpon>201903141933243_Initial314nohosts.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201904180905286_NeedLocalise.resx">
+      <DependentUpon>201904180905286_NeedLocalise.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
