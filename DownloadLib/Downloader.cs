@@ -1,23 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Infrastructure;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
 using Polly;
-using Polly.Retry;
+using static Infrastructure.Models.WebPage;
 
-namespace KissFW
+namespace DownloadLib
 {
-    public class Downloader
+    public class Downloader : IDownloader
     {
-        const string EXTN_SEPARATOR = ".";
+        const string EXTN_SEPARATOR = ".", HTML = "html", ERRTAG = "~";
         readonly IHttpParser Httpserver;
         readonly IRepository Dataserver;
         readonly string HtmlPath;               // subfolder to save *.html
@@ -41,7 +41,8 @@ namespace KissFW
             SetDefaultHeaders();
         }
 
-        public string ByteToString(byte[] data)
+        /*
+        string ByteToString(byte[] data)
         {
             var sBuilder = new StringBuilder();             // prepare to collect the bytes and create a string
 
@@ -52,45 +53,62 @@ namespace KissFW
             }
             return sBuilder.ToString();     // Return the hexadecimal string
         }
+        */
 
+        /// <summary>
+        ///     compare contents of filespecA, filespecB and if same delete filespecB
+        /// </summary>
+        /// <param name="filespecA">first filespec</param>
+        /// <param name="filespecB">second filespec</param>
+        /// <returns>true=files identical and filespecB deleted, else false with files as-was</returns>
         bool DeleteLatterIfSame(string filespecA, string filespecB)
         {
+            if (filespecA.Equals(filespecB, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;                            // filespecs are identical, but don't delete IT
+            }
             var hashOld = GetHash(filespecA);
             var hashNew = GetHash(filespecB);
-            var same = true;
             for (var i = 0; i < hashOld.Length; i++)
             {
                 if (hashOld[i] != hashNew[i])
                 {
-                    same = false;
-                    break;
+                    return false;                       // contents differ, files as-was
                 }
             }
-            if (same)
+            try
             {
-                File.Delete(filespecB);         // delete the new copy, but keep the old one (retain creation datetime)
-                return true;
+                File.Delete(filespecB);                 // delete the new copy, but keep the old one (retain creation datetime)
             }
-            return false;
+            catch (Exception excp)
+            {
+                Console.WriteLine($"DeleteLatterIfSame: error deleting {filespecB}\t{excp.Message}");   // warn but continue
+                return false;                           // files' content identical but failed to delete (files as-was)
+            }
+            return true;                                // files' content identical and delete succeeded
         }
 
         public async Task<bool> FetchFileAsync(WebPage webpage)
         {
-            string extn = null, filespec3;
+            string extn = null, filespec3, location, draft = null;
+            var akaUrls = new List<string>();
+
             var url = Utils.TrimOrNull(webpage?.Url) ?? throw new InvalidOperationException("FetchFileAsync(webpage.Url) cannot be null");
+
             using (var req = new HttpRequestMessage(HttpMethod.Get, url))
             using (var rsp = await _httpRetryPolicy.ExecuteAsync(      // TODO: rewrite as fatal timeouts won't be caught here [caller will catch]
                 () => Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead)))
-            {
+            {                                                                       // this block serves as Dispose() context for req and rsp
                 Console.WriteLine($"{rsp.StatusCode} {rsp.ReasonPhrase}");
 
                 if (!rsp.IsSuccessStatusCode)                                       // timeout will be thrown directly to caller [no catch here]
                 {
                     //webpage.NeedDownload = false;                                 // prevent any [infinite] retry loop
-                    webpage.Filespec = $"~{rsp.StatusCode}({rsp.ReasonPhrase})";
+                    webpage.Filespec = $"{ERRTAG}{rsp.StatusCode}({rsp.ReasonPhrase})";
                     //await Dataserver.SaveChangesAsync();                          // do it NOW !
                     //await Task.FromResult(result: false);                         // on error ignore (no exception)
-                    throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
+                    //throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
+                    rsp.EnsureSuccessStatusCode();                                  // raise official exception
                 }
                 TargetFilespecs(webpage, rsp, out extn, out var filespec2, out filespec3);  // determine appropriate file target(s)
 
@@ -101,12 +119,15 @@ namespace KissFW
                 try
                 {
                     using (var strm = await rsp.Content.ReadAsStreamAsync().ConfigureAwait(continueOnCapturedContext: false))
-                    using (var fs = File.Create(filespec3))             // TODO: write non-UTF - 8 file code
                     {
-                        await strm.CopyToAsync(fs).ConfigureAwait(continueOnCapturedContext: false);
-                        fs.Flush();
+                        using (var fs = File.Create(filespec3))             // TODO: write non-UTF - 8 file code
+                        {
+                            await strm.CopyToAsync(fs).ConfigureAwait(continueOnCapturedContext: false);
+                            fs.Flush();
+                        }
                     }
 
+                    // now all disk & network I/O completed [but using (var rsp) still undisposed], see how new downloaded file compares with 
                     if (!filespec2.Equals(filespec3, StringComparison.InvariantCultureIgnoreCase))
                     {
                         // compare before & after files
@@ -116,8 +137,26 @@ namespace KissFW
                         }
                     }
                     webpage.Filespec = filespec3;                                   // persist the ultimate filespec [N.B. may change by Title later]
-                    webpage.NeedDownload = false;                                   // download completed successfully
+                    webpage.Download = DownloadEnum.Downloaded;                     // download completed successfully
                     Console.WriteLine($"{webpage.DraftFilespec}\t{filespec3}");
+
+                    if (rsp.Headers.TryGetValues("Location", out var locs))
+                    {
+                        location = Utils.NoTrailSlash(locs.First());
+                        Console.WriteLine($"found locations {location}");
+                        if (!akaUrls.Contains(location))
+                        {
+                            Console.WriteLine($"found locations {location}");
+                            akaUrls.Add(location);
+                        }
+                    }
+
+                    location = Utils.NoTrailSlash(rsp.RequestMessage.RequestUri.AbsoluteUri);
+                    if (!webpage.Url.Equals(location, StringComparison.InvariantCultureIgnoreCase) && !akaUrls.Contains(location))
+                    {
+                        akaUrls.Add(location);
+                    }
+
                 }
                 catch (Exception excp)
                 {
@@ -128,9 +167,35 @@ namespace KissFW
                     */
                     return false;
                 }
-            }       // termination of using req, rsp for Dispose()
+            }       // termination of using req, rsp so now both had Dispose() invoked
 
-            if (extn == "html")
+            // process any sneaky redirections that happened under the covers
+            draft = Path.GetFileName(filespec3);
+            foreach (var redurl in akaUrls)
+            {
+                var redpage = await Dataserver.GetWebPageByUrlAsync(Utils.NoTrailSlash(redurl));
+                draft = Path.GetFileName(filespec3);
+                if (redpage == null)
+                {
+                    redpage = Dataserver.AddWebPage(new WebPage(redurl, draft, filespec3, DownloadEnum.Downloaded, LocaliseEnum.Ignore));
+                }
+                else
+                {
+                    if (redpage.DraftFilespec != draft || redpage.Filespec != filespec3 || redpage.Download != DownloadEnum.Downloaded)
+                    {
+                        redpage.DraftFilespec = redpage.DraftFilespec ?? draft;
+                        redpage.Filespec = filespec3;
+                        redpage.Download = DownloadEnum.Downloaded;
+                    }
+                }
+                if (!webpage.ConsumeFrom.Contains(redpage))
+                {
+                    webpage.ConsumeFrom.Add(redpage);
+                    //var nrows = await Dataserver.SaveChangesAsync();
+                }                    //return Task.FromResult<bool>(false);
+            }
+
+            if (extn == HTML)
             {
                 await ExtractLinks(webpage, filespec3, url);
             }
@@ -155,7 +220,28 @@ namespace KissFW
             return true;
         }
 
-        private void TargetFilespecs(WebPage webpage, HttpResponseMessage rsp, out string extn, out string filespec2, out string filespec3)
+        /// <summary>
+        ///     given HttpResponseMessage, invent two candidate target filespecs
+        /// </summary>
+        /// <param name="webpage">
+        ///     current webpage being downloaded
+        /// </param>
+        /// <param name="rsp">
+        ///     HttpResponseMessage
+        /// </param>
+        /// <param name="extn">
+        ///     extension without the dot (e.g. "html")
+        /// </param>
+        /// <param name="filespec2">
+        ///     filespec supposed from basic data before the HttpRequest
+        /// </param>
+        /// <param name="filespec3">
+        ///     filespec based on the HttpResponse content (or generated if borderline case)
+        /// </param>
+        /// <remarks>
+        ///     because this is executed DURING HttpResponse processing, it must be quick (no long debugging!) to avoid timeout
+        /// </remarks>
+        void TargetFilespecs(WebPage webpage, HttpResponseMessage rsp, out string extn, out string filespec2, out string filespec3)
         {
             var filenameOnly = Utils.TrimOrNull(Path.GetFileNameWithoutExtension(webpage.DraftFilespec));
             var mtyp = rsp.Content.Headers.ContentType.MediaType;           // "application/json", "application/manifest+json"
@@ -196,50 +282,46 @@ namespace KissFW
                 */
                 throw new ApplicationException($"unknown extn for Url={webpage.Url}");
             }
-            if (filenameOnly == null)
-            {
-                filenameOnly = RandomFilenameOnly();                        // NB this produces a file5678.ext4 format but real extn added 3 lines below
-            }
-            var folder = (extn == "html") ? HtmlPath : OtherPath;           // device & folder path
-            var filespec1 = filenameOnly + EXTN_SEPARATOR + extn;           // filename & extension (ignore any extn in DraftFilespec)
-            filespec2 = filespec3 = (!string.IsNullOrWhiteSpace(webpage.Filespec))
-                ? webpage.Filespec                                          // if this is a reload, assign the original to filespec2 (will compare later)
+            var filespec1 = (filenameOnly ?? Utils.RandomFilenameOnly())         // NB this produces a file5678 format
+                + EXTN_SEPARATOR + extn;                                            // filename & extension (ignore any extn in DraftFilespec)
+            var folder = (extn == HTML) ? HtmlPath : OtherPath;                     // device & folder path
+            filespec2 = Utils.TrimOrNull(webpage.Filespec);                         // if this is a reload, assign the original to filespec2 (will compare later)
+            filespec2 = filespec3 = (filespec2 != null && !filespec2.StartsWith(ERRTAG))   // skip any previous error message
+                ? filespec2
                 : Path.Combine(folder, filespec1);
             if (File.Exists(filespec2) || filespec2.Length > WebPage.FILESIZE)
             {
-                webpage.DraftFilespec = filespec1;                          // keep our 2nd choice of fn.extn [simple debug aid]
-                var filext = RandomFilenameOnly() + EXTN_SEPARATOR + extn;  // use alternate file target [N.B. no 100% guarantee that file doesn't exist]
-                filespec3 = Path.Combine(folder, filext);
-                Debug.Assert(filespec3.Length <= WebPage.FILESIZE, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
-                if (File.Exists(filespec3))                                 // no 100% guarantee that file5678.html file doesn't exist
+                webpage.DraftFilespec = filespec1;                                  // keep our 2nd choice of fn.extn [simple debug aid]
+                do                                                                  // use alternate file target
                 {
-                    File.Delete(filespec3);
-                }
+                    filespec3 = Path.Combine(folder, Utils.RandomFilenameOnly() + EXTN_SEPARATOR + extn);   // no 100% guarantee that file5678.extn file doesn't exist
+                    Debug.Assert(filespec3.Length <= WebPage.FILESIZE, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
+                } while (File.Exists(filespec3));                                   //hopefully rare and finite case !
             }
         }
 
-        private async Task ExtractLinks(WebPage webpage, string filespec3, string url)
+        async Task ExtractLinks(WebPage webpage, string filespec3, string url)
         {
             Httpserver.LoadFromFile(url, filespec3);
             //await Httpserver.LoadFromWebAsync("http://stackoverflow.com/questions/2226554/c-class-for-decoding-quoted-printable-encoding", CancellationToken.None);
-            if (!string.IsNullOrWhiteSpace(Httpserver.Title))
+            string filespec4 = Utils.TrimOrNull(Httpserver.Title);
+            if (filespec4 != null)
             {
-                var filespec4 = Path.Combine(HtmlPath, Utils.MakeValid(Httpserver.Title.Trim() + ".html"));     // intrinsic spec by page content
+                filespec4 = Path.Combine(HtmlPath, Utils.MakeValid(filespec4 + ".html"));     // intrinsic spec by page content
                 if (filespec3 != filespec4)
                 {
                     try
                     {
                         if (File.Exists(filespec4))
                         {
-                            if (!DeleteLatterIfSame(filespec4, filespec3))
+                            if (DeleteLatterIfSame(filespec4, filespec3))
                             {
-                                Console.WriteLine($"leaving new {filespec3} as different to existing {filespec4}");
+                                Console.WriteLine($"after DELETE: moved for {webpage.Url}\n  deleted\t{filespec3}\n  reused\t{filespec4}");
+                                webpage.Filespec = filespec4;                               // update row to use previous file
                             }
                             else
                             {
-                                File.Move(filespec3, filespec4);
-                                Console.WriteLine($"after DELETE: moved {filespec3} => {filespec4}");
-                                webpage.Filespec = filespec4;                               // update to intrinsic filespec
+                                Console.WriteLine($"leaving new {filespec3} as different to existing {filespec4}");
                             }
                         }
                         else
@@ -250,6 +332,7 @@ namespace KissFW
                             if (swapYN)
                             {
                                 File.Move(filespec3, filespec4);
+                                webpage.Filespec = filespec4;
                                 Console.WriteLine($"moved {filespec3} => {filespec4}");
                             }
                             else
@@ -265,14 +348,10 @@ namespace KissFW
                 }
             }
             var links = Httpserver.GetLinks();                  // get all links (<a href> etc) and de-duplicate
-            await Dataserver.AddLinksAsync(webpage, links);      // add to local repository
+            await Dataserver.AddLinksAsync(webpage, links);     // add to local repository
         }
 
-        private static string RandomFilenameOnly() =>
-            Path.GetFileNameWithoutExtension(                                   // this produces a file5678 format
-                Path.GetRandomFileName());                                      //  from original file5678.ext4 format
-
-        public byte[] GetHash(string filespec2)
+        byte[] GetHash(string filespec2)
         {
             byte[] mash;
             // compute MD5 for each of the pre-existing & new files and see if they match

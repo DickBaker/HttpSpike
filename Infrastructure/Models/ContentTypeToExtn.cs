@@ -1,10 +1,10 @@
 namespace Infrastructure.Models
 {
-    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class ContentTypeToExtn // : IEquatable<ContentTypeToExtn>
     {
+        public const int EXTNSIZE = 10;
         public ContentTypeToExtn() { }
 
         public ContentTypeToExtn(string template, string extn, bool isText = false)
@@ -19,7 +19,7 @@ namespace Infrastructure.Models
         public string Template { get; set; }
 
         [Required]
-        [StringLength(10)]
+        [StringLength(EXTNSIZE)]
         public string Extn { get; set; }
 
         public bool IsText { get; set; }

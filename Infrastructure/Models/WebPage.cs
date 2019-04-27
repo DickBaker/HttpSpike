@@ -9,18 +9,34 @@ namespace Infrastructure.Models
 
     public class WebPage : IEquatable<WebPage>      // , IComparable<WebPage>
     {
-        public const int URLSIZE = 900 / 2,   // UTF-8 unicode=2bytes/char * 450 = 900 [max index size for CI_WebPages]
-            FILESIZE = 260;                 // cf. MAX_PATH=260 for most NTFS volumes (W10 optionally more)
+        public enum DownloadEnum : byte
+        {
+            Ignore,
+            ToDownload,
+            ReDownload,
+            Downloaded
+        }
+
+        public enum LocaliseEnum : byte
+        {
+            Ignore,
+            ToLocalise,
+            Localised
+        }
+        public const int URLSIZE = 900 / 2,                         // UTF-8 unicode=2bytes/char * 450 = 900 [max index size for CI_WebPages]
+            FILESIZE = 260,                                         // cf. MAX_PATH=260 for most NTFS volumes (W10 optionally more)
+            DRAFTSIZE = FILESIZE / 2 - ContentTypeToExtn.EXTNSIZE;  // allow space for device:folders
 
         public WebPage() { }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public WebPage(string url, string draftFilespec = null, string filespec = null, bool? needDownload = null)
+        public WebPage(string url, string draftFilespec = null, string filespec = null, DownloadEnum download = DownloadEnum.Ignore, LocaliseEnum localise = LocaliseEnum.Ignore)
         {
             Url = url;                                  // caller must present as absolute, e.g. by convert(base,relative)
             DraftFilespec = draftFilespec;
             Filespec = filespec;
-            NeedDownload = needDownload;
+            Download = download;
+            Localise = localise;
         }
 
         [Key]
@@ -84,12 +100,25 @@ namespace Infrastructure.Models
         /// <summary>
         ///     null means WebPages_trIU will determine extn then update from Host.IsXXX setting default
         /// </summary>
-        public bool? NeedDownload { get; set; }
+        /// <value>
+        ///     see DownloadEnum
+        /// </value>
+        /// <remarks>
+        ///     no default value in SQL metadata, and NULLable
+        ///     on INSERT/UPDATE when NULL, WebPages_trIU trigger will set a NN value (e.g. DownloadEnum.Ignor) based on lookup to Hosts table
+        /// </remarks>
+        public DownloadEnum? Download { get; set; }
 
         /// <summary>
         ///     true means downloaded file should be localised [when most/all independent pages also downloaded]
         /// </summary>
-        public bool NeedLocalise { get; set; }
+        /// <value>
+        ///     see LocaliseEnum
+        /// </value>
+        /// <remarks>
+        ///     NOT NULL and the default value [DF_WebPages_Localise] in SQL metadata is 0
+        /// </remarks>
+        public LocaliseEnum Localise { get; set; } = LocaliseEnum.Ignore;
 
         //public virtual Host Host { get; set; }            // not implemented here (i.e. server-side only usage)
 
@@ -124,9 +153,10 @@ namespace Infrastructure.Models
 #pragma warning disable CA1307 // Specify StringComparison
             var qpstart = url.IndexOf(QUEST);                       // first "?" indicates start of queryparams (any subsequent is simple ASCII)
 #pragma warning restore CA1307 // Specify StringComparison
-            if (qpstart < 0)
+            if (qpstart < 0 || qpstart> WebPage.URLSIZE)            // either empty querystring or path itself already too long ?
             {
-                return url.Substring(0, WebPage.URLSIZE);           // crude truncate at max width (may not be at word-break)
+                //return url.Substring(0, WebPage.URLSIZE);           // yes. crude truncate at max width (may not be at word-break)
+                throw new InvalidOperationException("Url too long (even after removing any queryparams)");  // abandon this particular link
             }
             var sb = new StringBuilder(url.Substring(0, qpstart));
             var qryprns = url.Substring(qpstart + 1).Split(DELIM, StringSplitOptions.RemoveEmptyEntries);

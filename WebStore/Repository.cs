@@ -16,7 +16,9 @@ namespace WebStore
 
         public Repository(Webstore.WebModel dbctx)
         {
+#pragma warning disable IDE0021 // Use expression body for constructors
             EfDomain = dbctx;
+#pragma warning restore IDE0021 // Use expression body for constructors
             //  var ObjCtx = (EfDomain as IObjectContextAdapter).ObjectContext;
             //  ObjCtx.SavingChanges += OnSavingChanges;
         }
@@ -72,6 +74,8 @@ namespace WebStore
                 }
             }
         }
+
+        public WebPage AddWebPage(WebPage newpage) => throw new NotImplementedException();
 
         /*
         void OnSavingChanges(object sender, EventArgs e)
@@ -150,6 +154,8 @@ namespace WebStore
             }
         }
         */
+
+        public Task<WebPage> GetWebPageByUrlAsync(string url) => throw new NotImplementedException();
 
         public Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 20)
         {

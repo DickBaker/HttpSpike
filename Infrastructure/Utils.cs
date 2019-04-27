@@ -16,27 +16,20 @@ namespace Infrastructure
 
         public static (string filename, string extn) FileExtSplit(string instr)
         {
-            string fname = null, extn = null;
-            var proto = MakeValid(instr);       // will remove any trailing "/". finally does .Trim() but not TrimOrNull()
+            var proto = MakeValid(instr);                       // will remove any trailing "/". finally does .Trim() but not TrimOrNull()
             if (!string.IsNullOrWhiteSpace(proto))
             {
-                //#pragma warning disable CA1307 // Specify StringComparison
-                //                if (proto[proto.Length - 1] == '/')             // proto.EndsWith("/")
-                //#pragma warning restore CA1307 // Specify StringComparison
-                //                {
-                //                    proto = proto.Substring(0, proto.Length - 1).TrimEnd();
-                //                }
-                fname = Path.GetFileNameWithoutExtension(proto);
+                var fname = Path.GetFileNameWithoutExtension(proto);
                 if (!string.IsNullOrWhiteSpace(fname))          // MUST be a filename
                 {
-                    extn = Path.GetExtension(proto);
+                    var extn = Path.GetExtension(proto);
                     if (extn.Length > 0 && extn[0] == '.')
                     {
                         extn = extn.Substring(1);
                     }
                     return (MimeCollection.IsValidExtn(extn))   // ANY match ?
-                    ? (fname, extn)                             // yes. pass extn as-is
-                    : (fname, null);                            // no. makes no guesses (content/type will prevail later)
+                        ? (fname, extn)                         // yes. pass extn as-is
+                        : (fname, null);                        // no. makes no guesses (content/type will prevail later)
                 }
             }
             return (null, null);
@@ -53,7 +46,7 @@ namespace Infrastructure
 
         public static string GetRelativePath(string fromPath, string toPath)
         {
-            //return path;                // TODO: [write later] if CORE use Path.GetRelativePath, else cf https://stackoverflow.com/questions/275689/how-to-get-relative-path-from-absolute-path/1599260#1599260
+            //return topath;                // TODO: [write later] if CORE use Path.GetRelativePath, else cf https://stackoverflow.com/questions/275689/how-to-get-relative-path-from-absolute-path/1599260#1599260
 
             #region StackOverflow solution
 
@@ -225,11 +218,15 @@ namespace Infrastructure
             }
         }
 
+        public static string RandomFilenameOnly() =>
+            Path.GetFileNameWithoutExtension(                   // this produces a file5678 format
+                Path.GetRandomFileName());                      //  from original file5678.ext4 format
+
         // extension method to simplify common requirement
         public static string TrimOrNull(string raw) =>
             raw == null || string.IsNullOrWhiteSpace(raw)
                 ? null
-                : raw.Trim();                   // removes leading/trailing whitespace (incl CR/LF)
+                : raw.Trim();                                   // removes leading/trailing whitespace (incl CR/LF)
 
         public static void BombIf(this Task t)
         {

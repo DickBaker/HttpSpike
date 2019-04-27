@@ -53,9 +53,9 @@
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="BulkRepository.cs" />
-    <Compile Include="Migrations\201904180905286_NeedLocalise.cs" />
-    <Compile Include="Migrations\201904180905286_NeedLocalise.Designer.cs">
-      <DependentUpon>201904180905286_NeedLocalise.cs</DependentUpon>
+    <Compile Include="Migrations\201904232011537_InitialDDL.cs" />
+    <Compile Include="Migrations\201904232011537_InitialDDL.Designer.cs">
+      <DependentUpon>201904232011537_InitialDDL.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Repository.cs" />
@@ -63,9 +63,6 @@
     <Compile Include="WebModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -75,8 +72,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201904180905286_NeedLocalise.resx">
-      <DependentUpon>201904180905286_NeedLocalise.cs</DependentUpon>
+    <None Include="PMcommands.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201904232011537_InitialDDL.resx">
+      <DependentUpon>201904232011537_InitialDDL.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

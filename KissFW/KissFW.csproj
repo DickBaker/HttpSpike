@@ -56,7 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Downloader.cs" />
     <Compile Include="Localiser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,6 +67,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DownloadLib\DownloadLib.csproj">
+      <Project>{44126907-2ad5-488a-babf-4751c2fdb3b8}</Project>
+      <Name>DownloadLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HapParser\HapLib.csproj">
       <Project>{9FA61B49-AF69-4714-B6ED-BA075ACC523C}</Project>
       <Name>HapLib</Name>

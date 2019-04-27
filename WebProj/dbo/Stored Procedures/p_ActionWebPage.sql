@@ -1,4 +1,5 @@
 ﻿
+
 CREATE PROCEDURE [dbo].[p_ActionWebPage] 
 /*
 PURPOSE
@@ -20,7 +21,7 @@ NOTES
 
 EXAMPLE
 	select * from dbo.WebPages where [Url]='http://ligonier.org'
-	exec dbo.p_ActionWebPage 23078, 'http://ligonier.org', NULL, 'C:\temp\webcache\gj3vdojg.bxl.html', 1
+	exec dbo.p_ActionWebPage 23078, 'http://ligonier.org', 'draft1.html', 'C:\temp\webcache\gj3vdojg.bxl.html', 1
 */
 (	@PageId			int					-- not IDENTITY(1,1) and not PK as independent rows value will be 0
 ,	@Url			nvarchar(450)

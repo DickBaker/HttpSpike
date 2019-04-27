@@ -1,12 +1,16 @@
 namespace Webstore
 {
-    using Infrastructure.Models;
     using System.Data.Entity;
+    using Infrastructure.Models;
 
     public class WebModel : DbContext
     {
-        //public WebModel() { }           // to satisfy PM else get "The target context 'Webstore.WebModel' is not constructible. Add a default constructor or provide an implementation of IDbContextFactory."
-        public WebModel(string config = "name=DefaultConnection") : base(config)
+        /*
+        The target context 'Webstore.WebModel' is not constructible. Add a default constructor or provide an implementation of IDbContextFactory.
+        */
+        public WebModel() : this("name=DefaultConnection")         // would generate Webstore.WebModel db unless given overload
+        { }
+        public WebModel(string config) : base(config)
         { }
 
         public virtual DbSet<ContentTypeToExtn> ContentTypeToExtns { get; set; }

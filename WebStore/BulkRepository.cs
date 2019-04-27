@@ -48,7 +48,9 @@ namespace WebStore
         enum EfWipEnum                  // states for async ADO activity
         {
             Idle = 0,
+            AddWebPage,
             GetContentTypeToExtns,
+            GetWebPageByUrl,
             GetWebPagesToDownload,
             GetWebPagesToLocalise,
             SaveChangesAsync
@@ -130,7 +132,7 @@ namespace WebStore
                 MultipleActiveResultSets = false,
                 Pooling = false
             };
-            _conn = new SqlConnection(csb.ConnectionString);       // independent so EF & ADO can free-run
+            _conn = new SqlConnection(csb.ConnectionString);       // independent SPID so EF & ADO can free-run
 
             truncateCmd = new SqlCommand("truncate table " + TGTTABLE, _conn);
             addLinksCmd = new SqlCommand("exec dbo.p_ActionWebPage @PageId,@Url", _conn);
@@ -242,7 +244,17 @@ namespace WebStore
             }
         }
 
-        Task CreateStagingAsync()                         // EF will OPEN() then initiate [but DON'T WAIT for] CREATE
+        public WebPage AddWebPage(WebPage newpage)
+        {
+            EfWip.WaitBombIf();                         // wait for <*> to finish
+#if WIP
+            LastEfCmd = EfWipEnum.AddWebPage;
+#endif
+            var wp = EfDomain.WebPages.Add(newpage);    // Local only (no db net work)
+            //EfWip = EfDomain.SaveChangesAsync();      // shouldn't need to do this perf killer!
+            return wp;
+        }
+        Task CreateStagingAsync()                       // EF will OPEN() then initiate [but DON'T WAIT for] CREATE
         {
 #if WIP
             LastAdoCmd = AdoWipEnum.CreateStaging;
@@ -259,10 +271,10 @@ namespace WebStore
 
         public Task<List<ContentTypeToExtn>> GetContentTypeToExtnsAsync()
         {
+            EfWip.WaitBombIf();                                 // wait for <nothing> to finish
 #if WIP
             LastEfCmd = EfWipEnum.GetContentTypeToExtns;
 #endif
-            EfWip.WaitBombIf();                                 // wait for <nothing> to finish
             Task<List<ContentTypeToExtn>> rslt;
             EfWip = rslt = EfDomain.ContentTypeToExtns
                     //.AsNoTracking()                             // read-only here
@@ -270,20 +282,36 @@ namespace WebStore
                     .OrderBy(row => row.Template)
                     .ToListAsync();
 
-            EfWip.WaitBombIf();                                 // wait for <***> to finish
-            var xxx = EfDomain.ContentTypeToExtns.ToList();
+            //EfWip.WaitBombIf();                                 // wait for <***> to finish
+            //var xxx = EfDomain.ContentTypeToExtns.ToList();
 
             return rslt;
         }
 
         //public WebPage GetWebPageById(int id) => EfDomain.WebPages.FirstOrDefault(row => row.PageId == id);
-        //public WebPage GetWebPageByUrl(string url) => EfDomain.WebPages.FirstOrDefault(row => row.Url == url);
+
+        public Task<WebPage> GetWebPageByUrlAsync(string url)
+        {
+            EfWip.WaitBombIf();                                 // wait for <***> to finish
+#if WIP
+            LastEfCmd = EfWipEnum.GetWebPageByUrl;
+#endif
+            var wplocal = EfDomain.WebPages.Local.FirstOrDefault(row => row.Url == url);
+            if (wplocal != null)
+            {
+                return Task.FromResult<WebPage>(wplocal);       // found locally (sync)
+            }
+            Task<WebPage> rslt;
+            EfWip = rslt = EfDomain.WebPages.FirstOrDefaultAsync(row => row.Url == url);    // async roundtrip to db
+            return rslt;
+        }
+
         //public IEnumerable<WebPage> GetWebPages() => EfDomain.WebPages;
 
         public Task<List<WebPage>> GetWebPagesToDownloadAsync(int maxrows = 15)
         {
             EfWip.WaitBombIf();                                 // wait for GetContentTypeToExtnsAsync / SaveChangesAsync to finish
-            AdoWip.WaitBombIf();                                // *** TEMP ***
+            //AdoWip.WaitBombIf();                                // *** TEMP ***
 
             // sadly this results in setting change-tracking for all rows to EnumEntityState.Deleted so don't enable !
             // imho best to live with the gradual growth of this collection - else incur high cost to cycle in a new DbContext as replacement
@@ -294,6 +322,7 @@ namespace WebStore
 #endif
             var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
             { Value = maxrows };                                    //  "The SqlParameter is already contained by another SqlParameterCollection" error
+            var N = EfDomain.WebPages.Local.Count;
             Task<List<WebPage>> rslt;
             EfWip = rslt = EfDomain.WebPages
                 .SqlQuery("exec p_ToDownload @Take=@TakeN", anoprm)
@@ -314,6 +343,7 @@ namespace WebStore
             EfWip = rslt = EfDomain.WebPages
                 .SqlQuery("exec dbo.p_ToLocalise @Take=@TakeN", anoprm)
                 .ToListAsync();                                 // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
+
             return rslt;
         }
 
@@ -338,10 +368,10 @@ namespace WebStore
 
         public Task<int> SaveChangesAsync()
         {
+            EfWip.WaitBombIf();                                 // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
 #if WIP
             LastEfCmd = EfWipEnum.SaveChangesAsync;
 #endif
-            EfWip.WaitBombIf();                                 // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
             Task<int> rslt;
             EfWip = rslt = EfDomain.SaveChangesAsync();
             return rslt;
@@ -382,10 +412,10 @@ namespace WebStore
             dataCaches[ActiveData].Clear();                         // hose all local data from any previous operation
                                                                     // the caller is now free to re-use this zeroed dataCache (i.e. invoke AddDataRow)
 
+            AdoWip.WaitBombIf();                                    // .Wait for previous BULK INSERT operation to complete
 #if WIP
             LastAdoCmd = AdoWipEnum.Action;
 #endif
-            AdoWip.WaitBombIf();                                    // .Wait for previous BULK INSERT operation to complete
             Task<int> sq;
             AdoWip = sq = addLinksCmd.ExecuteNonQueryAsync();       // import #WebStaging data into WebPages and Depends tables
             //var qty = sq.Result;                                    // async until completed ***** TEMPORARY *****
@@ -397,6 +427,9 @@ namespace WebStore
         public int SaveChanges()
         {
             EfWip.WaitBombIf();                                 // wait for any previous SQL traffic to finish
+#if WIP
+            LastEfCmd = EfWipEnum.SaveChangesAsync;             // although method not Async, it refreshes latest activity
+#endif
             return EfDomain.SaveChanges();
         }
     }
