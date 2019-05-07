@@ -16,4 +16,5 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "<Pending>", Scope = "member", Target = "~M:Infrastructure.Utils.NoFragment(System.String)~System.Uri")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "<Pending>", Scope = "member", Target = "~M:Infrastructure.Models.WebPage.SlimQP(System.String)~System.String")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "<Pending>", Scope = "member", Target = "~M:Infrastructure.Interfaces.IRepository.GetWebPageByUrlAsync(System.String)~System.Threading.Tasks.Task{Infrastructure.Models.WebPage}")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>", Scope = "member", Target = "~M:Infrastructure.Utils.RetireFile(System.String,System.String,System.String)~System.Boolean")]
 

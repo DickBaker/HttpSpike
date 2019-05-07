@@ -11,15 +11,16 @@ namespace Infrastructure.Models
     {
         public enum DownloadEnum : byte
         {
-            Ignore,
+            Ignore = 0,
             ToDownload,
             ReDownload,
+            Redirected,             // ConsumeFrom should have ONE entry, Filespec should be NULL
             Downloaded
         }
 
         public enum LocaliseEnum : byte
         {
-            Ignore,
+            Ignore = 0,
             ToLocalise,
             Localised
         }

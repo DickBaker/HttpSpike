@@ -22,6 +22,7 @@ namespace DownloadLib
         readonly IRepository Dataserver;
         readonly string HtmlPath;               // subfolder to save *.html
         readonly string OtherPath;              //  ditto for other extension types
+        readonly string BackupPath;             //  ditto as backup
 
         //TODO: plug-in Polly as MessageProcessingHandler / whatever !
         readonly HttpClient Client;
@@ -30,7 +31,7 @@ namespace DownloadLib
 
         readonly IAsyncPolicy<HttpResponseMessage> _httpRetryPolicy;
 
-        public Downloader(IRepository dataserver, HttpClient httpclient, IAsyncPolicy<HttpResponseMessage> policy, IHttpParser httpserver, string htmlPath, string otherPath = null)
+        public Downloader(IRepository dataserver, HttpClient httpclient, IAsyncPolicy<HttpResponseMessage> policy, IHttpParser httpserver, string htmlPath, string otherPath = null, string backupPath = null)
         {
             Client = httpclient;
             _httpRetryPolicy = policy;
@@ -38,6 +39,7 @@ namespace DownloadLib
             Dataserver = dataserver;
             HtmlPath = Utils.TrimOrNull(htmlPath) ?? throw new InvalidOperationException($"DownloadPage(htmlPath) cannot be null");
             OtherPath = Utils.TrimOrNull(otherPath) ?? HtmlPath;
+            BackupPath = backupPath;
             SetDefaultHeaders();
         }
 
@@ -63,9 +65,28 @@ namespace DownloadLib
         /// <returns>true=files identical and filespecB deleted, else false with files as-was</returns>
         bool DeleteLatterIfSame(string filespecA, string filespecB)
         {
+            if (CompareFiles(filespecA, filespecB))
+            {
+                try
+                {
+                    File.Delete(filespecB);                 // delete the new copy, but keep the old one (retain creation datetime)
+                    return true;                            // files' content identical and delete succeeded
+                }
+                catch (Exception excp)
+                {
+                    Console.WriteLine($"DeleteLatterIfSame: error deleting {filespecB}\t{excp.Message}");   // warn but continue
+                }
+            }
+            return false;                           // either same ONE file (filespecA=filespecB)
+                                                    //  or the TWO files' content differ
+                                                    //   both files as-was but caller should use filespecA
+        }
+
+        bool CompareFiles(string filespecA, string filespecB)
+        {
             if (filespecA.Equals(filespecB, StringComparison.InvariantCultureIgnoreCase))
             {
-                return true;                            // filespecs are identical, but don't delete IT
+                return false;                           // filespecs are identical, so caller must take NO ACTION on IT
             }
             var hashOld = GetHash(filespecA);
             var hashNew = GetHash(filespecB);
@@ -75,15 +96,6 @@ namespace DownloadLib
                 {
                     return false;                       // contents differ, files as-was
                 }
-            }
-            try
-            {
-                File.Delete(filespecB);                 // delete the new copy, but keep the old one (retain creation datetime)
-            }
-            catch (Exception excp)
-            {
-                Console.WriteLine($"DeleteLatterIfSame: error deleting {filespecB}\t{excp.Message}");   // warn but continue
-                return false;                           // files' content identical but failed to delete (files as-was)
             }
             return true;                                // files' content identical and delete succeeded
         }
@@ -140,19 +152,20 @@ namespace DownloadLib
                     webpage.Download = DownloadEnum.Downloaded;                     // download completed successfully
                     Console.WriteLine($"{webpage.DraftFilespec}\t{filespec3}");
 
-                    if (rsp.Headers.TryGetValues("Location", out var locs))
+                    location = rsp.Headers?.Location?.AbsoluteUri;
+                    if (!string.IsNullOrWhiteSpace(location) && !webpage.Url.Equals(location, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        location = Utils.NoTrailSlash(locs.First());
-                        Console.WriteLine($"found locations {location}");
-                        if (!akaUrls.Contains(location))
+                        akaUrls.Add(location);
+                    }
+                    else
+                    {
+                        if (rsp.Headers.TryGetValues("location", out var locs))
                         {
-                            Console.WriteLine($"found locations {location}");
-                            akaUrls.Add(location);
+                            Console.WriteLine("DEBUG: check Location header conflict");
                         }
                     }
-
-                    location = Utils.NoTrailSlash(rsp.RequestMessage.RequestUri.AbsoluteUri);
-                    if (!webpage.Url.Equals(location, StringComparison.InvariantCultureIgnoreCase) && !akaUrls.Contains(location))
+                    location = rsp.RequestMessage.RequestUri.AbsoluteUri;      // Utils.NoTrailSlash(
+                    if (!akaUrls.Contains(location) && !webpage.Url.Equals(location, StringComparison.InvariantCultureIgnoreCase))
                     {
                         akaUrls.Add(location);
                     }
@@ -170,34 +183,64 @@ namespace DownloadLib
             }       // termination of using req, rsp so now both had Dispose() invoked
 
             // process any sneaky redirections that happened under the covers
+            if (akaUrls.Count > 1)
+            {
+                Console.WriteLine("investigate multiple aliasses");
+            }
             draft = Path.GetFileName(filespec3);
             foreach (var redurl in akaUrls)
             {
-                var redpage = await Dataserver.GetWebPageByUrlAsync(Utils.NoTrailSlash(redurl));
-                draft = Path.GetFileName(filespec3);
+                if (url == redurl)
+                {
+                    continue;               // if same then no redirect occured
+                }
+                foreach (var dad in webpage.ConsumeFrom.ToArray())
+                {
+                    if (dad.Url != redurl)
+                    {
+                        webpage.ConsumeFrom.Remove(dad);                        // remove any historic links to other pages
+                    }
+                }
+                var redpage = await Dataserver.GetWebPageByUrlAsync(redurl);    // Utils.NoTrailSlash()
                 if (redpage == null)
                 {
                     redpage = Dataserver.AddWebPage(new WebPage(redurl, draft, filespec3, DownloadEnum.Downloaded, LocaliseEnum.Ignore));
+                    await Dataserver.SaveChangesAsync();                        // this MUST have been persisted before p_ActionWebPage
                 }
                 else
                 {
-                    if (redpage.DraftFilespec != draft || redpage.Filespec != filespec3 || redpage.Download != DownloadEnum.Downloaded)
+                    if (redpage.DraftFilespec != draft || redpage.Filespec != filespec3)
                     {
                         redpage.DraftFilespec = redpage.DraftFilespec ?? draft;
-                        redpage.Filespec = filespec3;
-                        redpage.Download = DownloadEnum.Downloaded;
+                        if (string.IsNullOrWhiteSpace(redpage.Filespec))
+                        {
+                            redpage.Filespec = filespec3;
+                        }
+                        else
+                        {
+                            if (!redpage.Filespec.Equals(filespec3, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                var backupfs = BackupPath == null ? null : Path.Combine(BackupPath, Path.GetFileName(redpage.Filespec));
+                                Utils.RetireFile(redpage.Filespec, backupfs, filespec3);
+                            }
+                        }
                     }
+                    redpage.Download = DownloadEnum.Downloaded;
                 }
                 if (!webpage.ConsumeFrom.Contains(redpage))
                 {
                     webpage.ConsumeFrom.Add(redpage);
-                    //var nrows = await Dataserver.SaveChangesAsync();
-                }                    //return Task.FromResult<bool>(false);
+                }
+                webpage.Filespec = null;                        // file just downloaded now belongs to redirected page
+                webpage.Download = DownloadEnum.Redirected;
+                webpage = redpage;                              // ditto parsed links belong to the redirected page                
+                Httpserver.BaseAddress = new Uri(redurl);       // re-base for relative links
+                break;                                          // ignore any subsequent redirection candidates
             }
 
             if (extn == HTML)
             {
-                await ExtractLinks(webpage, filespec3, url);
+                await ExtractLinks(webpage);
             }
 
             // flush changes to db (e.g. Filespec, and lotsa links if HTML)
@@ -300,15 +343,17 @@ namespace DownloadLib
             }
         }
 
-        async Task ExtractLinks(WebPage webpage, string filespec3, string url)
+        async Task ExtractLinks(WebPage webpage)
         {
-            Httpserver.LoadFromFile(url, filespec3);
+            var filespec3 = webpage.Filespec;
+            var prevParents = webpage.ConsumeFrom.Select(w => w.Url);
+            Httpserver.LoadFromFile(webpage.Url, filespec3);
             //await Httpserver.LoadFromWebAsync("http://stackoverflow.com/questions/2226554/c-class-for-decoding-quoted-printable-encoding", CancellationToken.None);
             string filespec4 = Utils.TrimOrNull(Httpserver.Title);
             if (filespec4 != null)
             {
                 filespec4 = Path.Combine(HtmlPath, Utils.MakeValid(filespec4 + ".html"));     // intrinsic spec by page content
-                if (filespec3 != filespec4)
+                if (filespec3 != filespec4 && filespec4.Length <= WebPage.FILESIZE)
                 {
                     try
                     {
@@ -328,7 +373,7 @@ namespace DownloadLib
                         {
                             var len3 = filespec3.Length - HtmlPath.Length;
                             var len4 = filespec4.Length - HtmlPath.Length;
-                            var swapYN = (len3 < 15 || len3 > 50) && (len4 > 12 && len4 < 50);
+                            var swapYN = (len3 < 15 || len3 > 60) || (len4 > 12 && len4 < 120);
                             if (swapYN)
                             {
                                 File.Move(filespec3, filespec4);
@@ -348,6 +393,17 @@ namespace DownloadLib
                 }
             }
             var links = Httpserver.GetLinks();                  // get all links (<a href> etc) and de-duplicate
+            var oldies = links.Select(kvp => kvp.Key).Except(prevParents, StringComparer.InvariantCultureIgnoreCase);
+            foreach (var oldie in webpage.ConsumeFrom.Where(w => oldies.Contains(w.Url)))
+            {
+                var killed = webpage.ConsumeFrom.Remove(oldie);
+                if (killed)
+                {
+                    Console.WriteLine($"\tremoved {oldie.Url}");
+                }
+                else { Console.WriteLine($"\tremoval failed {oldie.Url}"); }
+            }
+
             await Dataserver.AddLinksAsync(webpage, links);     // add to local repository
         }
 

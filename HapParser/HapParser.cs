@@ -28,10 +28,16 @@ namespace HapLib
         public Uri ReqUri
         {
             get => reqUri;
-            set => reqUri = BaseAddress = string.IsNullOrEmpty(value.Fragment)
-                    ? value
-                    : Utils.NoFragment(value.AbsoluteUri);
+            set
+            {
+                reqUri = BaseAddress = string.IsNullOrEmpty(value.Fragment)
+                   ? value
+                   : Utils.NoFragment(value.AbsoluteUri);
+                ReqUriMatch = GetUrlStandard(ReqUri);           // standardise on Url content for self-comparison
+            }
         }
+
+        string ReqUriMatch;
 
         string _title;
 
@@ -56,13 +62,13 @@ namespace HapLib
             }
         }
 
-        bool AlterLinks(string dirname, string[] subdirs, string att, IDictionary<string, string> oldNewLinks)
+        bool AlterLinks(string dirname, string att, IDictionary<string, string> oldNewLinks)
         {
             var rslt = false;
             foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
                 var url = hnode.Attributes[att].Value;
-#if DEBUG
+#if DEBUG && BORING
                 if (url.StartsWith("//"))
                 {
                     Console.WriteLine("observe relative scheme!");
@@ -73,18 +79,22 @@ namespace HapLib
                 {
                     var uri = new Uri(BaseAddress, url);                    // this handles relative scheme e.g.
                                                                             //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
+                    url = GetUrlStandard(uri);                              // standardise on Url content for self-comparison
+                    var schemeUrl = uri.Scheme + Uri.SchemeDelimiter + url;
                     if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)         // ignore "mailto" "javascript" etc
-                        || hnode.Attributes["rel"]?.Value == "nofollow")
-                    {
-                        continue;
-                    }
-                    url = uri.AbsoluteUri.ToLower();                        // convert back to basic string
-                    if (url.Length > WebPage.URLSIZE                        // oversize URL ?
-                        || !oldNewLinks.TryGetValue(url, out var fsabs))    // ContainsKey does not have ignoreCase but Repository.PutWebPage does
+                        || hnode.Attributes["rel"]?.Value == "nofollow"
+                        || url.Length > WebPage.URLSIZE                        // oversize URL ?
+                        || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase) // skip any self-refs (e.g. with fragment) or as rel=canonical
+                        || !oldNewLinks.TryGetValue(schemeUrl, out var fsabs))    // ContainsKey does not have ignoreCase but Repository.PutWebPage does
                     {
                         continue;                                           // don't change any uninteresting link (not even make relative)
                     }
                     var fsrel = Utils.GetRelativePath(dirname, fsabs);
+                    if (uri.Fragment.CompareTo("#") > 0)                    // ignore null, space, "#" but catch "#frag"
+                    {
+                        Console.WriteLine("postfix fragment");
+                        fsrel += uri.Fragment;              // TODO: does this need "#" ??
+                    }
                     hnode.Attributes[att].Value = fsrel;
                     rslt = true;
                 }
@@ -98,33 +108,38 @@ namespace HapLib
 
         void FindLinks(string att, IDictionary<string, string> Links)
         {
-            var ReqUriMatch = GetUrlStandard(ReqUri);                              // standardise on Url content for self-comparison
+            List<string> selfs = new List<string> { ".", "./" };    // , "/"
             foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
                 var url = hnode.Attributes[att].Value;
-#if DEBUG  && BORING
+#if DEBUG && BORING
                 if (url.StartsWith("//"))
                 {
                     Console.WriteLine("observe relative scheme!");
                 }
 #endif
+
+                //if (selfs.Contains(url))
+                //{
+                //    continue;
+                //}
                 // attempt extracting the [next] url, but ignore any exceptions
                 try
                 {
                     var uri = new Uri(BaseAddress, url);                        // this handles relative scheme e.g.
                                                                                 //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
+                    url = GetUrlStandard(uri);                                  // standardise on Url content for self-comparison
                     if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)   // ignore "mailto" "javascript" etc "mailto:jestedfa%40microsoft.com?Subject=MailKit Documentation"
-                        || hnode.Attributes["rel"]?.Value == "nofollow")
-                    {
-                        continue;
-                    }
-
-                    url = GetUrlStandard(uri);                                     // standardise on Url content for self-comparison
-                    if (url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase))
+                        || hnode.Attributes["rel"]?.Value == "nofollow"
+                        || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;                                               // skip any self-refs (e.g. with fragment) or as rel=canonical
                     }
 
+                    if (url == "www.ligonier.org/learn/keyword" || url == "www.ligonier.org/store/keyword")
+                    {
+                        Console.WriteLine("check URL");
+                    }
                     // assign DraftFilespec via choice skip-chain [N.B. Downloader can set Filespec after download
                     //  if rsp.Content.Headers.ContentDisposition.FileName or Title (from //head/title[title]) looks more suitable]
                     var numsegs = uri.Segments.Length;
@@ -216,8 +231,8 @@ namespace HapLib
                             {
                                 Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
                                 filename =      //filename.Substring(0, WebPage.DRAFTSIZE - EXTN_SEPARATOR.Length - extn.Length)
-                                    Utils.RandomFilenameOnly()                      // too long means we prefer short file5678 format
-                                    + EXTN_SEPARATOR + extn;                        //  but keep the supposed extn for now
+                                    Utils.RandomFilenameOnly()                  // too long means we prefer short file5678 format
+                                    + EXTN_SEPARATOR + extn;                    //  but keep the supposed extn for now
                             }
                             else
                             {
@@ -226,7 +241,7 @@ namespace HapLib
                         }
                     }
 
-                    url = Utils.NoTrailSlash(GetUriFull(uri));                      // recover the full Uri for persisting to db
+                    url = GetUriFull(uri);                      // recover the full Uri for persisting to db
                     if (url.Length > WebPage.URLSIZE)
                     {
                         Console.WriteLine($"oversize URL:\tU={url.Length}");
@@ -325,11 +340,11 @@ namespace HapLib
         /// 2.  Scheme is omitted because FindLinks will only accept HTTP/HTTPS schemes
         /// 3.  the Fragment field is always omitted
         /// </remarks>
-        string GetUrlStandard(Uri uri) => Utils.NoTrailSlash(uri.GetComponents(
+        string GetUrlStandard(Uri uri) => uri.GetComponents(    // Utils.NoTrailSlash(
                 (uri.Scheme == Uri.UriSchemeHttp && uri.Port == 80) || (uri.Scheme == Uri.UriSchemeHttps && uri.Port == 443)
-                    ? MATCHBITS                                                 // omit explicit port:# if standard
-                    : MATCHBITS | UriComponents.Port                            // include explicit port:# if non-standard
-                , UriFormat.SafeUnescaped));
+                    ? MATCHBITS                                 // omit explicit port:# if standard
+                    : MATCHBITS | UriComponents.Port            // include explicit port:# if non-standard
+                , UriFormat.SafeUnescaped);
 
         void LoadDoc(string url, string path)
         {
@@ -341,18 +356,18 @@ namespace HapLib
             };                                                  //   no node matched the XPath expression
             HtmlDoc.Load(path);
 
-            var b = HtmlDoc.DocumentNode.SelectSingleNode("//head/base[href]");    // there can only be ONE or none [href]
-            if (b != null)
+            var basenode = HtmlDoc.DocumentNode.SelectSingleNode("//head/base[href]");    // there can only be ONE or none [href]
+            if (basenode != null)
             {
-                var b2 = b.Attributes["href"];
-                var tmpuri = new Uri(b2.Value, UriKind.RelativeOrAbsolute);
-                if (tmpuri.IsAbsoluteUri)
+                var baseatt = basenode.Attributes["href"];
+                var baseuri = new Uri(baseatt.Value, UriKind.RelativeOrAbsolute);
+                if (baseuri.IsAbsoluteUri)
                 {
-                    BaseAddress = tmpuri;
+                    BaseAddress = baseuri;
                 }
                 else
                 {
-                    Console.WriteLine($"base ({b2}) fail");
+                    Console.WriteLine($"base ({baseatt}) fail");
                 }
             }
         }
@@ -369,15 +384,13 @@ namespace HapLib
             ;
         }
 
-        public bool ReworkLinks(string url, string filespec, IDictionary<string, string> oldNewLinks)
+        public bool ReworkLinks(string filespec, IDictionary<string, string> oldNewLinks)
         {
-            LoadDoc(url, filespec);                 // load file into HtmlDoc, and set ReqUri, BaseAddress
-            var dirname = Path.GetDirectoryName(filespec);
-            var subdirs = dirname.Split(DIRSEP, System.StringSplitOptions.RemoveEmptyEntries);
+            var dirname = Path.GetDirectoryName(filespec) + DIRSEP;          // must have trailing slash for recognition as folder
             var changedLinks = false;
             foreach (var att in LinkAttList)
             {
-                changedLinks |= AlterLinks(dirname, subdirs, att, oldNewLinks);
+                changedLinks |= AlterLinks(dirname, att, oldNewLinks);
             }
             return changedLinks;
         }

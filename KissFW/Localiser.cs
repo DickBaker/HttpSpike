@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using Infrastructure;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
 
@@ -13,7 +13,7 @@ namespace KissFW
         readonly IHttpParser Httpserver;
         readonly string HtmlPath;               // subfolder to read *.html
         readonly string BackupPath;             //  ditto to write revised (localised) *.html
-        public Localiser(IRepository dataserver, IHttpParser httpserver, string htmlPath, string backupPath)
+        public Localiser(IRepository dataserver, IHttpParser httpserver, string htmlPath, string backupPath=null)
         {
             Dataserver = dataserver;
             Httpserver = httpserver;
@@ -21,6 +21,7 @@ namespace KissFW
             BackupPath = backupPath;
         }
 
+        /*
         public enum TxformEnum { setBackup, retire, saveNew, recall, fin }
         public struct TranslateState
         {
@@ -40,14 +41,16 @@ namespace KissFW
             }
         }
 
-        internal Task<bool> Translate(WebPage webpage)
+        TranslateState[] stateData = {          // table-driven state machine (code has communal try-catch handling)
+            new TranslateState(TxformEnum.setBackup, "determine free backup", TxformEnum.retire,  TxformEnum.setBackup),
+            new TranslateState(TxformEnum.retire,    "original to backup",    TxformEnum.saveNew, TxformEnum.setBackup, "Translate: failed to rename {0}\tto\t{1}\n\t{2}"),
+            new TranslateState(TxformEnum.saveNew,   "save revised hdoc",     TxformEnum.fin,     TxformEnum.recall,"Translate: failed to save revised {1}"),
+            new TranslateState(TxformEnum.recall,    "restore from backup",   TxformEnum.fin,     TxformEnum.fin, "Translate failed to recover {1}\tto\t{0}\n\t{2}")
+        };
+        */
+
+        internal bool Translate(WebPage webpage)
         {
-            TranslateState[] stateData = {          // table-driven state machine (code has communal try-catch handling)
-                new TranslateState(TxformEnum.setBackup, "determine free backup", TxformEnum.retire,  TxformEnum.setBackup),
-                new TranslateState(TxformEnum.retire,    "original to backup",    TxformEnum.saveNew, TxformEnum.setBackup, "Translate: failed to rename {0}\tto\t{1}\n\t{2}"),
-                new TranslateState(TxformEnum.saveNew,   "save revised hdoc",     TxformEnum.fin,     TxformEnum.recall,"Translate: failed to save revised {1}"),
-                new TranslateState(TxformEnum.recall,    "restore from backup",   TxformEnum.fin,     TxformEnum.fin, "Translate failed to recover {1}\tto\t{0}\n\t{2}")
-            };
 
             var mydict = new Dictionary<string, string>();
             foreach (var dad in webpage.ConsumeFrom)
@@ -58,14 +61,24 @@ namespace KissFW
                     mydict.Add(dad.Url, fs);
                 }
             }
-            Httpserver.LoadFromFile(webpage.Url, webpage.Filespec);
-            var changedLinks = Httpserver.ReworkLinks(webpage.Url, webpage.Filespec, mydict);
+            var origfs = webpage.Filespec;
+            Httpserver.LoadFromFile(webpage.Url, origfs);
+            var changedLinks = Httpserver.ReworkLinks(origfs, mydict);
             if (!changedLinks)
             {
-                return Task.FromResult<bool>(false);        // no link replacement achieved
+                return false;        // no link replacement achieved
             }
-            var origfs = webpage.Filespec;
+
+            var newFilespec =       // htmldir + Path.DirectorySeparatorChar + Path.GetRandomFileName()
+                Path.Combine(HtmlPath, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".html");
+            Httpserver.SaveFile(newFilespec);
+
             var backfs = Path.Combine(BackupPath, Path.GetFileName(origfs));
+            var result = Utils.RetireFile(origfs, backfs, newFilespec);
+
+            return result;
+
+            /*
             var current = TxformEnum.setBackup;
             var retries = 5;
             while (--retries > 0)
@@ -120,6 +133,7 @@ namespace KissFW
                 changedLinks = false;
             }
             return Task.FromResult<bool>(changedLinks);
+            */
         }
     }
 }

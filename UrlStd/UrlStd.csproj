@@ -59,6 +59,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\HapParser\HapLib.csproj">
+      <Project>{9fa61b49-af69-4714-b6ed-ba075acc523c}</Project>
+      <Name>HapLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj">
       <Project>{d39a2223-3081-4aa3-a91b-4faff8dbe6f9}</Project>
       <Name>Infrastructure</Name>

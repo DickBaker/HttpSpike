@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HapLib;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
 using Webstore;
@@ -58,8 +59,21 @@ namespace UrlStd
         var u2 = StdUrl(url);
     }
     */
-
             #endregion
+
+            var u = "http://www.ligonier.org/store/keyword/apologetics";
+            var fs = @"C:\Ligonier\webcache\41m4uuk2.html";
+            var HParser = new HapParser();
+            HParser.LoadFromFile(u, fs);
+            var lnks = HParser.GetLinks();
+
+            var url0 = "http://www.ligonier.org/store/keyword/apologetics";
+            var bld = new UriBuilder(url0);
+            var url1 = bld.Uri.AbsoluteUri;
+            if (url0 != url1)
+            {
+                Console.WriteLine($"{url0}\t->\t{url1}");
+            }
 
             foreach (var webpage in allpages)
             {

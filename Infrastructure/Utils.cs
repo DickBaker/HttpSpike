@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,9 @@ namespace Infrastructure
     {
         static readonly char[] BadChars = Path.GetInvalidFileNameChars();
         const string EXTN_SEPARATOR = ".";
-        static readonly char[] DIRSEP = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        //static readonly char[] DIRSEP = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+
+        public enum TxformEnum { setBackup, retire, saveNew, recall, fin }
 
         public static (string filename, string extn) FileExtSplit(string instr)
         {
@@ -29,7 +30,7 @@ namespace Infrastructure
                     }
                     return (MimeCollection.IsValidExtn(extn))   // ANY match ?
                         ? (fname, extn)                         // yes. pass extn as-is
-                        : (fname, null);                        // no. makes no guesses (content/type will prevail later)
+                        : (proto, null);                        // no. makes no guesses (content/type will prevail later)
                 }
             }
             return (null, null);
@@ -67,13 +68,14 @@ namespace Infrastructure
 
             var relativePath = Uri.UnescapeDataString(fromUri.MakeRelativeUri(toUri).ToString());
 
-            if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
-            {
-                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-            }
+            //if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+            //{
+            //    relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            //}
             #endregion
 
-            #region Dick 
+            #region Dick (commented-out)
+            /*
             Debug.Assert(fromPath == Path.GetFullPath(fromPath), "fromPath not normalised");
             Debug.Assert(toPath == Path.GetFullPath(toPath), "toPath not normalised");
             var subdirs = fromPath.Split(DIRSEP, StringSplitOptions.RemoveEmptyEntries);
@@ -97,9 +99,11 @@ namespace Infrastructure
             }
             sb.Append(subdirs2[subdirs2.Length - 1]);
             var rslt = sb.ToString();
-            #endregion
 
             Debug.Assert(relativePath == rslt, "SO and Dick solution disagree!");
+            */
+            #endregion
+
             return relativePath;
 
         }
@@ -221,6 +225,53 @@ namespace Infrastructure
         public static string RandomFilenameOnly() =>
             Path.GetFileNameWithoutExtension(                   // this produces a file5678 format
                 Path.GetRandomFileName());                      //  from original file5678.ext4 format
+
+        public static bool RetireFile(string filespec, string backupfilespec = null, string replacefilespec = null)
+        {
+            if (string.IsNullOrWhiteSpace(filespec)
+                || (backupfilespec == null && replacefilespec == null)
+                || filespec == backupfilespec
+                || filespec == replacefilespec
+                || backupfilespec == replacefilespec)
+            {
+                throw new InvalidOperationException($"RetireFile: invalid params({filespec}, {backupfilespec}, {replacefilespec})");
+            }
+            try
+            {
+                if (File.Exists(filespec))
+                {
+                    if (backupfilespec == null)
+                    {
+                        File.Delete(filespec);
+                    }
+                    else
+                    {
+                        if (File.Exists(backupfilespec))
+                        {
+                            File.Delete(backupfilespec);
+                        }
+                        File.Move(filespec, backupfilespec);
+                    }
+                }
+            }
+            catch (Exception e1)
+            {
+                throw new InvalidOperationException($"RetireFile: failed to delete/move {filespec}\n\t{e1.Message}");
+            }
+
+            try
+            {
+                if (replacefilespec != null && File.Exists(replacefilespec))
+                {
+                    File.Move(replacefilespec, filespec);
+                }
+                return true;
+            }
+            catch (Exception e2)         // replaceFile still as-was (hopefully!)
+            {
+                throw new InvalidOperationException($"RetireFile: failed to move {replacefilespec}\n\t{e2.Message}");
+            }
+        }
 
         // extension method to simplify common requirement
         public static string TrimOrNull(string raw) =>

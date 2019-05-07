@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using DownloadLib;
 using HapLib;
-using Infrastructure;
 using Infrastructure.Interfaces;
 using Infrastructure.Models;
 using Polly;
@@ -40,8 +39,13 @@ namespace KissFW
             //Console.WriteLine(rel);
 
             dbctx = new WebModel();             // EF context defaults to config: "name=DefaultConnection"
+
+            IAsyncPolicy AdoRetryPolicy =                               // TODO: probably should configure based on App.config
+                Policy.Handle<Exception>(ex => true)                    // retry every exception! TODO: improve
+                .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 4));  // i.e. 0.5, 1, 2, 4, 8 second retries
+
             //IRepository repo = new Repository(dbctx);
-            IRepository repo = new BulkRepository(dbctx);
+            IRepository repo = new BulkRepository(dbctx, AdoRetryPolicy);
 
             MimeCollection.Load(await repo.GetContentTypeToExtnsAsync());
 
@@ -85,12 +89,12 @@ namespace KissFW
             { Timeout = new TimeSpan(0, 0, 20) };
 #pragma warning restore GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
 
-            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir);
+            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir);
             await DownloadAndParse(repo, batchSize, download);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
             var localise = new Localiser(repo, HParser, htmldir, backupdir);
-            var success = await HtmlLocalise(repo, batchSize, localise);
+            await HtmlLocalise(repo, batchSize, localise);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
 #if DEBUG
@@ -109,14 +113,21 @@ namespace KissFW
                 .Include("ConsumeFrom")
                 .Include("SupplyTo")            // not necessary
                 .Where(
-                    w => w.Url.StartsWith("http://tools.ietf.org/html/rfc7230")                 // https://tools.ietf.org/html/rfc7230
-                        || w.Url.StartsWith("http://www.w3.org/Protocols/rfc2616")              // https://www.w3.org/Protocols/rfc2616/rfc2616.html
-                        || w.Url.StartsWith("http://www.w3schools.com/tags/ref_attributes.asp") // https://www.w3schools.com/tags/ref_attributes.asp
+                    w => w.Url.Contains("rfc7230")                 // https://tools.ietf.org/html/rfc7230
+                        || w.Url.Contains("rfc2616")              // https://www.w3.org/Protocols/rfc2616/rfc2616.html
+                        || w.Url.Contains("w3schools.com/tags/ref_attributes.asp") // https://www.w3schools.com/tags/ref_attributes.asp
                     )
                 .OrderBy(w => w.Url)
                 .ToList();
             //var batch = dbctx.WebPages.Include("ConsumeFrom").Where(w => w.Url.StartsWith("http://amzn.to")).ToList();
-            //var batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as List<WebPage>)
+            //var keywords = new int[] { 53954, 54180, 54194, 54196, 54197, 54311, 54312, 54313, 54339, 54747, 55782, 56309, 56549, 57214 };
+            //batch = dbctx.WebPages
+            //    .Include("ConsumeFrom")
+            //    //.Include("SupplyTo")            // not necessary
+            //    .Where(w => keywords.Contains(w.PageId))
+            //    .OrderBy(w => w.Url)
+            //    .ToList();
+            batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as List<WebPage>)
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List
@@ -124,7 +135,6 @@ namespace KissFW
                     Console.WriteLine($"<<<{webpage.Url}>>>");
                     try
                     {
-
                         await download.FetchFileAsync(webpage);                 // complete current page before starting the next
                     }
                     catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
@@ -156,63 +166,33 @@ namespace KissFW
         /// <remarks>
         /// 1.  batchSize is set by caller [from App.config
         /// </remarks>
-        static async Task<bool> HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
+        static async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
         {
-            string genfile, backupFile;
-            Recovery state;
-            var success = true;
             var batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List
                 {
-                    state = Recovery.idle;
                     var htmlFile = webpage.Filespec;
-                    backupFile = backupdir + Path.DirectorySeparatorChar + Path.GetFileName(htmlFile);
+                    var backupFile = backupdir + Path.DirectorySeparatorChar + Path.GetFileName(htmlFile);
 
                     Console.WriteLine($"<<<{webpage.Url}\t~~>\t{htmlFile }>>>");
                     try
                     {
-                        var changedLinks = await localise.Translate(webpage);   // complete current page before starting the next
-                        if (changedLinks)
-                        {
-                            /*
-                            1.  save revised file to generated.xyz
-                            2.  move original A.html to backup\A.html
-                            3.  rename generated.xyz from A.html
-                            */
-                            genfile = htmldir + Path.DirectorySeparatorChar + Path.GetRandomFileName();
-                            HParser.SaveFile(genfile);
-                            state = Recovery.gensaved;
-                            File.Move(htmlFile, backupFile);
-                            state = Recovery.backupsaved;
-                            File.Move(genfile, htmlFile);
-                            state = Recovery.completed;
-
-                        }
-                        webpage.Localise = WebPage.LocaliseEnum.Localised;      // show Localise success
+                        var changedLinks = localise.Translate(webpage);         // [sync] complete current page before starting the next
+                        webpage.Localise = (changedLinks)
+                            ? WebPage.LocaliseEnum.Localised                    // show Localise success
+                            : WebPage.LocaliseEnum.Ignore;                      // pretend it wasn't wanted anyway
                     }
                     catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
-                        Console.WriteLine($"HtmlLocalise{state} EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
-                        switch (state)
-                        {
-                            case Recovery.backupsaved:                          // failed during rename genfile -> htmlFile
-                                File.Move(backupFile, htmlFile);                // restore the backup to main folder (but if fails have to manually fixup later)
-                                break;
-                            case Recovery.idle:
-                            case Recovery.gensaved:                             // move htmlFile -> backup failed (presumably still in as-was folder) so NO-OP
-                            case Recovery.completed:
-                            default:
-                                success = false;
-                                break;
-                        }
+                        Console.WriteLine($"HtmlLocalise EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
+                        webpage.Localise = WebPage.LocaliseEnum.Ignore;                 // pretend it wasn't wanted anyway
                     }
                 }
                 var finalcnt = repo.SaveChanges();                              // flush to update any pending "webpage.Localise = Ignore/Localised" rows
                 batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get next batch
             }
-            return success;
         }
     }
 }
