@@ -17,6 +17,17 @@ namespace Infrastructure.Models
             Redirected,             // ConsumeFrom should have ONE entry, Filespec should be NULL
             Downloaded
         }
+        public enum Download2Enum : byte
+        {
+            Ignore = 0,
+            Redirected,                                                     // ConsumeFrom should have ONE entry, Filespec should be NULL
+            Downloaded,
+            LoPriorityDownload,                                             // 3
+            HiPriorityDownload = 63,                                        // valid range is 3 .. 63 for all WebPage rows
+            ReDownload = (LoPriorityDownload + HiPriorityDownload) / 2,     // 33 midpoint is default on INSERT
+            BoostMax = (ReDownload + ReDownload) / 2                        // 48 so boost is range 34 .. 48 (15 automatic notches)
+                                                                            // so 49-63 only set manually after UI action (15 manual notches)
+        }
 
         public enum LocaliseEnum : byte
         {
@@ -142,9 +153,29 @@ namespace Infrastructure.Models
         //public int CompareTo(WebPage other) => string.Compare(this.Url, other.Url, StringComparison.InvariantCultureIgnoreCase);
         #endregion
 
+        /// <summary>
+        ///     improve debugging UX to show ID and Url keys
+        /// </summary>
+        /// <returns>
+        ///     string that will show up in VS debugger (not used otherwise by app)
+        /// </returns>
+        public override string ToString() => $"[{PageId}]: {Url}";
+
+        /// <summary>
+        ///     reduce QueryString so it fits the Url size max
+        /// </summary>
+        /// <param name="url">
+        ///     oversize string of AbsoluteUri (Scheme, Authority, Path, Query)
+        /// </param>
+        /// <returns>
+        ///     reduced string thats fits within max size
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///     if can't reduce QS, method will throw fatal exception (caller will have to ignore candidate URL)
+        /// </exception>
         public static string SlimQP(string url)
         {
-            const string AMP = "&amp;", QUEST = "?";
+            const string AMP = "&", QUEST = "?";
             string[] DELIM = { AMP };
 
             if (url.Length <= URLSIZE)
@@ -154,7 +185,7 @@ namespace Infrastructure.Models
 #pragma warning disable CA1307 // Specify StringComparison
             var qpstart = url.IndexOf(QUEST);                       // first "?" indicates start of queryparams (any subsequent is simple ASCII)
 #pragma warning restore CA1307 // Specify StringComparison
-            if (qpstart < 0 || qpstart> WebPage.URLSIZE)            // either empty querystring or path itself already too long ?
+            if (qpstart < 0 || qpstart > WebPage.URLSIZE)            // either empty querystring or path itself already too long ?
             {
                 //return url.Substring(0, WebPage.URLSIZE);           // yes. crude truncate at max width (may not be at word-break)
                 throw new InvalidOperationException("Url too long (even after removing any queryparams)");  // abandon this particular link

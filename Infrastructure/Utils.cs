@@ -13,8 +13,6 @@ namespace Infrastructure
         const string EXTN_SEPARATOR = ".";
         //static readonly char[] DIRSEP = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
-        public enum TxformEnum { setBackup, retire, saveNew, recall, fin }
-
         public static (string filename, string extn) FileExtSplit(string instr)
         {
             var proto = MakeValid(instr);                       // will remove any trailing "/". finally does .Trim() but not TrimOrNull()
@@ -165,7 +163,8 @@ namespace Infrastructure
             new Uri(new Uri(url, UriKind.RelativeOrAbsolute)
                 .GetLeftPart(UriPartial.Query), UriKind.RelativeOrAbsolute);
 
-        public static string NoTrailSlash(string value)
+        /*
+        public static string NoTrailSlash(string value)         // *** UNUSED ***
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
@@ -182,7 +181,9 @@ namespace Infrastructure
             }
             return null;
         }
+        */
 
+        /*
         public static (string extn, bool isString) ParseType(string contentType)
         {
             switch (contentType)
@@ -221,6 +222,7 @@ namespace Infrastructure
                     return (".txt", true);
             }
         }
+        */
 
         public static string RandomFilenameOnly() =>
             Path.GetFileNameWithoutExtension(                   // this produces a file5678 format
@@ -277,7 +279,7 @@ namespace Infrastructure
         public static string TrimOrNull(string raw) =>
             raw == null || string.IsNullOrWhiteSpace(raw)
                 ? null
-                : raw.Trim();                                   // removes leading/trailing whitespace (incl CR/LF)
+                : raw.Trim();                   // removes leading/trailing whitespace (incl CR/LF)
 
         public static void BombIf(this Task t)
         {

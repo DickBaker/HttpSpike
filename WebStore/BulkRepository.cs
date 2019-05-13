@@ -109,7 +109,8 @@ namespace WebStore
         const int CACHELEN = 2;                             // size of DataTable array (i.e. double-buffering)
         int ActiveData = 0;                                 // start with zero-th cache table
         readonly DataTable[] dataCaches = new DataTable[CACHELEN];  // array of DataTable instances (used round-robin cycle) convenient for debugging
-        IAsyncPolicy Policy;
+        readonly IAsyncPolicy Policy;
+        WebPage ActionPage = null;
 
         public BulkRepository(Webstore.WebModel dbctx, IAsyncPolicy retryPolicy)
         {
@@ -140,7 +141,7 @@ namespace WebStore
             truncateCmd = new SqlCommand("truncate table " + TGTTABLE, _conn);
             addLinksCmd = new SqlCommand("exec dbo.p_ActionWebPage @PageId,@Url", _conn);
             addLinksCmd.Parameters.AddRange(p_ActionWebPageParams);
-            _bulk = new SqlBulkCopy(_conn) { DestinationTableName = TGTTABLE, BatchSize = 1000, BulkCopyTimeout = 15 };
+            _bulk = new SqlBulkCopy(_conn) { DestinationTableName = TGTTABLE, BatchSize = 500, BulkCopyTimeout = 45 };
 
 #if WIP
             LastAdoCmd = AdoWipEnum.Open;
@@ -236,7 +237,9 @@ namespace WebStore
                     */
                 }
 
-                // 3.   actual upload
+                // 3.   upload now but defer exec sproc to after SaveChanges
+                Debug.Assert(ActionPage == null, "previous deferment not yet actioned");
+                ActionPage = webpage;
                 var junk = Upload(webpage);
             }
             catch (Exception excp)
@@ -369,14 +372,60 @@ namespace WebStore
 
         public Task<int> SaveChangesAsync()
         {
-            EfWip.WaitBombIf();                // wait for previous GetContentTypeToExtnsAsync / SaveChangesAsync to finish
-            AdoWip.WaitBombIf();               // wait for parallel ADO to quiesce (e.g. "exec dbo.p_ActionWebPage")
+            EfWip.WaitBombIf();                         // wait for any previous async SQL traffic by EF to finish
+            AdoWip.WaitBombIf();                        // ditto wait for any previous async p_ActionWebPage sproc operation to complete [avoid internal deadlocks]
 #if WIP
             LastEfCmd = EfWipEnum.SaveChangesAsync;
 #endif
             Task<int> rslt;
             EfWip = rslt = EfDomain.SaveChangesAsync();
-            return rslt;
+
+            // 3.   previous upload, but exec sproc deferred to after SaveChanges, i.e. now
+            if (ActionPage != null)
+            {
+                EfWip.WaitBombIf();                 // wait for repository's SaveChangesAsync to finish (e.g. to persist new redirected WebPage)
+                SaveLinks(ActionPage);              // actually invoke p_ActionWebPage sproc
+                ActionPage = null;
+                AdoWip.WaitBombIf();                // wait for parallel ADO to quiesce (i.e. p_Action sproc)
+            }
+
+            return rslt;                            // caller can await to get integer rowcount
+        }
+
+        /// <summary>
+        ///     execute the p_ActionWebPage sproc to upsert the data in #Staging table
+        /// </summary>
+        ///     Upload method has already uploaded the data into #Staging table, but deferred until after SaveChanges completes
+        ///      to ensure redirect WebPage has been persisted (i.e. nz PageId)
+        /// <remarks>
+        ///     1.  .Wait for previous BULK INSERT operation to complete
+        ///     2.  prepare sproc params (now the PageId value has been assigned by Sql+EF)
+        ///     3.  exec dbo.p_ActionWebPage sproc
+        /// </remarks>
+        void SaveLinks(WebPage webpage)
+        {
+            AdoWip.WaitBombIf();                        // wait for parallel ADO to quiesce (e.g. BULKINSERT)
+            p_ActionWebPageParams[(int)Action_enum.PageId].Value = webpage.PageId;
+            p_ActionWebPageParams[(int)Action_enum.Url].Value = webpage.Url;
+
+#if WIP
+            LastAdoCmd = AdoWipEnum.Action;
+#endif
+            // code is idempotent safe as sproc checks if Depends row pre-exists
+            AdoWip = Policy.ExecuteAsync(() => addLinksCmd.ExecuteNonQueryAsync()); // import #WebStaging data into WebPages and Depends tables
+
+            //AdoWip.WaitBombIf();                      // wait for parallel ADO to quiesce (e.g. p_ActionWebPage sproc) TODO: double-check ?
+            // caller can now populate next buffer in the ring (whilst SqlServer runs sproc)
+        }
+
+        public int SaveChanges()
+        {
+            EfWip.WaitBombIf();                         // wait for any previous async SQL traffic by EF to finish
+            AdoWip.WaitBombIf();                        // ditto wait for any previous async p_ActionWebPage sproc operation to complete [avoid internal deadlocks]
+#if WIP
+            LastEfCmd = EfWipEnum.SaveChangesAsync;     // although method not Async, it refreshes latest activity
+#endif
+            return EfDomain.SaveChanges();              // N.B. EF has its own retry and transaction wrappers
         }
 
         public Task Upload(WebPage webpage)
@@ -388,44 +437,22 @@ namespace WebStore
             LastAdoCmd = AdoWipEnum.Truncate;
             AdoWip = Policy.ExecuteAsync(() => truncateCmd.ExecuteNonQueryAsync()); // TRUNCATE TABLE must complete before we can do BULK INSERT
 
-            // 2.    wait for TRUNCATE, then perform BULK INSERT and advance pointer so caller can continue
+            // 2.    wait for TRUNCATE, then perform BULK INSERT to upload into #Staging
             AdoWip.WaitBombIf();                                            // wait for previous TRUNCATE operation to complete
             LastAdoCmd = AdoWipEnum.Bulk;
-            AdoWip = _bulk.WriteToServerAsync(dataCaches[ActiveData]);      // upload current batch of {called[0]..[n-1] rows}
+            AdoWip = _bulk.WriteToServerAsync(dataCaches[ActiveData]);      // upload current batch [but no Polly retry as not idempotent and atomic]
 #else
-            AdoWip = Policy.ExecuteAsync(() =>
-                truncateCmd.ExecuteNonQueryAsync()                    // TRUNCATE TABLE #WebpagesStaging
+            AdoWip = Policy.ExecuteAsync(() =>                      // idempotent : if BULKINSERT fails then re-reun TRUNCATE
+                truncateCmd.ExecuteNonQueryAsync()                  // TRUNCATE TABLE #WebpagesStaging
                     .ContinueWith(t => _bulk.WriteToServerAsync(dataCaches[ActiveData]), TaskContinuationOptions.OnlyOnRanToCompletion));
 #endif
 
-            // 3.   prepare sproc params, wait for INSERT BULK to complete, then exec dbo.p_ActionWebPage
-            p_ActionWebPageParams[(int)Action_enum.PageId].Value = webpage.PageId;
-            p_ActionWebPageParams[(int)Action_enum.Url].Value = webpage.Url;
-
+            // 3.   advance pointer so caller can continue
             ActiveData = ++ActiveData % CACHELEN;                   // round-robin advance to next DataTable
             dataCaches[ActiveData].Clear();                         // hose all local data from any previous operation
                                                                     // the caller is now free to re-use this zeroed dataCache (i.e. invoke AddDataRow)
 
-            AdoWip.WaitBombIf();                                    // .Wait for previous BULK INSERT operation to complete
-#if WIP
-            LastAdoCmd = AdoWipEnum.Action;
-#endif
-            //Task<int> sq;
-            AdoWip = Policy.ExecuteAsync(() => addLinksCmd.ExecuteNonQueryAsync());      // import #WebStaging data into WebPages and Depends tables
-            //var qty = sq.Result;                                    // async until completed ***** TEMPORARY *****
-
-            // drop out here so task wrapper completes, thus allows caller to populate next buffer in the ring (whilst SqlServer runs dbo.p_ActionWebPage sproc)
             return AdoWip;
-        }
-
-        public int SaveChanges()
-        {
-            EfWip.WaitBombIf();                                 // wait for any previous SQL traffic by EF to finish
-            AdoWip.WaitBombIf();                                // .Wait for previous p_ActionWebPage sproc operation to complete [avoid internal deadlocks]
-#if WIP
-            LastEfCmd = EfWipEnum.SaveChangesAsync;             // although method not Async, it refreshes latest activity
-#endif
-            return EfDomain.SaveChanges();                      // N.B. EF has its own retry and transaction wrappers
         }
     }
 }

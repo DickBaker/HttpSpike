@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace KissFW
         static IHttpParser HParser;
         static string htmldir, backupdir;
         static WebModel dbctx;
+        static int MaxLinks;
 
         static async Task Main(string[] _)
         {
@@ -49,7 +51,6 @@ namespace KissFW
 
             MimeCollection.Load(await repo.GetContentTypeToExtnsAsync());
 
-            HParser = new HapParser();
             //var ct = new CancellationToken();
             htmldir = ConfigurationManager.AppSettings["htmldir"] ?? @"C:\Ligonier\webcache";
             if (!Directory.Exists(htmldir))
@@ -70,6 +71,10 @@ namespace KissFW
             {
                 batchSize = 15;
             }
+            if (!int.TryParse(ConfigurationManager.AppSettings["maxlinks"], out MaxLinks))
+            {
+                MaxLinks = 1500;
+            }
             var ValidRetry = new HttpStatusCode[] {
                 HttpStatusCode.Ambiguous,               // 300
                 HttpStatusCode.Conflict,                // 409
@@ -89,6 +94,7 @@ namespace KissFW
             { Timeout = new TimeSpan(0, 0, 20) };
 #pragma warning restore GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
 
+            HParser = new HapParser(MaxLinks);
             var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir);
             await DownloadAndParse(repo, batchSize, download);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
@@ -109,17 +115,36 @@ namespace KissFW
 
         static async Task DownloadAndParse(IRepository repo, int batchSize, Downloader download)
         {
-            var batch = dbctx.WebPages
-                .Include("ConsumeFrom")
-                .Include("SupplyTo")            // not necessary
-                .Where(
-                    w => w.Url.Contains("rfc7230")                 // https://tools.ietf.org/html/rfc7230
-                        || w.Url.Contains("rfc2616")              // https://www.w3.org/Protocols/rfc2616/rfc2616.html
-                        || w.Url.Contains("w3schools.com/tags/ref_attributes.asp") // https://www.w3schools.com/tags/ref_attributes.asp
-                    )
-                .OrderBy(w => w.Url)
-                .ToList();
-            //var batch = dbctx.WebPages.Include("ConsumeFrom").Where(w => w.Url.StartsWith("http://amzn.to")).ToList();
+            List<WebPage> batch;
+            //batch = dbctx.WebPages
+            //.Include("ConsumeFrom")
+            //.Include("SupplyTo")            // not necessary
+            //.Where(
+            //    w => w.Url.Contains("rfc7230")                 // https://tools.ietf.org/html/rfc7230
+            //        || w.Url.Contains("rfc2616")              // https://www.w3.org/Protocols/rfc2616/rfc2616.html
+            //        || w.Url.Contains("w3schools.com/tags/ref_attributes.asp") // https://www.w3schools.com/tags/ref_attributes.asp
+            //    )
+            //.OrderBy(w => w.Url)
+            //.ToList();
+            /*
+            https://bible.logos.com/jsapi/referencetagging.js
+            http://renewingyourmind.org/
+            http://tabletalkmagazine.com/
+            http://renewingyourmind.org
+            http://tabletalkmagazine.com
+            https://www.ligoniertours.com/tours/2019-american-foundation-study-tour
+            https://www.ligoniertours.com/tours/mediterranean2020
+            http://connect.ligonier.org/school/catalog/course/reformation-profiles/
+            https://connect.ligonier.org/library/calvinism-and-the-christian-life/
+            http://connect.ligonier.org/school/catalog/course/jonathan-edwards/
+            http://connect.ligonier.org/school/catalog/course/doctrine-of-scripture/
+            http://connect.ligonier.org/school/catalog/course/doctrine-of-election/
+            https://connect.ligonier.org/library/holiness-of-god/81365/about/
+            http://connect.ligonier.org/school/catalog/course/intrototheo/
+            https://d3abi6urn4w8xd.cloudfront.net/uploads/attachments/store_product/6375/
+            */
+            var keywords = new int[] { 63022, 69633, 66977, 66163, 68525, 47718, 59701, 47719, 59702, 47855, 65624, 66188, 47963, 48233 };
+            //batch = dbctx.WebPages.Include("ConsumeFrom").Where(w => w.Url.StartsWith("http://amzn.to")).ToList();
             //var keywords = new int[] { 53954, 54180, 54194, 54196, 54197, 54311, 54312, 54313, 54339, 54747, 55782, 56309, 56549, 57214 };
             //batch = dbctx.WebPages
             //    .Include("ConsumeFrom")
@@ -127,7 +152,7 @@ namespace KissFW
             //    .Where(w => keywords.Contains(w.PageId))
             //    .OrderBy(w => w.Url)
             //    .ToList();
-            batch = await repo.GetWebPagesToDownloadAsync(batchSize);      // get first batch (as List<WebPage>)
+            batch = await repo.GetWebPagesToDownloadAsync(batchSize);           // get first batch (as List<WebPage>)
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List
@@ -139,7 +164,7 @@ namespace KissFW
                     }
                     catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
-                        Console.WriteLine($"Main EXCEPTION\t{excp.Message}");   // see Filespec like '~%'
+                        Console.WriteLine($"Main EXCEPTION\tfor {webpage.PageId}\t{webpage.Url}\n{excp.Message}");   // see Filespec like '~%'
                         webpage.Download = WebPage.DownloadEnum.Ignore;         // prevent any [infinite] retry loop; although Downloading table should delay
                     }
                 }
@@ -179,7 +204,7 @@ namespace KissFW
                     Console.WriteLine($"<<<{webpage.Url}\t~~>\t{htmlFile }>>>");
                     try
                     {
-                        var changedLinks = localise.Translate(webpage);         // [sync] complete current page before starting the next
+                        var changedLinks = localise.Translate(webpage, MaxLinks);       // [sync] complete current page before starting the next
                         webpage.Localise = (changedLinks)
                             ? WebPage.LocaliseEnum.Localised                    // show Localise success
                             : WebPage.LocaliseEnum.Ignore;                      // pretend it wasn't wanted anyway

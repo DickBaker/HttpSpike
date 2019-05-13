@@ -11,7 +11,9 @@ namespace Webstore
         public WebModel() : this("name=DefaultConnection")         // would generate Webstore.WebModel db unless given overload
         { }
         public WebModel(string config) : base(config)
-        { }
+        {
+            System.Console.WriteLine(Database.Connection.ConnectionTimeout);
+        }
 
         public virtual DbSet<ContentTypeToExtn> ContentTypeToExtns { get; set; }
         //public virtual DbSet<Host> Hosts { get; set; }

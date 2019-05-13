@@ -32,7 +32,7 @@ namespace HapLib
             {
                 reqUri = BaseAddress = string.IsNullOrEmpty(value.Fragment)
                    ? value
-                   : Utils.NoFragment(value.AbsoluteUri);
+                   : new Uri(value.GetLeftPart(UriPartial.Query), UriKind.Absolute);        // scheme, authority, path, and query segments of the URI
                 ReqUriMatch = GetUrlStandard(ReqUri);           // standardise on Url content for self-comparison
             }
         }
@@ -62,18 +62,18 @@ namespace HapLib
             }
         }
 
-        bool AlterLinks(string dirname, string att, IDictionary<string, string> oldNewLinks)
+        int MaxLinks;                                               // max number of links (href=url etc) to extract [ignore subsequent ones]
+
+        public HapParser(int maxlinks = 500)
+        {
+            MaxLinks = maxlinks < 2500 ? maxlinks : 2500;           // set arbitrary ceiling to 2500 (BULKINSERT fragile on more)
+        }
+        bool AlterLinks(string dirname, string att, IDictionary<string, string> oldNewLinks)    // caller should respect MaxLinks but not enforced at AlterLinks time
         {
             var rslt = false;
             foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
                 var url = hnode.Attributes[att].Value;
-#if DEBUG && BORING
-                if (url.StartsWith("//"))
-                {
-                    Console.WriteLine("observe relative scheme!");
-                }
-#endif
                 // attempt extracting the [next] url, but ignore any exceptions
                 try
                 {
@@ -106,169 +106,179 @@ namespace HapLib
             return rslt;
         }
 
-        void FindLinks(string att, IDictionary<string, string> Links)
+        void FindLinks(string att, IDictionary<string, string> Links)   // this code enforces MaxLinks but not enforced at AlterLinks time
         {
-            List<string> selfs = new List<string> { ".", "./" };    // , "/"
+            char[] setsplit = { ',' };
             foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
-                var url = hnode.Attributes[att].Value;
-#if DEBUG && BORING
-                if (url.StartsWith("//"))
+                var url = hnode.Attributes[att].Value.Trim();           // deal with "//\r\ne.issuu.com/embed.js" oddballs
+                var odduri = new Uri(BaseAddress, url);
+                // special case for srcset that can contain multiple URLs
+                if (att == "srcset")
                 {
-                    Console.WriteLine("observe relative scheme!");
-                }
-#endif
-
-                //if (selfs.Contains(url))
-                //{
-                //    continue;
-                //}
-                // attempt extracting the [next] url, but ignore any exceptions
-                try
-                {
-                    var uri = new Uri(BaseAddress, url);                        // this handles relative scheme e.g.
-                                                                                //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
-                    url = GetUrlStandard(uri);                                  // standardise on Url content for self-comparison
-                    if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)   // ignore "mailto" "javascript" etc "mailto:jestedfa%40microsoft.com?Subject=MailKit Documentation"
-                        || hnode.Attributes["rel"]?.Value == "nofollow"
-                        || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase))
+                    var sets = url.Split(setsplit, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var set in sets)
                     {
-                        continue;                                               // skip any self-refs (e.g. with fragment) or as rel=canonical
-                    }
-
-                    if (url == "www.ligonier.org/learn/keyword" || url == "www.ligonier.org/store/keyword")
-                    {
-                        Console.WriteLine("check URL");
-                    }
-                    // assign DraftFilespec via choice skip-chain [N.B. Downloader can set Filespec after download
-                    //  if rsp.Content.Headers.ContentDisposition.FileName or Title (from //head/title[title]) looks more suitable]
-                    var numsegs = uri.Segments.Length;
-                    //if (numsegs == 0 || (numsegs == 1 && uri.Segments[0] == "/") && string.IsNullOrWhiteSpace(uri.Query))
-                    //{
-                    //    //continue;                                           // ignore link to self
-                    //}
-                    var protofn = numsegs > 0
-                        ? Utils.TrimOrNull(uri.Segments[numsegs - 1])           // #1 prefer last segment
-                        : null;
-                    if (protofn == "/")
-                    {
-                        protofn = numsegs > 1
-                            ? Utils.TrimOrNull(uri.Segments[numsegs - 2])       // #2 or penultimate segment if last is "/"
-                            : null;
-                    }
-                    if (string.IsNullOrEmpty(protofn))
-                    {
-                        var idx = url.LastIndexOfAny(DELIMS);
-                        if (idx >= 0)
+                        url = set.Trim();
+                        var setscope = string.Empty;
+                        var dlim = url.IndexOf(' ');
+                        if (dlim > 0)
                         {
-                            protofn = Utils.TrimOrNull(url.Substring(idx + 1)); // #3 or any parameter
+                            setscope = url.Substring(dlim + 1).TrimStart();     // extract media condition first
+                            url = url.Substring(0, dlim).TrimEnd();             //  then subset the actual URL
                         }
-                        if (protofn == null || protofn.Length > 50)             // unless too loooong
+                        AppendLink(att, hnode, url, Links);
+                    }
+                }
+                else
+                {
+                    AppendLink(att, hnode, url, Links);
+                }
+                if (Links.Count > MaxLinks)
+                {
+                    break;                                                      // avoid fragile BULKINSERT
+                }
+            }
+        }
+
+        void AppendLink(string att, HtmlNode hnode, string url, IDictionary<string, string> Links)
+        {
+            // attempt extracting the [next] url, but ignore any exceptions
+            try
+            {
+                var uri = new Uri(BaseAddress, url);                        // this handles relative scheme e.g.
+                                                                            //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
+                url = GetUrlStandard(uri);                                  // standardise on Url content for self-comparison
+                if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)   // ignore "mailto" "javascript" etc "mailto:jestedfa%40microsoft.com?Subject=MailKit Documentation"
+                    || hnode.Attributes["rel"]?.Value == "nofollow"
+                    || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return;                                               // skip any self-refs (e.g. with fragment) or as rel=canonical
+                }
+
+                // assign DraftFilespec via choice skip-chain [N.B. Downloader can set Filespec after download
+                //  if rsp.Content.Headers.ContentDisposition.FileName or Title (from //head/title[title]) looks more suitable]
+                var numsegs = uri.Segments.Length;
+                var protofn = numsegs > 0
+                    ? Utils.TrimOrNull(uri.Segments[numsegs - 1])           // #1 prefer last segment
+                    : null;
+                if (protofn == "/")
+                {
+                    protofn = numsegs > 1
+                        ? Utils.TrimOrNull(uri.Segments[numsegs - 2])       // #2 or penultimate segment if last is "/"
+                        : null;
+                }
+                if (string.IsNullOrEmpty(protofn))
+                {
+                    var idx = url.LastIndexOfAny(DELIMS);
+                    if (idx >= 0)
+                    {
+                        protofn = Utils.TrimOrNull(url.Substring(idx + 1)); // #3 or any parameter
+                    }
+                    if (protofn == null || protofn.Length > 80)             // unless too loooong
+                    {
+                        var protofn2 = FindFilespec(hnode);                 // #4 .InnerText on current HNode
+                        if (string.IsNullOrEmpty(protofn2))
                         {
-                            var protofn2 = FindFilespec(hnode);                 // #4 .InnerText on current HNode
-                            if (string.IsNullOrEmpty(protofn2))
+                            foreach (var child in hnode.ChildNodes)
                             {
-                                foreach (var child in hnode.ChildNodes)
+                                protofn2 = FindFilespec(child);             // #5 .InnerText on child HNode (depth=1 only)
+                                if (protofn2 != null)
                                 {
-                                    protofn2 = FindFilespec(child);             // #5 .InnerText on child HNode (depth=1 only)
-                                    if (protofn2 != null)
-                                    {
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
-                            if (protofn2 != null && (protofn == null || (protofn.Length > protofn2.Length && protofn2.Length >= 30)))
-                            {
-                                protofn = protofn2;                                 // if #1-3 choice too long take #4-5 choice if shorter
-                            }
                         }
-
+                        if (protofn2 != null && (protofn == null || (protofn.Length > protofn2.Length && protofn2.Length >= 30)))
+                        {
+                            protofn = protofn2;                                 // if #1-3 choice too long take #4-5 choice if shorter
+                        }
                     }
-                    string filename = null, extn = null;
-                    if (string.IsNullOrEmpty(protofn))
+
+                }
+                string filename = null, extn = null;
+                if (string.IsNullOrEmpty(protofn))
+                {
+                    Console.WriteLine($"no filename for ({hnode.OuterHtml})");
+                }
+                else
+                {
+                    (filename, extn) = Utils.FileExtSplit(WebUtility.HtmlDecode(protofn));
+                    //(var filename2, var extn2) = Utils.FileExtSplit(WebUtility.UrlDecode(protofn));     // TODO: which is better ?
+                }
+
+                if (filename != null)
+                {
+                    if (string.IsNullOrWhiteSpace(extn))                        // #1 if explicit extn given then we use it
                     {
-                        Console.WriteLine($"no filename for ({hnode.OuterHtml})");
+                        var atribType = hnode.Attributes["type"]?.Value;        // #2 explicit "type" ?
+                        if (atribType != null)
+                        {
+                            //extn = Utils.LookupExtnFromMime(atribType);
+                            extn = Infrastructure.Models.MimeCollection.LookupExtnFromMime(atribType);
+                        }
+                        if (extn == null)                                       // #3 <tag att='template'> lookup ?
+                        {
+                            extn = TagAttributeLookup(hnode, hnode.Name + "-" + att);
+                        }
+                    }
+                    if (extn == null)
+                    {
+                        Console.WriteLine($"no extn for ({hnode.OuterHtml}");
+                        if (filename?.Length > WebPage.DRAFTSIZE)
+                        {
+                            Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
+                            filename =          // filename.Substring(0, WebPage.DRAFTSIZE);
+                                                // Utils.RandomFilenameOnly();  // NB this would produce a file5678 format
+                                       null;    // big filename but no extn, so let Downloader invent name.extn (based on Title and Headers.ContentType)
+                        }
                     }
                     else
                     {
-                        (filename, extn) = Utils.FileExtSplit(WebUtility.HtmlDecode(protofn));
-                        //(var filename2, var extn2) = Utils.FileExtSplit(WebUtility.UrlDecode(protofn));     // TODO: which is better ?
-                    }
-
-                    if (filename != null)
-                    {
-                        if (string.IsNullOrWhiteSpace(extn))                        // #1 if explicit extn given then we use it
+                        if (extn.Length > ContentTypeToExtn.EXTNSIZE)
                         {
-                            var atribType = hnode.Attributes["type"]?.Value;        // #2 explicit "type" ?
-                            if (atribType != null)
-                            {
-                                //extn = Utils.LookupExtnFromMime(atribType);
-                                extn = Infrastructure.Models.MimeCollection.LookupExtnFromMime(atribType);
-                            }
-                            if (extn == null)                                       // #3 <tag att='template'> lookup ?
-                            {
-                                extn = TagAttributeLookup(hnode, hnode.Name + "-" + att);
-                            }
+                            extn = extn.Substring(0, ContentTypeToExtn.EXTNSIZE);       // TODO: or null ??
                         }
-                        if (extn == null)
+                        if (filename.Length + EXTN_SEPARATOR.Length + extn.Length > WebPage.DRAFTSIZE)
                         {
-                            Console.WriteLine($"no extn for ({hnode.OuterHtml}");
-                            if (filename?.Length > WebPage.DRAFTSIZE)
-                            {
-                                Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
-                                filename =          // filename.Substring(0, WebPage.DRAFTSIZE);
-                                                    // Utils.RandomFilenameOnly();  // NB this would produce a file5678 format
-                                           null;    // big filename but no extn, so let Downloader invent name.extn (based on Title and Headers.ContentType)
-                            }
+                            Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
+                            filename =      //filename.Substring(0, WebPage.DRAFTSIZE - EXTN_SEPARATOR.Length - extn.Length)
+                                Utils.RandomFilenameOnly()                  // too long means we prefer short file5678 format
+                                + EXTN_SEPARATOR + extn;                    //  but keep the supposed extn for now
                         }
                         else
                         {
-                            if (extn.Length > ContentTypeToExtn.EXTNSIZE)
-                            {
-                                extn = extn.Substring(0, ContentTypeToExtn.EXTNSIZE);
-                            }
-                            if (filename.Length + EXTN_SEPARATOR.Length + extn.Length > WebPage.DRAFTSIZE)
-                            {
-                                Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
-                                filename =      //filename.Substring(0, WebPage.DRAFTSIZE - EXTN_SEPARATOR.Length - extn.Length)
-                                    Utils.RandomFilenameOnly()                  // too long means we prefer short file5678 format
-                                    + EXTN_SEPARATOR + extn;                    //  but keep the supposed extn for now
-                            }
-                            else
-                            {
-                                filename += EXTN_SEPARATOR + extn;
-                            }
-                        }
-                    }
-
-                    url = GetUriFull(uri);                      // recover the full Uri for persisting to db
-                    if (url.Length > WebPage.URLSIZE)
-                    {
-                        Console.WriteLine($"oversize URL:\tU={url.Length}");
-
-                        url = WebPage.SlimQP(url);              // trim [parts of] queryparams, or throw exception if still too big
-                    }
-                    //uri.AbsoluteUri;                          
-                    if (!Links.ContainsKey(url))                // IDictionary.ContainsKey does not have ignoreCase overload, but concrete derived
-                    {                                           //   SortedDictionary | SortedList embeds StringComparer.InvariantCultureIgnoreCase in ctor
-                        Links[url] = filename;                  // add new url plus probable extn
-                    }
-                    else
-                    {
-                        if (Links[url] == null || (filename != null && !Links[url].Equals(filename, StringComparison.InvariantCultureIgnoreCase)))  // existing url: check matches same extn
-                        {
-                            if (!string.IsNullOrWhiteSpace(Links[url]))
-                            {
-                                Console.WriteLine($"variant file.ext for {url} : {Links[url]} {filename}");
-                            }
-                            Links[url] = filename;
+                            filename += EXTN_SEPARATOR + extn;
                         }
                     }
                 }
-                catch (Exception e)         // mailto: will probably bomb here as BaseAddress munge above will barf
+
+                url = GetUriFull(uri);                      // recover the full Uri for persisting to db
+                if (url.Length > WebPage.URLSIZE)
                 {
-                    Console.WriteLine($"failure extracting single url for {att} on {url}, continuing anyway\n{e.Message}");
+                    Console.WriteLine($"oversize URL:\tU={url.Length}");
+
+                    url = WebPage.SlimQP(url);              // trim [parts of] queryparams, or throw exception if still too big
                 }
+                if (!Links.ContainsKey(url))                // IDictionary.ContainsKey does not have ignoreCase overload, but concrete derived
+                {                                           //   SortedDictionary | SortedList embeds StringComparer.InvariantCultureIgnoreCase in ctor
+                    Links[url] = filename;                  // add new url plus probable extn
+                }
+                else
+                {
+                    if (Links[url] == null || (filename != null && !Links[url].Equals(filename, StringComparison.InvariantCultureIgnoreCase)))  // existing url: check matches same extn
+                    {
+                        if (!string.IsNullOrWhiteSpace(Links[url]))
+                        {
+                            Console.WriteLine($"variant file.ext for {url} : {Links[url]} {filename}");
+                        }
+                        Links[url] = filename;
+                    }
+                }
+            }
+            catch (Exception e)         // mailto: will probably bomb here as BaseAddress munge above will barf
+            {
+                Console.WriteLine($"failure extracting single url for {att} on {url}, continuing anyway\n{e.Message}");
             }
         }
 
@@ -337,14 +347,23 @@ namespace HapLib
         /// </returns>
         /// <remarks>
         /// 1.  do not use this standardisation for persisting Url to db. use GetUriFull instead
-        /// 2.  Scheme is omitted because FindLinks will only accept HTTP/HTTPS schemes
+        /// 2.  Scheme is omitted because FindLinks will only accept HTTP/HTTPS schemes anyway
         /// 3.  the Fragment field is always omitted
+        /// 4.  TODO: ignore any trailing slash in Path ?
         /// </remarks>
-        string GetUrlStandard(Uri uri) => uri.GetComponents(    // Utils.NoTrailSlash(
+        string GetUrlStandard(Uri uri)
+        {
+            // flags denoting significant components for equality [Host | LocalPath | Query], but NOT Scheme (cf. GetUrlFull) | UserInfo | Fragment or Port
+            var uriflags = string.IsNullOrWhiteSpace(uri.Query) || uri.Query == "?"
+                ? UriComponents.Host | UriComponents.Path               // drop QS
+                : UriComponents.Host | UriComponents.PathAndQuery;      // pass QS
+
+            return uri.GetComponents(
                 (uri.Scheme == Uri.UriSchemeHttp && uri.Port == 80) || (uri.Scheme == Uri.UriSchemeHttps && uri.Port == 443)
-                    ? MATCHBITS                                 // omit explicit port:# if standard
-                    : MATCHBITS | UriComponents.Port            // include explicit port:# if non-standard
+                ? uriflags                                              // drop explicit port:# if standard
+                : uriflags | UriComponents.Port                         // pass explicit port:# if non-standard
                 , UriFormat.SafeUnescaped);
+        }
 
         void LoadDoc(string url, string path)
         {
@@ -417,6 +436,7 @@ namespace HapLib
                 case "area-href":
                 case "base-href":
                 case "blockquote-cite":
+                case "button-href":
                 case "del-cite":
                 case "div-href":            // undoc
                 case "embed-src":
