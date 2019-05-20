@@ -10,13 +10,11 @@ namespace KissFW
     {
         const string ERRTAG = "~";
 
-        readonly IRepository Dataserver;
         readonly IHttpParser Httpserver;
         readonly string HtmlPath;               // subfolder to read *.html
         readonly string BackupPath;             //  ditto to write revised (localised) *.html
-        public Localiser(IRepository dataserver, IHttpParser httpserver, string htmlPath, string backupPath = null)
+        public Localiser(IHttpParser httpserver, string htmlPath, string backupPath = null)
         {
-            Dataserver = dataserver;
             Httpserver = httpserver;
             HtmlPath = htmlPath;
             BackupPath = backupPath;

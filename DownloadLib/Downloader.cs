@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure;
 using Infrastructure.Interfaces;
@@ -18,11 +19,15 @@ namespace DownloadLib
     public class Downloader : IDownloader
     {
         const string EXTN_SEPARATOR = ".", HTML = "html", ERRTAG = "~";
+        const int buffSize = 81920;             // default used by Stream.CopyToAsync
+        readonly DateTime earliest = new DateTime(2000, 1, 1);
         readonly IHttpParser Httpserver;
         readonly IRepository Dataserver;
         readonly string HtmlPath;               // subfolder to save *.html
         readonly string OtherPath;              //  ditto for other extension types
         readonly string BackupPath;             //  ditto as backup
+        readonly long MaxFileSize;              // don't download files bigger than 10 MB (default)
+        readonly long MinReport = 500_000;      // don't raise IProgress.Report(percent) unless download at least this big
 
         //TODO: plug-in Polly as MessageProcessingHandler / whatever !
         readonly HttpClient Client;
@@ -31,7 +36,9 @@ namespace DownloadLib
 
         readonly IAsyncPolicy<HttpResponseMessage> _httpRetryPolicy;
 
-        public Downloader(IRepository dataserver, HttpClient httpclient, IAsyncPolicy<HttpResponseMessage> policy, IHttpParser httpserver, string htmlPath, string otherPath = null, string backupPath = null)
+        public Downloader(IRepository dataserver, HttpClient httpclient, IAsyncPolicy<HttpResponseMessage> policy, IHttpParser httpserver,
+            string htmlPath, string otherPath = null, string backupPath = null,
+            long maxfilesize = 10_000_000)
         {
             Client = httpclient;
             _httpRetryPolicy = policy;
@@ -40,6 +47,7 @@ namespace DownloadLib
             HtmlPath = Utils.TrimOrNull(htmlPath) ?? throw new InvalidOperationException($"DownloadPage(htmlPath) cannot be null");
             OtherPath = Utils.TrimOrNull(otherPath) ?? HtmlPath;
             BackupPath = backupPath;
+            MaxFileSize = maxfilesize;
             SetDefaultHeaders();
         }
 
@@ -171,16 +179,21 @@ namespace DownloadLib
             await Dataserver.AddLinksAsync(webpage, links);     // add to local repository
         }
 
-        public async Task<bool> FetchFileAsync(WebPage webpage)
+        public Task<bool> FetchFileAsync(WebPage webpage, IProgress<int> progress = null) => FetchFileAsync(webpage, CancellationToken.None, progress);
+        public async Task<bool> FetchFileAsync(
+            WebPage webpage,
+            CancellationToken ct,
+            IProgress<int> progress = null)
         {
             string extn = null, filespec3, location, draft = null;
+            DateTimeOffset? lastmod = null;
             var akaUrls = new List<string>();
 
             var url = Utils.TrimOrNull(webpage?.Url) ?? throw new InvalidOperationException("FetchFileAsync(webpage.Url) cannot be null");
 
             using (var req = new HttpRequestMessage(HttpMethod.Get, url))
-            using (var rsp = await _httpRetryPolicy.ExecuteAsync(      // TODO: rewrite as fatal timeouts won't be caught here [caller will catch]
-                () => Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead)))
+            using (var rsp = await _httpRetryPolicy.ExecuteAsync(                   // TODO: rewrite as fatal timeouts won't be caught here [caller will catch]
+                (ct2) => Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct2), ct))
             {                                                                       // this block serves as Dispose() context for req and rsp
                 Console.WriteLine($"{rsp.StatusCode} {rsp.ReasonPhrase}");
 
@@ -193,6 +206,19 @@ namespace DownloadLib
                     //throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
                     rsp.EnsureSuccessStatusCode();                                  // raise official exception
                 }
+                var filesize = rsp.Content?.Headers?.ContentLength ?? 0;            // 249044384
+                var ctyp = rsp.Content?.Headers?.ContentType.MediaType;             // "application/octet-stream"
+                lastmod = rsp.Content?.Headers?.LastModified;
+                if (filesize > 1000000)
+                {
+                    Console.WriteLine("** CHECK LASTMOD ETC **");
+                }
+                if (filesize > MaxFileSize)
+                {
+                    webpage.Filespec = $"~FileSize(filesize) too big{MaxFileSize}";
+                    webpage.Download = DownloadEnum.Ignore;                         // forget it (caller must persist change)
+                    return false;
+                }
                 TargetFilespecs(webpage, rsp, out extn, out var filespec2, out filespec3);  // determine appropriate file target(s)
 
                 //var charset = rsp.Content.Headers.ContentType.CharSet;
@@ -201,16 +227,26 @@ namespace DownloadLib
 
                 try
                 {
-                    using (var strm = await rsp.Content.ReadAsStreamAsync().ConfigureAwait(continueOnCapturedContext: false))
+                    using (var readStream = await rsp.Content.ReadAsStreamAsync().ConfigureAwait(continueOnCapturedContext: false))
                     {
-                        using (var fs = File.Create(filespec3))             // TODO: write non-UTF - 8 file code
+                        using (var writeStream = File.Create(filespec3))             // TODO: write non-UTF - 8 file code
                         {
-                            await strm.CopyToAsync(fs).ConfigureAwait(continueOnCapturedContext: false);
-                            fs.Flush();
+                            if (progress == null || filesize <= 0 || filesize < MinReport)
+                            {
+                                await readStream.CopyToAsync(writeStream, buffSize, ct).ConfigureAwait(continueOnCapturedContext: false);
+
+                            }
+                            else
+                            {
+                                await StreamCopyWithProgressAsync(readStream, writeStream, filesize, progress, ct);
+
+                            }
+                            writeStream.Flush();        // Clears buffers for this stream and causes any buffered data to be written to the file
                         }
                     }
 
-                    // now all disk & network I/O completed [but using (var rsp) still undisposed], see how new downloaded file compares with 
+                    // now all disk & network I/O completed [but using (var rsp) still undisposed] ..
+                    // .. see how new downloaded file compares with any previous, then set LastModDate if declared
                     if (!filespec2.Equals(filespec3, StringComparison.InvariantCultureIgnoreCase))
                     {
                         // compare before & after files
@@ -218,9 +254,17 @@ namespace DownloadLib
                         {
                             filespec3 = filespec2;                                  // revert to pre-existing filespec after delete
                         }
+                        else
+                        {
+                            var dt = lastmod?.DateTime;
+                            if (dt != null && earliest <= dt && dt <= DateTime.Now)
+                            {
+                                File.SetLastWriteTime(filespec3, dt.Value);         // set "date and time last written to" as spec by rsp.Content?.Headers?.LastModified
+                            }
+                        }
                     }
                     var contdisp = rsp.Content.Headers.ContentDisposition;
-                    if (contdisp!=null)
+                    if (contdisp != null)
                     {
                         Console.WriteLine("check!");
                     }
@@ -355,14 +399,42 @@ namespace DownloadLib
             return true;
         }
 
+        async Task StreamCopyWithProgressAsync(Stream readStream, Stream writeStream, long filesize, IProgress<int> progress, CancellationToken ct)
+        {
+            var buff = new byte[buffSize];
+            long ReportAbove;
+            var reportInterval = ReportAbove = (MaxFileSize / 100 < (long)buffSize) ? (long)buffSize : MaxFileSize / 100;
+            progress.Report(0);
+            long SizeDone = 0;
+            Console.WriteLine($"stream expecting {filesize}, interval={reportInterval}");
+            do
+            {
+                ct.ThrowIfCancellationRequested();
+                var readCount = await readStream.ReadAsync(buff, 0, buffSize);
+                //Console.WriteLine($"streamIN({readCount})");
+                if (readCount <= 0)
+                {
+                    break;
+                }
+                await writeStream.WriteAsync(buff, 0, readCount);
+                SizeDone += readCount;
+                if (SizeDone > ReportAbove && SizeDone != filesize)         // at interval but not at 100% (final one done below)
+                {
+                    progress.Report((int)(SizeDone * 100 / filesize));
+                    ReportAbove += reportInterval;
+                }
+            } while (SizeDone < MaxFileSize);
+            progress.Report((int)(100));                                    // report the final 100%
+        }
+
         byte[] GetHash(string filespec2)
         {
             byte[] mash;
             // compute MD5 for each of the pre-existing & new files and see if they match
             using (var myhash = MD5.Create())
-            using (var fileStream = new FileStream(filespec2, FileMode.Open) { Position = 0 })       // Be sure fileStream is positioned at the beginning
+            using (var fileStream = new FileStream(filespec2, FileMode.Open) { Position = 0 })  // Be sure fileStream is positioned at the beginning
             {
-                mash = myhash.ComputeHash(fileStream);   // Compute the hash of the fileStream
+                mash = myhash.ComputeHash(fileStream);                      // Compute the hash of the fileStream
             }
             return mash;
         }
@@ -378,8 +450,8 @@ namespace DownloadLib
             Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/png", 0.8));
             //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/apng", 0.4));   // strange Chrome type ??
             //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.1));          // don't ask what we can't digest (e.g. .gz)
-
             Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
             Client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             Client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
         }
@@ -444,23 +516,23 @@ namespace DownloadLib
                 /*
                 "application/manifest+json"
                 */
-                throw new ApplicationException($"unknown extn for Url={webpage.Url}");
+                throw new ApplicationException($"unknown extn for Url={webpage.Url}");  // TODO: consider accepting a plain filename (no extn)
             }
-            var filespec1 = (filenameOnly ?? Utils.RandomFilenameOnly())         // NB this produces a file5678 format
-                + EXTN_SEPARATOR + extn;                                            // filename & extension (ignore any extn in DraftFilespec)
-            var folder = (extn == HTML) ? HtmlPath : OtherPath;                     // device & folder path
-            filespec2 = Utils.TrimOrNull(webpage.Filespec);                         // if this is a reload, assign the original to filespec2 (will compare later)
+            var filespec1 = (filenameOnly ?? Utils.RandomFilenameOnly())    // NB this produces a file5678 format
+                + EXTN_SEPARATOR + extn;                                    // filename & extension (ignore any extn in DraftFilespec)
+            var folder = (extn == HTML) ? HtmlPath : OtherPath;             // device & folder path
+            filespec2 = Utils.TrimOrNull(webpage.Filespec);                 // if this is a reload, assign the original to filespec2 (will compare later)
             filespec2 = filespec3 = (filespec2 != null && !filespec2.StartsWith(ERRTAG))   // skip any previous error message
                 ? filespec2
                 : Path.Combine(folder, filespec1);
             if (File.Exists(filespec2) || filespec2.Length > WebPage.FILESIZE)
             {
-                webpage.DraftFilespec = filespec1;                                  // keep our 2nd choice of fn.extn [simple debug aid]
-                do                                                                  // use alternate file target
+                webpage.DraftFilespec = filespec1;                          // keep our 2nd choice of fn.extn [simple debug aid]
+                do                                                          // use alternate file target
                 {
                     filespec3 = Path.Combine(folder, Utils.RandomFilenameOnly() + EXTN_SEPARATOR + extn);   // no 100% guarantee that file5678.extn file doesn't exist
                     Debug.Assert(filespec3.Length <= WebPage.FILESIZE, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
-                } while (File.Exists(filespec3));                                   //hopefully rare and finite case !
+                } while (File.Exists(filespec3));                           // hopefully rare and finite case !
             }
         }
     }

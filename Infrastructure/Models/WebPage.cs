@@ -9,7 +9,7 @@ namespace Infrastructure.Models
 
     public class WebPage : IEquatable<WebPage>      // , IComparable<WebPage>
     {
-        public enum DownloadEnum : byte
+        public enum OLDDownloadEnum : byte
         {
             Ignore = 0,
             ToDownload,
@@ -17,7 +17,7 @@ namespace Infrastructure.Models
             Redirected,             // ConsumeFrom should have ONE entry, Filespec should be NULL
             Downloaded
         }
-        public enum Download2Enum : byte
+        public enum DownloadEnum : byte
         {
             Ignore = 0,
             Redirected,                                                     // ConsumeFrom should have ONE entry, Filespec should be NULL

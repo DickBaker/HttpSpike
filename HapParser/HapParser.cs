@@ -51,23 +51,12 @@ namespace HapLib
         public string Title
         {
             get => _title;
-            set
-            {
-                int delim;
-                _title = Utils.TrimOrNull(WebUtility.HtmlDecode(value));        // remove any leading/trailing whitespace (incl CR/LF)
-                if (_title != null && (delim = _title.IndexOfAny(CRLF)) > 0)    // any embedded CRLF within revised Title ?
-                {
-                    _title = _title.Substring(0, delim).TrimEnd();
-                }
-            }
+            set => _title = FirstLine(Utils.TrimOrNull(WebUtility.HtmlDecode(value)));    // remove any leading/trailing whitespace (incl CR/LF)
         }
 
-        int MaxLinks;                                               // max number of links (href=url etc) to extract [ignore subsequent ones]
+        readonly int MaxLinks;                                          // max number of links (href=url etc) to extract [ignore subsequent ones]
 
-        public HapParser(int maxlinks = 500)
-        {
-            MaxLinks = maxlinks < 2500 ? maxlinks : 2500;           // set arbitrary ceiling to 2500 (BULKINSERT fragile on more)
-        }
+        public HapParser(int maxlinks = 500) => MaxLinks = maxlinks < 2500 ? maxlinks : 2500;   // set arbitrary ceiling to 2500 (BULKINSERT fragile on more)
         bool AlterLinks(string dirname, string att, IDictionary<string, string> oldNewLinks)    // caller should respect MaxLinks but not enforced at AlterLinks time
         {
             var rslt = false;
@@ -108,26 +97,47 @@ namespace HapLib
 
         void FindLinks(string att, IDictionary<string, string> Links)   // this code enforces MaxLinks but not enforced at AlterLinks time
         {
-            char[] setsplit = { ',' };
             foreach (var hnode in HtmlDoc.DocumentNode.SelectNodes($"//*[@{att}]"))
             {
                 var url = hnode.Attributes[att].Value.Trim();           // deal with "//\r\ne.issuu.com/embed.js" oddballs
-                var odduri = new Uri(BaseAddress, url);
+                //if (url.StartsWith("https://www.reformationbiblecollege.org/wp-content/uploads/2019/05"))   //"https://www.reformationbiblecollege.org/wp-content/uploads/2019/05/1200x630_Blog_Why_RBC_Exists_Blog_Assets_32.jpg"
+                //{
+                //    Console.WriteLine();
+                //}
+                //var odduri = new Uri(BaseAddress, url);
                 // special case for srcset that can contain multiple URLs
-                if (att == "srcset")
+                if (att == "srcset")        // cf. http://w3c.github.io/html/semantics-embedded-content.html#image-candidate-string
                 {
-                    var sets = url.Split(setsplit, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var set in sets)
+                    /* particularly difficult case ...
+                    <img width="150" height="150" src="https://wikimediafoundation.org/wp-content/uploads/2018/06/Wikimedia_Conference_2017_â€“_228-e1533253661801.jpg?w=150&amp;h=150&amp;crop=1"
+                    class="attachment-thumbnail size-thumbnail" alt="Wikimedia Conference 2017"
+                    srcset="https://wikimediafoundation.org/wp-content/uploads/2018/06/Wikimedia_Conference_2017_â€“_228-e1533253661801.jpg?resize=150,150 150w, https://wikimediafoundation.org/wp-content/uploads/2018/06/Wikimedia_Conference_2017_â€“_228-e1533253661801.jpg?resize=250,250 250w"
+                    sizes="(max-width: 150px) 100vw, 150px">
+                    */
+                    while (url.Length > 0)
                     {
-                        url = set.Trim();
-                        var setscope = string.Empty;
-                        var dlim = url.IndexOf(' ');
-                        if (dlim > 0)
+                        string srcsetUrl = "", descr = "";
+                        var spacecol = (url + " ").IndexOf(' ');
+                        var commacol = (url + ",").IndexOf(',');
+                        if (spacecol < commacol)                        // #1 normal case ("url descr,")
                         {
-                            setscope = url.Substring(dlim + 1).TrimStart();     // extract media condition first
-                            url = url.Substring(0, dlim).TrimEnd();             //  then subset the actual URL
+                            srcsetUrl = url.Substring(0, spacecol);
+                            descr = url.Substring(spacecol + 1, commacol - spacecol - 1).Trim();
                         }
-                        AppendLink(att, hnode, url, Links);
+                        else
+                        if (commacol + 1 == spacecol)                   // #2 no descr ("url, ") as url cannot have comma as final char
+                        {
+                            srcsetUrl = url.Substring(0, commacol);
+                        }
+                        else
+                        if (commacol < spacecol)                        // #3 comma embedded within URL (see above)
+                        {
+                            srcsetUrl = url.Substring(0, spacecol);
+                            commacol = (url + ",").IndexOf(',', spacecol + 1);  // find next comma after the space
+                            descr = url.Substring(spacecol + 1, commacol - spacecol - 1).Trim();
+                        }
+                        url = (commacol < url.Length) ? url.Substring(commacol + 1).TrimStart() : string.Empty;
+                        AppendLink(att, hnode, srcsetUrl, Links);
                     }
                 }
                 else
@@ -153,20 +163,25 @@ namespace HapLib
                     || hnode.Attributes["rel"]?.Value == "nofollow"
                     || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return;                                               // skip any self-refs (e.g. with fragment) or as rel=canonical
+                    return;                                                 // skip any self-refs (e.g. with fragment) or as rel=canonical
                 }
 
                 // assign DraftFilespec via choice skip-chain [N.B. Downloader can set Filespec after download
                 //  if rsp.Content.Headers.ContentDisposition.FileName or Title (from //head/title[title]) looks more suitable]
-                var numsegs = uri.Segments.Length;
-                var protofn = numsegs > 0
-                    ? Utils.TrimOrNull(uri.Segments[numsegs - 1])           // #1 prefer last segment
-                    : null;
-                if (protofn == "/")
+                var protofn = FirstLine(Utils.TrimOrNull(                   // remove any leading/trailing whitespace (incl CR/LF)
+                    hnode.Attributes["title"]?.Value));                     // #0 specific title for this element ?
+                if (protofn == null)
                 {
-                    protofn = numsegs > 1
-                        ? Utils.TrimOrNull(uri.Segments[numsegs - 2])       // #2 or penultimate segment if last is "/"
+                    var numsegs = uri.Segments.Length;
+                    protofn = numsegs > 0
+                        ? Utils.TrimOrNull(uri.Segments[numsegs - 1])       // #1 prefer last segment
                         : null;
+                    if (protofn == "/")
+                    {
+                        protofn = numsegs > 1
+                            ? Utils.TrimOrNull(uri.Segments[numsegs - 2])   // #2 or penultimate segment if last is "/"
+                            : null;
+                    }
                 }
                 if (string.IsNullOrEmpty(protofn))
                 {
@@ -191,7 +206,7 @@ namespace HapLib
                         }
                         if (protofn2 != null && (protofn == null || (protofn.Length > protofn2.Length && protofn2.Length >= 30)))
                         {
-                            protofn = protofn2;                                 // if #1-3 choice too long take #4-5 choice if shorter
+                            protofn = protofn2;                             // if #1-3 choice too long take #4-5 choice if shorter
                         }
                     }
 
@@ -199,7 +214,7 @@ namespace HapLib
                 string filename = null, extn = null;
                 if (string.IsNullOrEmpty(protofn))
                 {
-                    Console.WriteLine($"no filename for ({hnode.OuterHtml})");
+                    //Console.WriteLine($"no filename for ({hnode.OuterHtml})");
                 }
                 else
                 {
@@ -209,22 +224,21 @@ namespace HapLib
 
                 if (filename != null)
                 {
-                    if (string.IsNullOrWhiteSpace(extn))                        // #1 if explicit extn given then we use it
+                    // cf. http://w3c.github.io/html/semantics-embedded-content.html#the-source-element
+                    var atribType = hnode.Attributes["type"]?.Value;                // #1 explicit "type" trumps explicit
+                    if (atribType != null)
                     {
-                        var atribType = hnode.Attributes["type"]?.Value;        // #2 explicit "type" ?
-                        if (atribType != null)
-                        {
-                            //extn = Utils.LookupExtnFromMime(atribType);
-                            extn = Infrastructure.Models.MimeCollection.LookupExtnFromMime(atribType);
-                        }
-                        if (extn == null)                                       // #3 <tag att='template'> lookup ?
-                        {
-                            extn = TagAttributeLookup(hnode, hnode.Name + "-" + att);
-                        }
+                        extn = Infrastructure.Models.MimeCollection.LookupExtnFromMime(atribType);  // override explicit extn if found
                     }
+                    if (string.IsNullOrWhiteSpace(extn))                            // #2 if explicit extn given then we use it
+                    {
+                        extn = TagAttributeLookup(hnode, hnode.Name + "-" + att);   // #3 <tag att='template'> lookup ?
+                    }
+                    //var ano = WebUtility.HtmlDecode(protofn);
+                    //var ano2 = WebUtility.UrlDecode(protofn);
                     if (extn == null)
                     {
-                        Console.WriteLine($"no extn for ({hnode.OuterHtml}");
+                        //Console.WriteLine($"no extn for ({hnode.OuterHtml}");
                         if (filename?.Length > WebPage.DRAFTSIZE)
                         {
                             Console.WriteLine($"oversize FILE:\tFlen={filename.Length},\tF={filename},\tU={url}");
@@ -284,10 +298,10 @@ namespace HapLib
 
         static string FindFilespec(HtmlNode hnode)
         {
-            var protofn = Utils.TrimOrNull(hnode.GetAttributeValue("download", null))
-                            ?? Utils.TrimOrNull(hnode.GetAttributeValue("title", null))
+            var protofn = Utils.TrimOrNull(hnode.Attributes["download"]?.Value)
+                            ?? Utils.TrimOrNull(hnode.Attributes["title"]?.Value)
                             ?? FirstLine(hnode.InnerText)
-                            ?? Utils.TrimOrNull(hnode.GetAttributeValue("alt", null));
+                            ?? Utils.TrimOrNull(hnode.Attributes["alt"]?.Value);
             return (protofn != null) ? WebUtility.HtmlDecode(protofn) : null;
         }
 
@@ -445,24 +459,30 @@ namespace HapLib
                 case "input-src":
                 case "ins-cite":
                 case "q-cite":
-                case "source-src":
-                case "source-srcset":
                 case "span-href":           // undoc !!
                     return "html";
 
                 case "script-src":
                     return "js";
 
+                case "img-srcset":
+                case "source-src":          // within <picture> element
+                case "source-srcset":
+                    return "jpg";
+
                 case "audio-src":
                 case "video-src":
                     return "mp4";
 
                 case "link-href":
-                    switch (href.Attributes["rel"]?.Value)
+                    switch (href.GetAttributeValue("rel", " NONE "))
                     {
+                        case "image_src":
+                            return "jpg";           // wild guess but hope content-type adjusts correctly !
                         case "canonical":           // w3schools doesn't doc this
                         case "next":
                         case "prev":
+                        case "publisher":
                             return "html";          // more of the same
                         case "apple-touch-icon":
                         case "apple-touch-icon-precomposed":
@@ -482,12 +502,17 @@ namespace HapLib
                         case "preconnect":
                         case "prefetch":
                         case "preload":
+                        case "profile":
+                        case "shortlink":
+                        case " NONE ":          // placeholder in case of no @rel
+                        case "https://api.w.org/":      // e.g. https://www.reformationbiblecollege.org/student-life
                             return null;        // can't tell in advance what resource might be
                         case "search":
                             return "xml";
                         default:
                             // The mask-icon keyword is a registered extension to the predefined set of link types, but user agents are not required to support it in any way.
                             // <link rel="alternate" hreflang="x-default" href="https://twitter.com/jeremylikness">
+                            // "<link rel=\"image_src\" href=\"https://yt3.ggpht.com/a/AGF-l7-BBIcC888A2qYc3rB44rST01IEYDG3uzbU_A=s900-mo-c-c0xffffffff-rj-k-no\">"
                             Console.WriteLine($"unexpected link-href {href.OuterHtml}");
                             // next
                             break;

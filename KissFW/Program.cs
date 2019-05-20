@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using DownloadLib;
 using HapLib;
@@ -16,7 +17,7 @@ using WebStore;
 
 namespace KissFW
 {
-    static class Program
+    class Program
     {
         const string OTHFOLDER = "assets", BACKUPFOLDER = "backup";
         enum Recovery
@@ -30,7 +31,9 @@ namespace KissFW
         static IHttpParser HParser;
         static string htmldir, backupdir;
         static WebModel dbctx;
-        static int MaxLinks;
+        static WebPage currentPage;
+        static int MaxLinks;                    // max number of links (href=url etc) to extract [ignore subsequent ones]
+        static int MaxFileSize;                 // don't download files bigger than 10 MB
 
         static async Task Main(string[] _)
         {
@@ -75,6 +78,10 @@ namespace KissFW
             {
                 MaxLinks = 1500;
             }
+            if (!int.TryParse(ConfigurationManager.AppSettings["maxfilesize"], out MaxFileSize))
+            {
+                MaxFileSize = 10_000_000;               // 10 MB
+            }
             var ValidRetry = new HttpStatusCode[] {
                 HttpStatusCode.Ambiguous,               // 300
                 HttpStatusCode.Conflict,                // 409
@@ -94,13 +101,15 @@ namespace KissFW
             { Timeout = new TimeSpan(0, 0, 20) };
 #pragma warning restore GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
 
+            var p = new Program();
+
             HParser = new HapParser(MaxLinks);
-            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir);
-            await DownloadAndParse(repo, batchSize, download);
+            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir, MaxFileSize);
+            await p.DownloadAndParse(repo, batchSize, download);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
-            var localise = new Localiser(repo, HParser, htmldir, backupdir);
-            await HtmlLocalise(repo, batchSize, localise);
+            var localise = new Localiser(HParser, htmldir, backupdir);
+            await p.HtmlLocalise(repo, batchSize, localise);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
 #if DEBUG
@@ -113,16 +122,16 @@ namespace KissFW
             Console.ReadLine();
         }
 
-        static async Task DownloadAndParse(IRepository repo, int batchSize, Downloader download)
+        async Task DownloadAndParse(IRepository repo, int batchSize, Downloader download)
         {
             List<WebPage> batch;
             //batch = dbctx.WebPages
             //.Include("ConsumeFrom")
             //.Include("SupplyTo")            // not necessary
             //.Where(
-            //    w => w.Url.Contains("rfc7230")                 // https://tools.ietf.org/html/rfc7230
-            //        || w.Url.Contains("rfc2616")              // https://www.w3.org/Protocols/rfc2616/rfc2616.html
-            //        || w.Url.Contains("w3schools.com/tags/ref_attributes.asp") // https://www.w3schools.com/tags/ref_attributes.asp
+            //    w => w.Url.Contains("rfc7230")                                    // https://tools.ietf.org/html/rfc7230
+            //        || w.Url.Contains("rfc2616")                                  // https://www.w3.org/Protocols/rfc2616/rfc2616.html
+            //        || w.Url.Contains("w3schools.com/tags/ref_attributes.asp")    // https://www.w3schools.com/tags/ref_attributes.asp
             //    )
             //.OrderBy(w => w.Url)
             //.ToList();
@@ -153,23 +162,25 @@ namespace KissFW
             //    .OrderBy(w => w.Url)
             //    .ToList();
             batch = await repo.GetWebPagesToDownloadAsync(batchSize);           // get first batch (as List<WebPage>)
+            var progressIndicator = new Progress<int>(ReportProgress);
             while (batch.Count > 0)
             {
-                foreach (var webpage in batch)                                  // iterate through [re-]obtained List
+                foreach (var webpage in batch)                                      // iterate through [re-]obtained List
                 {
                     Console.WriteLine($"<<<{webpage.Url}>>>");
+                    currentPage = webpage;                                          // prepare for IProgress.Report notification
                     try
                     {
-                        await download.FetchFileAsync(webpage);                 // complete current page before starting the next
+                        await download.FetchFileAsync(webpage, progress: progressIndicator);  // complete current page before starting the next
                     }
-                    catch (Exception excp)                                      // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
+                    catch (Exception excp)                                          // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
                         Console.WriteLine($"Main EXCEPTION\tfor {webpage.PageId}\t{webpage.Url}\n{excp.Message}");   // see Filespec like '~%'
-                        webpage.Download = WebPage.DownloadEnum.Ignore;         // prevent any [infinite] retry loop; although Downloading table should delay
+                        webpage.Download = WebPage.DownloadEnum.Ignore;             // prevent any [infinite] retry loop; although Downloading table should delay
                     }
                 }
-                var finalcnt = await repo.SaveChangesAsync();                   // flush to update any pending webpage.Download changed rows (else p_ToDownload will repeat)
-                batch = await repo.GetWebPagesToDownloadAsync(batchSize);       // get next batch
+                var finalcnt = await repo.SaveChangesAsync();                       // flush to update any pending webpage.Download changed rows (else p_ToDownload will repeat)
+                batch = await repo.GetWebPagesToDownloadAsync(batchSize);           // get next batch
             }
         }
 
@@ -191,7 +202,7 @@ namespace KissFW
         /// <remarks>
         /// 1.  batchSize is set by caller [from App.config
         /// </remarks>
-        static async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
+        async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
         {
             var batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
             while (batch.Count > 0)
@@ -218,6 +229,11 @@ namespace KissFW
                 var finalcnt = repo.SaveChanges();                              // flush to update any pending "webpage.Localise = Ignore/Localised" rows
                 batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get next batch
             }
+        }
+
+        public void ReportProgress(int value)
+        {
+            Console.WriteLine($"[{Thread.CurrentThread.ManagedThreadId}]\tdownload progress\t{value}\t{currentPage.Url}");   // N.B. Url as .Filespec may change during analysis
         }
     }
 }
