@@ -118,7 +118,7 @@ namespace DownloadLib
             if (filespec4 != null)
             {
                 filespec4 = Path.Combine(HtmlPath, Utils.MakeValid(filespec4 + ".html"));     // intrinsic spec by page content
-                if (!filespec3.Equals(filespec4, StringComparison.InvariantCultureIgnoreCase) && filespec4.Length <= WebPage.FILESIZE)
+                if (!filespec3.Equals(filespec4, StringComparison.InvariantCultureIgnoreCase) && filespec4.Length <= FILESIZE)
                 {
                     try
                     {
@@ -131,7 +131,7 @@ namespace DownloadLib
                             }
                             else
                             {
-                                Console.WriteLine($"leaving new {filespec3} as different to existing {filespec4}");
+                                Console.WriteLine($"leaving as different\n\twas:\t{filespec4}\n\tnow:\t{filespec3}");
                             }
                         }
                         else
@@ -143,17 +143,17 @@ namespace DownloadLib
                             {
                                 File.Move(filespec3, filespec4);
                                 webpage.Filespec = filespec4;
-                                Console.WriteLine($"moved {filespec3} => {filespec4}");
+                                Console.WriteLine($"moved\t{filespec3}\n  =>\t{filespec4}");
                             }
                             else
                             {
-                                Console.WriteLine($"NOT moved {filespec3} => {filespec4}");
+                                Console.WriteLine($"NOT moved\t{filespec3}\n  =>\t\t{filespec4}");
                             }
                         }
                     }
                     catch (Exception excp)
                     {
-                        Console.WriteLine($"moving {filespec3} => {filespec4} failed with {excp.Message}");
+                        Console.WriteLine($"moving {filespec3} => {filespec4} failed with\n{excp.Message}");
                     }
                 }
             }
@@ -195,7 +195,7 @@ namespace DownloadLib
             using (var rsp = await _httpRetryPolicy.ExecuteAsync(                   // TODO: rewrite as fatal timeouts won't be caught here [caller will catch]
                 (ct2) => Client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct2), ct))
             {                                                                       // this block serves as Dispose() context for req and rsp
-                Console.WriteLine($"{rsp.StatusCode} {rsp.ReasonPhrase}");
+                Console.WriteLine($"{(int)rsp.StatusCode} {rsp.ReasonPhrase}");
 
                 if (!rsp.IsSuccessStatusCode)                                       // timeout will be thrown directly to caller [no catch here]
                 {
@@ -207,23 +207,35 @@ namespace DownloadLib
                     rsp.EnsureSuccessStatusCode();                                  // raise official exception
                 }
                 var filesize = rsp.Content?.Headers?.ContentLength ?? 0;            // 249044384
-                var ctyp = rsp.Content?.Headers?.ContentType.MediaType;             // "application/octet-stream"
-                lastmod = rsp.Content?.Headers?.LastModified;
-                if (filesize > 1000000)
-                {
-                    Console.WriteLine("** CHECK LASTMOD ETC **");
-                }
                 if (filesize > MaxFileSize)
                 {
-                    webpage.Filespec = $"~FileSize(filesize) too big{MaxFileSize}";
+                    webpage.Filespec = $"~FileSize({filesize}) too big({MaxFileSize})";
                     webpage.Download = DownloadEnum.Ignore;                         // forget it (caller must persist change)
                     return false;
                 }
                 TargetFilespecs(webpage, rsp, out extn, out var filespec2, out filespec3);  // determine appropriate file target(s)
 
+                DateTimeOffset? CreationDate = null, ModificationDate = null;
+                //var ctyp = rsp.Content?.Headers?.ContentType.MediaType;           // "application/octet-stream"
                 //var charset = rsp.Content.Headers.ContentType.CharSet;
                 //var prms = rsp.Content.Headers.ContentType.Parameters;
                 //var content = await rsp.Content.ReadAsStringAsync();
+                var contdisp = rsp.Content.Headers?.ContentDisposition;
+                if (contdisp != null)
+                {
+                    var DispositionType = contdisp.DispositionType;                 // "attachment" (separate from main body of HTTP response) or "inline" (display automatically)
+                    var FileNameStar = contdisp.FileNameStar;
+                    var Name = contdisp.Name;
+                    var FileName = Path.GetFileName(Utils.MakeValid(contdisp.FileName ?? FileNameStar ?? Name));    // "json.json" (prevent any malicious device/folder spec)
+                    var ReadDate = contdisp.ReadDate;
+                    CreationDate = contdisp.CreationDate ?? ReadDate;
+                    ModificationDate = contdisp.ModificationDate ?? rsp.Content.Headers.LastModified ?? CreationDate;
+                    //FileName = contdisp.Parameters.Name == "filename" ? contdisp.Parameters[0].Value : null;
+                    if (FileNameStar != null || CreationDate != null || ModificationDate != null || ReadDate != null || Name != null)
+                    {
+                        Console.WriteLine($"DispositionType={DispositionType}, FileName={FileName}, CreationDate={CreationDate}, ModificationDate={ModificationDate}, ReadDate={ReadDate}, Name={Name}");
+                    }
+                }
 
                 try
                 {
@@ -256,17 +268,17 @@ namespace DownloadLib
                         }
                         else
                         {
-                            var dt = lastmod?.DateTime;
-                            if (dt != null && earliest <= dt && dt <= DateTime.Now)
+                            var dt = CreationDate?.UtcDateTime;                     // rsp.Content.Headers.ContentDisposition.CreationDate
+                            if (dt != null && earliest <= dt.Value && dt.Value <= DateTime.UtcNow)
                             {
-                                File.SetLastWriteTime(filespec3, dt.Value);         // set "date and time last written to" as spec by rsp.Content?.Headers?.LastModified
+                                File.SetCreationTimeUtc(filespec3, dt.Value);       // "set date and time the file was created"
+                            }
+                            dt = ModificationDate?.UtcDateTime;                     // rsp.Content?.Headers?.LastModified ?? rsp.Content.Headers.LastModified
+                            if (dt != null && earliest <= dt.Value && dt.Value <= DateTime.UtcNow)
+                            {
+                                File.SetLastWriteTimeUtc(filespec3, dt.Value);      // "set date and time last written to"
                             }
                         }
-                    }
-                    var contdisp = rsp.Content.Headers.ContentDisposition;
-                    if (contdisp != null)
-                    {
-                        Console.WriteLine("check!");
                     }
                     webpage.Filespec = filespec3;                                   // persist the ultimate filespec [N.B. may change by Title later]
                     webpage.Download = DownloadEnum.Downloaded;                     // download completed successfully
@@ -281,7 +293,7 @@ namespace DownloadLib
                     {
                         if (rsp.Headers.TryGetValues("location", out var locs))
                         {
-                            Console.WriteLine("DEBUG: check Location header conflict");
+                            Console.WriteLine("DEBUG: check Location header");
                         }
                     }
                     location = rsp.RequestMessage.RequestUri.AbsoluteUri;      // Utils.NoTrailSlash(
@@ -439,18 +451,22 @@ namespace DownloadLib
             return mash;
         }
 
-        void SetDefaultHeaders()
+        void SetDefaultHeaders()        // Chrome does: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3
         {
             Client.DefaultRequestHeaders.Accept.Clear();
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/http"));
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/http"));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
             Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/webp", 0.8));
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/png", 0.8));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/jpeg"));     // whoops, forgot this!
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/webp", 0.8));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/png", 0.8));
+            //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
             //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/apng", 0.4));   // strange Chrome type ??
             //Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.1));          // don't ask what we can't digest (e.g. .gz)
-            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.9));          // EVERYTHING !
 
             Client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             Client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
@@ -487,18 +503,8 @@ namespace DownloadLib
             var contdisp = rsp.Content.Headers.ContentDisposition;
             if (contdisp != null)
             {
-                var DispositionType = contdisp.DispositionType;             // "attachment"
-                var FileName = Path.GetFileName(contdisp.FileName);         // "json.json" (prevent any malicious device/folder spec)
-                var FileNameStar = contdisp.FileNameStar;
-                var CreationDate = contdisp.CreationDate;
-                var ModificationDate = contdisp.ModificationDate;
-                var ReadDate = contdisp.ReadDate;
-                var Name = contdisp.Name;
-                //FileName = contdisp.Parameters.Name == "filename" ? contdisp.Parameters[0].Value : null;
-                if (DispositionType != null || FileName != null || FileNameStar != null || CreationDate != null || ModificationDate != null || ReadDate != null || Name != null)
-                {
-                    Console.WriteLine($"DispositionType={DispositionType}, FileName={FileName}, CreationDate={CreationDate}, ModificationDate={ModificationDate}, ReadDate={ReadDate}, Name={Name}");
-                }
+                var FileName = Path.GetFileName(                            // e.g. "json.json" (prevent any malicious device/folder spec)
+                    Utils.MakeValid(contdisp.FileName ?? contdisp.FileNameStar ?? contdisp.Name));  // filter out any spurious chars(e.g. double-quotes)
                 if (FileName != null)
                 {
                     string extn2;
@@ -525,13 +531,13 @@ namespace DownloadLib
             filespec2 = filespec3 = (filespec2 != null && !filespec2.StartsWith(ERRTAG))   // skip any previous error message
                 ? filespec2
                 : Path.Combine(folder, filespec1);
-            if (File.Exists(filespec2) || filespec2.Length > WebPage.FILESIZE)
+            if (File.Exists(filespec2) || filespec2.Length > FILESIZE)
             {
                 webpage.DraftFilespec = filespec1;                          // keep our 2nd choice of fn.extn [simple debug aid]
                 do                                                          // use alternate file target
                 {
                     filespec3 = Path.Combine(folder, Utils.RandomFilenameOnly() + EXTN_SEPARATOR + extn);   // no 100% guarantee that file5678.extn file doesn't exist
-                    Debug.Assert(filespec3.Length <= WebPage.FILESIZE, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
+                    Debug.Assert(filespec3.Length <= FILESIZE, "reduce folder length for htmldir / otherdir in App.config for AppSettings");
                 } while (File.Exists(filespec3));                           // hopefully rare and finite case !
             }
         }

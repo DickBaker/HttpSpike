@@ -4,6 +4,7 @@ namespace Infrastructure.Models
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Net;
     using System.Text;
     using Infrastructure;
 
@@ -24,9 +25,12 @@ namespace Infrastructure.Models
             Downloaded,
             LoPriorityDownload,                                             // 3
             HiPriorityDownload = 63,                                        // valid range is 3 .. 63 for all WebPage rows
-            ReDownload = (LoPriorityDownload + HiPriorityDownload) / 2,     // 33 midpoint is default on INSERT
-            BoostMax = (ReDownload + ReDownload) / 2                        // 48 so boost is range 34 .. 48 (15 automatic notches)
+            Default = (LoPriorityDownload + HiPriorityDownload) / 2,        // 33 midpoint is default on INSERT
+            BoostMin = Default + 1,                                         // 34 midpoint is default on INSERT
+            BoostMax = (BoostMin + HiPriorityDownload) / 2,                 // 48 so boost is range 34 .. 48 (15 automatic notches)
                                                                             // so 49-63 only set manually after UI action (15 manual notches)
+            LoReserved = 64,                                                // 64-255 reserved for future definition
+            HiReserved = byte.MaxValue                                      // byte is unsigned 8-bit integer (ditto TSQL tinyint) range 0-255
         }
 
         public enum LocaliseEnum : byte
@@ -60,7 +64,7 @@ namespace Infrastructure.Models
         [NotMapped]
         Uri Uri { get; set; }                           // reference so can discover individual members like Host
 
-        string _url;                                    // backing field (saves having to invoke Uri.AbsoluteUri and NoTrailSlash everytime)
+        string _url;                                    // backing field (saves having to invoke Uri.AbsoluteUri everytime)
 
         [Required]
         [StringLength(URLSIZE)]
@@ -82,7 +86,6 @@ namespace Infrastructure.Models
                     */
                 }
                 Uri = new Uri(_url, UriKind.Absolute);      // caller must present as absolute, e.g. by convert(base,relative)
-                //_url = Utils.NoTrailSlash(Uri.AbsoluteUri.ToLowerInvariant());  // PERFORMANCE: do this once (immutable and is read often)
                 HashCode = _url.GetHashCode();                                  //  and cache the signature
                 var numsegs = Uri.Segments.Length - 1;
                 if (numsegs >= 0)
@@ -91,7 +94,7 @@ namespace Infrastructure.Models
                     {
                         return;
                     }
-                    DraftFilespec = Uri.Segments[numsegs];
+                    DraftFilespec = WebUtility.UrlDecode(Uri.Segments[numsegs]);
                 }
             }
         }
@@ -185,7 +188,7 @@ namespace Infrastructure.Models
 #pragma warning disable CA1307 // Specify StringComparison
             var qpstart = url.IndexOf(QUEST);                       // first "?" indicates start of queryparams (any subsequent is simple ASCII)
 #pragma warning restore CA1307 // Specify StringComparison
-            if (qpstart < 0 || qpstart > WebPage.URLSIZE)            // either empty querystring or path itself already too long ?
+            if (qpstart < 0 || qpstart > URLSIZE)            // either empty querystring or path itself already too long ?
             {
                 //return url.Substring(0, WebPage.URLSIZE);           // yes. crude truncate at max width (may not be at word-break)
                 throw new InvalidOperationException("Url too long (even after removing any queryparams)");  // abandon this particular link
@@ -200,7 +203,7 @@ namespace Infrastructure.Models
 #pragma warning restore CA1307 // Specify StringComparison
                 {
                     var qpn = special + qryprns[i];
-                    if (sb.Length + qpn.Length <= WebPage.URLSIZE)
+                    if (sb.Length + qpn.Length <= URLSIZE)
                     {
                         sb.Append(qpn);                             // may not be left-significant (e.g. ignore QP[i] but copy QP[i+1])
                         special = AMP;                              // subsequent delimiter for QS params is the "&"

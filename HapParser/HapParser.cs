@@ -228,7 +228,7 @@ namespace HapLib
                     var atribType = hnode.Attributes["type"]?.Value;                // #1 explicit "type" trumps explicit
                     if (atribType != null)
                     {
-                        extn = Infrastructure.Models.MimeCollection.LookupExtnFromMime(atribType);  // override explicit extn if found
+                        extn = MimeCollection.LookupExtnFromMime(atribType);  // override explicit extn if found
                     }
                     if (string.IsNullOrWhiteSpace(extn))                            // #2 if explicit extn given then we use it
                     {
@@ -284,7 +284,7 @@ namespace HapLib
                     {
                         if (!string.IsNullOrWhiteSpace(Links[url]))
                         {
-                            Console.WriteLine($"variant file.ext for {url} : {Links[url]} {filename}");
+                            Console.WriteLine($"variant file.ext for {url}\n\twas:\t{Links[url]}\n\tnow:\t{filename}");
                         }
                         Links[url] = filename;
                     }
@@ -385,9 +385,22 @@ namespace HapLib
                                                                 //  also initialises BaseAddress for any subsequent relative Urls
             HtmlDoc = new HtmlDocument
             {
-                OptionEmptyCollection = true                    // SelectNodes method will return empty collection when
-            };                                                  //   no node matched the XPath expression
-            HtmlDoc.Load(path);
+                OptionEmptyCollection = true,                   // SelectNodes method will return empty collection when no node matched the XPath expression
+                OptionReadEncoding = true                       // encoding must be read from the document. Declared encoding is determined using the
+                                                                // meta http-equiv="content-type" content="text/html;charset=XXXXX" html node. Default is true [already]
+            };
+            HtmlDoc.Load(path, detectEncodingFromByteOrderMarks: true); // look for byte order marks at the beginning of the file
+            //HtmlDoc.DetectEncodingAndLoad(path, detectEncoding: true);  // Detects the encoding of an HTML document from a file first, and then loads the file
+            if (((List<HtmlParseError>)HtmlDoc?.ParseErrors)?.Count > 0)
+            {
+                foreach (var err in HtmlDoc.ParseErrors)
+                {
+                    if (err.Code != HtmlParseErrorCode.EndTagNotRequired && err.Code != HtmlParseErrorCode.TagNotOpened)
+                    {
+                        Console.WriteLine($"HAP error = {err.Code}, row={err.Line}, col={err.LinePosition},\n\treason={err.Reason},\n\tsource={err.SourceText}");
+                    }
+                }
+            }
 
             var basenode = HtmlDoc.DocumentNode.SelectSingleNode("//head/base[href]");    // there can only be ONE or none [href]
             if (basenode != null)
@@ -411,8 +424,8 @@ namespace HapLib
             // extract title if any
             var tit = HtmlDoc.DocumentNode.SelectSingleNode("//head/title");
             Title = Utils.TrimOrNull(tit?.GetAttributeValue("title", tit.InnerText))
-                ?? Utils.TrimOrNull(HtmlDoc.DocumentNode.SelectSingleNode("//head/meta[@name='twitter:title']")?.GetAttributeValue("content", null))
-                ?? Utils.TrimOrNull(HtmlDoc.DocumentNode.SelectSingleNode("//head/meta[@Property='og:title']")?.GetAttributeValue("content", null))
+                ?? Utils.TrimOrNull(HtmlDoc.DocumentNode.SelectSingleNode("//head/meta[@name='twitter:title']")?.Attributes["content"]?.Value)
+                ?? Utils.TrimOrNull(HtmlDoc.DocumentNode.SelectSingleNode("//head/meta[@Property='og:title']")?.Attributes["content"]?.Value)
             //  ?? "UnknownTitle"               // don't do this (cf. Downloader.filespec4)
             ;
         }

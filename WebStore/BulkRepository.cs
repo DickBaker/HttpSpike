@@ -78,7 +78,7 @@ namespace WebStore
         }
         */
 
-        const string TGTTABLE = "#WebpagesStaging";
+        const string TGTTABLE = "#WebpagesStaging", COLLATION = "COLLATE SQL_Latin1_General_CP1_CI_AS";
 
         readonly string[] stagingNames = { "Url", "DraftFilespec" },
             stagingTypes = { "System.String", "System.String" };
@@ -267,8 +267,8 @@ namespace WebStore
             var createCmd = new SqlCommand(
                 $"DROP TABLE IF EXISTS {TGTTABLE};\n" +                                 // drop any pre-existing table (allow Polly to be idempotent)
                 $"CREATE TABLE {TGTTABLE}\n" +
-                $"(\t[Url]\t\tnvarchar({WebPage.URLSIZE})\tNOT NULL\tPRIMARY KEY,\n" +  // N.B. PKCI on Url for Staging (noPageId column here)
-                $"\tDraftFilespec\tnvarchar({WebPage.FILESIZE})\tNULL)", _conn);
+                $"(\t[Url]\t\tnvarchar({WebPage.URLSIZE})\t{COLLATION}\tNOT NULL\tPRIMARY KEY,\n" +  // N.B. PKCI on Url for Staging (noPageId column here)
+                $"\tDraftFilespec\tnvarchar({WebPage.FILESIZE})\t{COLLATION}\tNULL)", _conn);
 #pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
             return createCmd.ExecuteNonQueryAsync();
         }

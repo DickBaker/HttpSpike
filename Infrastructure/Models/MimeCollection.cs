@@ -54,7 +54,7 @@ namespace Infrastructure.Models
             var ValidExtns2 = new HashSet<string>(MimeList.Values.Distinct().Select(ctte => ctte.Extn));
             Debug.Assert(ValidExtns.SetEquals(ValidExtns2), "different ValidExtns !!");
             // commonplace extns found in real-world but [maybe?] not in ContentTypeToExtns
-            AddIfMissing(ValidExtns, new string[] { "asp", "aspx", "exe", "htm", "jpeg", "mp3", "php" });
+            AddIfMissing(ValidExtns, new string[] { "asp", "aspx", "exe", "htm", "jpeg", "mp3", "php" });   // "exe" is now listed
         }
 
         static void AddIfMissing(ICollection<string> collection, string[] dontforget)

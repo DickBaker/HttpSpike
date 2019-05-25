@@ -72,7 +72,7 @@ namespace KissFW
             }
             if (!int.TryParse(ConfigurationManager.AppSettings["batchsize"], out var batchSize))
             {
-                batchSize = 15;
+                batchSize = 4;
             }
             if (!int.TryParse(ConfigurationManager.AppSettings["maxlinks"], out MaxLinks))
             {
@@ -161,7 +161,13 @@ namespace KissFW
             //    .Where(w => keywords.Contains(w.PageId))
             //    .OrderBy(w => w.Url)
             //    .ToList();
-            batch = await repo.GetWebPagesToDownloadAsync(batchSize);           // get first batch (as List<WebPage>)
+            batch = dbctx.WebPages
+                .Include("ConsumeFrom")
+                //.Include("SupplyTo")            // not necessary
+                .Where(w => w.Url== "https://cmrc1.logoscdn.com/www.logos.com/images/products/165584.jpg?69723996288")
+                .OrderBy(w => w.Url)
+                .ToList();
+            //            batch = await repo.GetWebPagesToDownloadAsync(batchSize);               // get first batch (as List<WebPage>)
             var progressIndicator = new Progress<int>(ReportProgress);
             while (batch.Count > 0)
             {
@@ -176,6 +182,7 @@ namespace KissFW
                     catch (Exception excp)                                          // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
                         Console.WriteLine($"Main EXCEPTION\tfor {webpage.PageId}\t{webpage.Url}\n{excp.Message}");   // see Filespec like '~%'
+
                         webpage.Download = WebPage.DownloadEnum.Ignore;             // prevent any [infinite] retry loop; although Downloading table should delay
                     }
                 }
