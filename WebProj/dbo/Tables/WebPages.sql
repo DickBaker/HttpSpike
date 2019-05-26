@@ -16,14 +16,16 @@ CREATE TABLE [dbo].[WebPages] (
 
 
 
+
+
 GO
 CREATE UNIQUE CLUSTERED INDEX CI_WebPages
     ON dbo.WebPages(Url ASC);
 GO
 
 CREATE TRIGGER [dbo].[WebPages_trIU] 
-   ON  [dbo].[WebPages] 
-   AFTER INSERT, UPDATE
+	ON [dbo].[WebPages] 
+	AFTER INSERT, UPDATE
 /*
 PURPOSE
 	populate Host table as we encounter new page sources
@@ -38,7 +40,12 @@ HISTORY
 	20190329 dbaker	add ROWCOUNT_BIG and IF UPDATE(c) code, and NOTES
 	20190416 dbaker	remove ROWCOUNT_BIG and final IF UPDATE(c) code around SRC/TGT code to support BF/CF behaviour
 	20190421 dbaker	on Localise=1 set NeedDownload for each independent resource
-	20180422 dbaker	changed to Download, Localise and persist *Extn
+	20190422 dbaker	changed to Download, Localise and persist *Extn
+	20190503 dbaker acquire entire TABLOCK on WebPages for duration of this sproc !
+	20190504 dbaker remove (TABLOCKX, HOLDLOCK) on WebPages as the app now supports Polly retries for ADO and EF
+	20190507 dbaker remove changes [removing trailing /or ?] from Url
+	20190507 dbaker	ensure changing the Http Scheme doesn't exceed the 450 max (i.e. 442, 443 magic below)
+	20190507 dbaker	isolate INSERT Hosts under separate IF UPDATE() block
 
 EXAMPLE
 	select * from dbo.Hosts where HostName like '%DICK.CO%' order by HostId
@@ -78,14 +85,11 @@ AS
 BEGIN
 	SET NOCOUNT ON		-- prevent extra result sets from interfering with SELECT statements.
 	
-	--IF (ROWCOUNT_BIG() = 0)				-- cf https://docs.microsoft.com/en-us/sql/t-sql/statements/create-trigger-transact-sql?view=sql-server-2017
+	--IF (ROWCOUNT_BIG() = 0)			-- cf https://docs.microsoft.com/en-us/sql/t-sql/statements/create-trigger-transact-sql?view=sql-server-2017
 	--	RETURN;
 
 	IF		UPDATE([Url])				-- cf https://docs.microsoft.com/en-us/sql/t-sql/functions/update-trigger-functions-transact-sql?view=sql-server-2017
-		or	UPDATE(HostId)				-- NB nested triggers server configuration option is OFF to avoid infinite loop
-		or	UPDATE(Download)
-	BEGIN
-
+	  BEGIN
 		INSERT INTO dbo.Hosts (HostName)
 			select	DISTINCT I.HostName
 			from
@@ -96,53 +100,68 @@ BEGIN
 			where	I.HostName	is not NULL
 			 and	H.HostId	is NULL
 			order by I.HostName
+	  END
 
+	IF		UPDATE([Url])				-- cf https://docs.microsoft.com/en-us/sql/t-sql/functions/update-trigger-functions-transact-sql?view=sql-server-2017
+		or	UPDATE(HostId)				-- NB nested triggers server configuration option is OFF to avoid infinite loop
+		or	UPDATE(Download)
+	 BEGIN
+		/*
+        public enum DownloadEnum : byte
+        {
+            Ignore = 0,
+            Redirected,                                                     // ConsumeFrom should have ONE entry, Filespec should be NULL
+            Downloaded,
+            LoPriorityDownload,                                             // 3
+            HiPriorityDownload = 63,                                        // valid range is 3 .. 63 for all WebPage rows
+            Default = (LoPriorityDownload + HiPriorityDownload) / 2,        // 33 midpoint is default on INSERT
+            BoostMin = Default + 1,                                         // 34 midpoint is default on INSERT
+            BoostMax = (BoostMin + HiPriorityDownload) / 2,                 // 48 so boost is range 34 .. 48 (15 automatic notches)
+                                                                            // so 49-63 only set manually after UI action (15 manual notches)
+            LoReserved = 64,                                                // 64-255 reserved for future definition
+            HiReserved = byte.MaxValue                                      // byte is unsigned 8-bit integer (ditto TSQL tinyint) range 0-255
+        }
+		*/
 		UPDATE	WP set
-				[Url]	=
+				HostId	= H.HostId
+			,	Download =					-- NULL=unknown (take Hosts.Is* default), else as above DownloadEnum
 					case
-						when right(WP.[Url], 1)='/' or right(WP.[Url], 1) = '?'	-- any remove trailing / or ? (ideally both!)
-							then	left(WP.[Url], len(WP.[Url]) -1)
-						else		WP.[Url]
-					end
-			,	HostId	= H.HostId
-			,	Download =					-- NULL=unknown, 0=no download, 1=to download, 2=to re-download, 3=downloaded
-					case
-						when WP.Download <=	0											then 0
-						when WP.Download is NULL	and WP.DraftFilespec like '%.html'	then convert(tinyint, H.IsHtml)
-						when WP.Download is NULL	and WP.DraftFilespec like '%.css'	then convert(tinyint, H.IsCss)
-						when WP.Download is NULL	and WP.DraftFilespec like '%.js'	then convert(tinyint, H.IsJs)
-						when WP.Download is NULL	and WP.DraftFilespec like '%.json'	then convert(tinyint, H.[IsJson])
-						when WP.Download is NULL	and WP.DraftFilespec like '%.xml'	then convert(tinyint, H.IsXml)
+						when WP.Filespec like '~%'										then 0	-- some fatal error encountered
+						when WP.Download is NULL	and WP.DraftFilespec like '%.html'	then convert(tinyint, H.IsHtml)		* 33
+						when WP.Download is NULL	and WP.DraftFilespec like '%.css'	then convert(tinyint, H.IsCss)		* 33
+						when WP.Download is NULL	and WP.DraftFilespec like '%.js'	then convert(tinyint, H.IsJs)		* 33
+						when WP.Download is NULL	and WP.DraftFilespec like '%.json'	then convert(tinyint, H.[IsJson])	* 33
+						when WP.Download is NULL	and WP.DraftFilespec like '%.xml'	then convert(tinyint, H.IsXml)		* 33
 						when WP.Download is NULL	and dbo.fn_extension(WP.DraftFilespec)
-									in ('gif','ico','jpeg','jpg','png','svg')			then convert(tinyint, H.IsImage)
-						when WP.Download is NULL	and WP.DraftFilespec is not NULL	then convert(tinyint, H.IsOther)	-- extn=null is legit
-						when WP.Download is NULL	and WP.DraftFilespec is NULL		then 0		-- fs=null legit if FindLinks can't find fn, default to skip download
-						when WP.Download >=	3		and WP.Filespec		is not NULL		then 3
-						when WP.Download >	1		and WP.Filespec		is NULL			then 1
-						else WP.Download		-- accept NN given
+									in ('bmp', 'gif','ico','jpeg','jpg','png','svg')	then convert(tinyint, H.IsImage)	* 33
+						when WP.Download is NULL										then convert(tinyint, H.IsOther)	* 29	-- extn=null is legit
+						when WP.Download >=	64		and WP.Filespec		is not NULL		then 2	-- DownloadEnum.Downloaded
+						else WP.Download									-- accept NN given
 					end
-			,	DraftExtn		= dbo.fn_extension(WP.DraftFilespec)		-- PERSISTED so deterministic
+			,	DraftExtn		= dbo.fn_extension(WP.DraftFilespec)		-- PERSISTED so deterministic (and could be used as index column)
 			,	FinalExtn		= dbo.fn_extension(WP.Filespec)				-- and eligible as index field
 		from	inserted		I
-		join	dbo.WebPages	WP	on	WP.PageId	= I.PageId	-- (PageId is immutable)
+		join	dbo.WebPages	WP	-- WITH (TABLOCKX, HOLDLOCK)			-- exclusive lock on entire table to avoid deadlocks
+									on	WP.PageId	= I.PageId				-- (PageId is immutable)
+																			--  [complex joins otherwise spid1 takes A, B and spid2 takes B,A] and kept for transaction (EF SaveChanges)
 		join	dbo.Hosts		H	on	H.HostName	= dbo.UrlSplit(WP.[Url])
-		where	WP.HostId		is NULL							-- always the case for C# app because EF ignorant of HostId
+		where	WP.HostId		is NULL										-- always the case for C# app because EF ignorant of HostId
 		  or	WP.Download		is NULL 
 		  or	WP.HostId		!= H.HostId
 
-	END
+	 END
 
 	-- commented-out since row with defaulting *Filespec can still be target of pre-existing values elsewhere
 	-- IF	UPDATE(DraftFilespec)			-- cf https://docs.microsoft.com/en-us/sql/t-sql/functions/update-trigger-functions-transact-sql?view=sql-server-2017
 	--	or	UPDATE(Filespec)
-	BEGIN
+	 BEGIN
 		UPDATE	TGT set
 			DraftFilespec	=	isnull(TGT.DraftFilespec, SRC.DraftFilespec)
 		,	Filespec		=	isnull(TGT.Filespec, SRC.Filespec)
 		from	inserted		I											-- frozen original as written by app
 		join	dbo.WebPages	X		on		X.PageId	=	I.PageId	-- latest which may have shortened Url (PageId is immutable)
-		join	dbo.WebPages	SRC		on		SRC.[Url]	in	(X.[Url], 'http://'+substring(X.[Url], 9, 999), 'https://'+substring(X.[Url], 8, 999))
-		join	dbo.WebPages	TGT		on		TGT.[Url]	in	(X.[Url], 'http://'+substring(X.[Url], 9, 999), 'https://'+substring(X.[Url], 8, 999))
+		join	dbo.WebPages	SRC		on		SRC.[Url]	in	(X.[Url], 'http://'+substring(X.[Url], 9, 443), 'https://'+substring(X.[Url], 8, 442))
+		join	dbo.WebPages	TGT		on		TGT.[Url]	in	(X.[Url], 'http://'+substring(X.[Url], 9, 443), 'https://'+substring(X.[Url], 8, 442))
 		where	I.[Url]					like	'http%'
 		 and	(	(	SRC.DraftFilespec	is not NULL
 					and	TGT.DraftFilespec	is NULL
@@ -151,23 +170,26 @@ BEGIN
 					and	TGT.Filespec		is NULL
 					)
 				)
-	END
+	 END
 
 	if	UPDATE(Localise)										-- 0=no localisation, 1=to localise, 2=localised
-	BEGIN
+	 BEGIN
 		UPDATE dbo.WebPages set
-			Download	=	1									-- NULL=unknown, 0=no download, 1=to download, 2=to re-download, 3=downloaded
-		where	(	Download	= 0
+			Download	=	48									-- DownloadEnum.BoostMax
+		where	(	Download	= 0								-- DownloadEnum.Ignore
+				or	Download between 3 and 47					-- lower-priority download already queued
 				--or	Download	is NULL						-- should be unnecessary as above code should have eliminated all NULLs
 				)
-		--and	Filespec	is NULL
+		 and	(	Filespec	is NULL							-- un-attempted or
+				or	Filespec	not like '~%'					--  non-errored
+				)
 		 and	PageId		in
 		 (	select distinct D.ParentId
 			from	inserted	I								-- frozen original as written by app (PageId is immutable)
 			join	dbo.Depends	D	on	D.ChildId	= I.PageId
-			where	I.Localise	= 1
+			where	I.Localise	= 1								-- LocaliseEnum.ToLocalise
 		)
-	END
+	 END
 
 END
 
@@ -177,6 +199,7 @@ CREATE NONCLUSTERED INDEX [IX_HostId]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_Download_Localise]
-    ON [dbo].[WebPages]([Download] ASC, [Localise] ASC, [PageId] ASC, [FinalExtn] ASC);
+CREATE NONCLUSTERED INDEX [WebPages_Download_HostId]
+    ON [dbo].[WebPages]([Download] ASC)
+    INCLUDE([HostId]);
 

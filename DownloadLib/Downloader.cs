@@ -186,7 +186,6 @@ namespace DownloadLib
             IProgress<int> progress = null)
         {
             string extn = null, filespec3, location, draft = null;
-            DateTimeOffset? lastmod = null;
             var akaUrls = new List<string>();
 
             var url = Utils.TrimOrNull(webpage?.Url) ?? throw new InvalidOperationException("FetchFileAsync(webpage.Url) cannot be null");
@@ -201,9 +200,10 @@ namespace DownloadLib
                 {
                     //webpage.NeedDownload = false;                                 // prevent any [infinite] retry loop
                     webpage.Filespec = $"{ERRTAG}{rsp.StatusCode}({rsp.ReasonPhrase})";
-                    //await Dataserver.SaveChangesAsync();                          // do it NOW !
-                    //await Task.FromResult(result: false);                         // on error ignore (no exception)
-                    //throw new ApplicationException($"web response {rsp.StatusCode}({rsp.ReasonPhrase}) for Url={webpage.Url}");
+                    if (!(new int[] { 404, 303 }).Contains((int)rsp.StatusCode))
+                    {
+                        Console.WriteLine($"unexpected error{(int)rsp.StatusCode}");
+                    }
                     rsp.EnsureSuccessStatusCode();                                  // raise official exception
                 }
                 var filesize = rsp.Content?.Headers?.ContentLength ?? 0;            // 249044384
@@ -219,7 +219,6 @@ namespace DownloadLib
                 //var ctyp = rsp.Content?.Headers?.ContentType.MediaType;           // "application/octet-stream"
                 //var charset = rsp.Content.Headers.ContentType.CharSet;
                 //var prms = rsp.Content.Headers.ContentType.Parameters;
-                //var content = await rsp.Content.ReadAsStringAsync();
                 var contdisp = rsp.Content.Headers?.ContentDisposition;
                 if (contdisp != null)
                 {
@@ -230,7 +229,6 @@ namespace DownloadLib
                     var ReadDate = contdisp.ReadDate;
                     CreationDate = contdisp.CreationDate ?? ReadDate;
                     ModificationDate = contdisp.ModificationDate ?? rsp.Content.Headers.LastModified ?? CreationDate;
-                    //FileName = contdisp.Parameters.Name == "filename" ? contdisp.Parameters[0].Value : null;
                     if (FileNameStar != null || CreationDate != null || ModificationDate != null || ReadDate != null || Name != null)
                     {
                         Console.WriteLine($"DispositionType={DispositionType}, FileName={FileName}, CreationDate={CreationDate}, ModificationDate={ModificationDate}, ReadDate={ReadDate}, Name={Name}");
@@ -415,7 +413,7 @@ namespace DownloadLib
         {
             var buff = new byte[buffSize];
             long ReportAbove;
-            var reportInterval = ReportAbove = (MaxFileSize / 100 < (long)buffSize) ? (long)buffSize : MaxFileSize / 100;
+            var reportInterval = ReportAbove = (MaxFileSize / 100 < buffSize) ? buffSize : MaxFileSize / 100;
             progress.Report(0);
             long SizeDone = 0;
             Console.WriteLine($"stream expecting {filesize}, interval={reportInterval}");
@@ -436,7 +434,7 @@ namespace DownloadLib
                     ReportAbove += reportInterval;
                 }
             } while (SizeDone < MaxFileSize);
-            progress.Report((int)(100));                                    // report the final 100%
+            progress.Report(100);                                    // report the final 100%
         }
 
         byte[] GetHash(string filespec2)

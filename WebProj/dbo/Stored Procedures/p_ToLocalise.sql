@@ -9,6 +9,7 @@ HISTORY
 	20190420 dbaker tweaked to try index
 	20190422 dbaker change NeedDownload/NeedLocalise to Download/Localise tinyint indicators, and *Extn persistent columns for index
 
+	20190426 dbaker	coerce Download, Localise to tinyint
 EXAMPLES
 	exec dbo.p_ToLocalise
 	exec dbo.p_ToLocalise	'http%://%DICK.com%'
@@ -139,7 +140,7 @@ where	Spid	= @SPID
 -- SELECT * from @results			-- DISABLE for PROD
 
 -- 7.	return exact entity rows to client app (N.B. client ignorant of HostId)
-SELECT	PageId, [Url], DraftFilespec, Filespec, 3 as Download, 1 as Localise
+SELECT	PageId, [Url], DraftFilespec, Filespec, convert(tinyint,3) as Download, convert(tinyint,1) as Localise	-- need to cast as int8 otherwise will be int32
 from	@results
 
 END

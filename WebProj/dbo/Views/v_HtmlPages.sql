@@ -16,25 +16,60 @@ PURPOSE
 
 HISTORY
 	20190421 dbaker	created
+	20190421 dbaker	belated change of Download constants
 
 EXAMPLE
+	set transaction isolation level read uncommitted
 	select top 50 * from dbo.v_HtmlPages order by GotRefs desc,[Url]
-	select top 50 *, 100.0*GotRefs/TotRefs as ZZZ from dbo.v_HtmlPages order by ZZZ desc, GotRefs desc, [Url]
-	select top 50 *, 100.0*GotRefs/TotRefs as ZZZ from dbo.v_HtmlPages order by ZZZ desc, GotRefs desc, [Url]
-	select count(*)	--top 50 PageId, HostId, Url, DraftFilespec, Filespec, Download, Localise, TotRefs, GotRefs, PC, 100.0*GotRefs/TotRefs as ZZZ
-	from dbo.v_HtmlPages order by PC desc, GotRefs desc, [Url]
+	select top 500 * from dbo.v_HtmlPages order by PC desc, GotRefs desc, [Url]
+	select top 50 count(*) as N, PC from dbo.v_HtmlPages group by PC order by N desc, PC desc
+	select top 50 count(*) as N, PC from dbo.v_HtmlPages where PC > 95 group by PC order by PC desc
+	select * from dbo.v_HtmlPages where PC between 95 and 99.9999 order by PC desc, [Url]
+	select * from dbo.v_HtmlPages where [Url] like '%www.ligonier.org/learn/devotionals/?page_devotionals=%' order by [Url]
 
-	UPDATE top 10 W set Localise	= 1
-	-- select	W.PageId, W.HostId, W.Url, W.DraftFilespec, W.Filespec, W.Download, W.Localise
+	select	W.*
+	-- update W set Download=60
+	from	WebPages	W
+	where	W.Download	not in (1, 2)
+	 and	W.[Url] not like '%amzn.to%'
+	 and	W.[Url] not like '%amazon.com%'
+	 and	W.[Url] not like '%brightcove.net%'
+	 and	W.[Url] not like '%facebook.com%'
+	 and	W.[Url] not like '%twitter.com%'
+	 and	W.[Url] like '%ligonier.org%'
+	 and	(W.Filespec is NULL or W.Filespec not like '~%')
+	 and	W.PageId	in
+	(	select	distinct D.ParentId
+		from	Depends		D
+		join	WebPages	C	on	 C.PageId	= D.ChildId
+		where	C.[Url]		like	'%www.ligonier.org/store%'
+		 or		C.[Url]		like	'%www.ligonier.org/learn%'
+		 or		C.[Url]		like	'%www.ligonier.org/team%'
+		 or		C.[Url]		like	'%www.ligonier.org/teachers%'
+	)
+	order by W.[Url]
+	exec sp_configure 'show advanced options', 1
+	exec sp_configure 'clr enabled', 1
+	exec sp_configure 'clr strict security', 0
+	RECONFIGURE
+
+select *
+-- update W set Download=2
+from WebPages W
+where Download=0 and FileSpec is not NULL and Filespec not like '~%'
+order by Url
+
+	select	W.PageId, W.HostId, W.Url, W.DraftFilespec, W.Filespec, W.Download, W.Localise
+	-- UPDATE top 10 W set Localise	= 1
 	from	dbo.WebPages	W
-	where	Download	= 3		-- Filespec	is not NULL
+	where	Download	= 2		-- Filespec	is not NULL
 	 and	PageId in
 		(	select PageId
 			--select top 10 *, 10.0*GotRefs/TotRefs
 			from	dbo.v_HtmlPages	V
 			--where	TotRefs		= GotRefs				-- don't use PC column as real is an approx datatype
 			-- and	TotRefs		> 0
-			order by PC desc, GotRefs desc, [Url]
+			--order by PC desc, GotRefs desc, [Url]
 		)
 	 and	Download	= 0
 	 and	Localise	= 0
@@ -73,11 +108,11 @@ as
 			,	(	select	count(*)					-- GotRefs: count # external resources needed and downloaded
 					from	dbo.Depends (nolock)	D
 					join	dbo.WebPages (nolock)	P	ON	P.PageId	= D.ParentId
-					where	P.Download	= 3			-- independent resources already downloaded
+					where	P.Download	= 2			-- independent resources already downloaded
 						and	D.ChildId	= W.PageId
 				)	as	GotRefs
 		from	dbo.WebPages (nolock)				W
-		where	W.Download	= 3		-- fully downloaded
+		where	W.Download	= 2		-- fully downloaded
 		--and	Filespec	is not NULL
 		 and	W.FinalExtn	= 'html'
 		--and	W.Localise	= 1

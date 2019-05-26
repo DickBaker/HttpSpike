@@ -10,14 +10,14 @@ namespace Infrastructure.Models
 
     public class WebPage : IEquatable<WebPage>      // , IComparable<WebPage>
     {
-        public enum OLDDownloadEnum : byte
-        {
-            Ignore = 0,
-            ToDownload,
-            ReDownload,
-            Redirected,             // ConsumeFrom should have ONE entry, Filespec should be NULL
-            Downloaded
-        }
+        //public enum OLDDownloadEnum : byte
+        //{
+        //    Ignore = 0,
+        //    ToDownload,
+        //    ReDownload,
+        //    Redirected,             // ConsumeFrom should have ONE entry, Filespec should be NULL
+        //    Downloaded
+        //}
         public enum DownloadEnum : byte
         {
             Ignore = 0,

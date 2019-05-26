@@ -104,8 +104,6 @@ namespace WebStore
                 new SqlParameter("@Url", SqlDbType.NVarChar, WebPage.URLSIZE)
             };
 
-        //readonly SqlParameter MoreParameter = new SqlParameter("@TakeN", SqlDbType.Int);      // HAVE TO RECREATE EACH TIME (cf. anoprm)
-
         const int CACHELEN = 2;                             // size of DataTable array (i.e. double-buffering)
         int ActiveData = 0;                                 // start with zero-th cache table
         readonly DataTable[] dataCaches = new DataTable[CACHELEN];  // array of DataTable instances (used round-robin cycle) convenient for debugging
@@ -324,12 +322,12 @@ namespace WebStore
 #if WIP
             LastEfCmd = EfWipEnum.GetWebPagesToDownload;
 #endif
-            var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
+            var takeprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
             { Value = maxrows };                                    //  "The SqlParameter is already contained by another SqlParameterCollection" error
             var N = EfDomain.WebPages.Local.Count;
             Task<List<WebPage>> rslt;
             EfWip = rslt = EfDomain.WebPages
-                .SqlQuery("exec p_ToDownload @Take=@TakeN", anoprm)
+                .SqlQuery("exec p_ToDownload @Take=@TakeN", takeprm)
                 .ToListAsync();                                     // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
             return rslt;
         }
@@ -341,11 +339,11 @@ namespace WebStore
 #if WIP
             LastEfCmd = EfWipEnum.GetWebPagesToLocalise;
 #endif
-            var anoprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
+            var takeprm = new SqlParameter("@TakeN", SqlDbType.Int)  // have to recreate every time (presumably as EF invents new SqlCommand) to avoid
             { Value = maxrows };                                    //  "The SqlParameter is already contained by another SqlParameterCollection" error
             Task<List<WebPage>> rslt;
             EfWip = rslt = EfDomain.WebPages
-                .SqlQuery("exec dbo.p_ToLocalise @Take=@TakeN", anoprm)
+                .SqlQuery("exec dbo.p_ToLocalise @Take=@TakeN", takeprm)
                 .ToListAsync();                                     // solidify as List<WebPage> (i.e. no deferred execution), and caller will await to get # requested
 
             return rslt;

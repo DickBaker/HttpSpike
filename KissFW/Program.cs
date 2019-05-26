@@ -161,13 +161,13 @@ namespace KissFW
             //    .Where(w => keywords.Contains(w.PageId))
             //    .OrderBy(w => w.Url)
             //    .ToList();
-            batch = dbctx.WebPages
-                .Include("ConsumeFrom")
-                //.Include("SupplyTo")            // not necessary
-                .Where(w => w.Url== "https://cmrc1.logoscdn.com/www.logos.com/images/products/165584.jpg?69723996288")
-                .OrderBy(w => w.Url)
-                .ToList();
-            //            batch = await repo.GetWebPagesToDownloadAsync(batchSize);               // get first batch (as List<WebPage>)
+            //batch = dbctx.WebPages
+            //    .Include("ConsumeFrom")
+            //    //.Include("SupplyTo")            // not necessary
+            //    .Where(w => w.Url== "https://cmrc1.logoscdn.com/www.logos.com/images/products/165584.jpg?69723996288")
+            //    .OrderBy(w => w.Url)
+            //    .ToList();
+            batch = await repo.GetWebPagesToDownloadAsync(batchSize);               // get first batch (as List<WebPage>)
             var progressIndicator = new Progress<int>(ReportProgress);
             while (batch.Count > 0)
             {
