@@ -31,9 +31,9 @@ namespace KissFW
             {
                 getMissing = false;
             }
-            var origfs = webpage.Filespec;
+            var usingfs = webpage.Filespec;
             if (webpage.Download != WebPage.DownloadEnum.Downloaded         // not fully downloaded ?
-                || !File.Exists(origfs)                                     // or file [now] missing
+                || !File.Exists(usingfs)                                     // or file [now] missing
                 || !getMissing                                              // or download impossible
                 || webpage.Download != WebPage.DownloadEnum.Ignore          // or invalid state
                 || !(await Downloader.FetchFileAsync(webpage))              // or [another] download attempt failed
@@ -62,27 +62,30 @@ namespace KissFW
                         }
                     }
                 }
-                string fs;
+                string usedfs;
                 if (supplied.Download.Value == WebPage.DownloadEnum.Downloaded
-                    && !string.IsNullOrWhiteSpace(fs = supplied.Filespec)
-                    && !fs.StartsWith(ERRTAG)
+                    && !string.IsNullOrWhiteSpace(usedfs = supplied.Filespec)
+                    && !usedfs.StartsWith(ERRTAG)
                     //&& !mydict.ContainsKey(supplied.Url)                          // should be unnecessary as WebPage.Url is unique
-                    && File.Exists(fs))
+                    && File.Exists(usedfs))
                 {
-                    mydict.Add(supplied.Url, fs);
+                    // make usedfs relative to usingfs
+                    var relfs = Utils.GetRelativePath(usingfs, usedfs);
+
+                    mydict.Add(supplied.Url, usedfs);                               //
                     if (mydict.Count > maxlinks)
                     {
                         break;                                                      // now at capacity, so exit the foreach
                     }
                 }
             }
-            if (mydict.Count==0)
+            if (mydict.Count == 0)
             {
                 return false;                                                       // no links to replace
             }
 
-            Httpserver.LoadFromFile(webpage.Url, origfs);
-            var changedLinks = Httpserver.ReworkLinks(origfs, mydict);
+            Httpserver.LoadFromFile(webpage.Url, usingfs);
+            var changedLinks = Httpserver.ReworkLinks(usingfs, mydict);
             if (!changedLinks)
             {
                 return false;        // no link replacement achieved
@@ -92,8 +95,8 @@ namespace KissFW
                 Path.Combine(HtmlPath, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".html");
             Httpserver.SaveFile(newFilespec);
 
-            var backfs = Path.Combine(BackupPath, Path.GetFileName(origfs));
-            var result = Utils.RetireFile(origfs, backfs, newFilespec);
+            var backfs = Path.Combine(BackupPath, Path.GetFileName(usingfs));
+            var result = Utils.RetireFile(usingfs, backfs, newFilespec);
 
             return result;
         }

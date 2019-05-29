@@ -105,7 +105,7 @@ namespace KissFW
 
             HParser = new HapParser(MaxLinks);
             var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir, MaxFileSize);
-            await p.DownloadAndParse(repo, batchSize, download);
+            //await p.DownloadAndParse(repo, batchSize, download);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
             var localise = new Localiser(HParser, htmldir, backupdir, download);
@@ -211,7 +211,9 @@ namespace KissFW
         /// </remarks>
         async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise, bool getMissing = false)
         {
-            var batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
+            List<WebPage> batch;
+            //batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
+            batch = new List<WebPage>(dbctx.WebPages.Where(w => w.Url == "https://www.ligonier.org/learn/scripture/").ToList());
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List

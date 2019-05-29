@@ -70,11 +70,11 @@ namespace HapLib
                                                                             //  "//www.slideshare.net/jeremylikness/herding-cattle-with-azure-container-service-acs"
                     url = GetUrlStandard(uri);                              // standardise on Url content for self-comparison
                     var schemeUrl = uri.Scheme + Uri.SchemeDelimiter + url;
-                    if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)         // ignore "mailto" "javascript" etc
+                    if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)   // ignore "mailto" "javascript" etc
                         || hnode.Attributes["rel"]?.Value == "nofollow"
-                        || url.Length > WebPage.URLSIZE                        // oversize URL ?
+                        || url.Length > WebPage.URLSIZE                             // oversize URL ?
                         || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase) // skip any self-refs (e.g. with fragment) or as rel=canonical
-                        || !oldNewLinks.TryGetValue(schemeUrl, out var fsabs))    // ContainsKey does not have ignoreCase but Repository.PutWebPage does
+                        || !oldNewLinks.TryGetValue(schemeUrl, out var fsabs))      // ContainsKey does not have ignoreCase but Repository.PutWebPage does
                     {
                         continue;                                           // don't change any uninteresting link (not even make relative)
                     }
@@ -82,7 +82,7 @@ namespace HapLib
                     if (uri.Fragment.CompareTo("#") > 0)                    // ignore null, space, "#" but catch "#frag"
                     {
                         Console.WriteLine("postfix fragment");
-                        fsrel += uri.Fragment;              // TODO: does this need "#" ??
+                        fsrel += uri.Fragment;                              // TODO: does this need "#" ??
                     }
                     hnode.Attributes[att].Value = fsrel;
                     rslt = true;
