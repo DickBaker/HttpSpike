@@ -108,7 +108,7 @@ namespace KissFW
             await p.DownloadAndParse(repo, batchSize, download);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
-            var localise = new Localiser(HParser, htmldir, backupdir);
+            var localise = new Localiser(HParser, htmldir, backupdir, download);
             await p.HtmlLocalise(repo, batchSize, localise);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
@@ -209,20 +209,24 @@ namespace KissFW
         /// <remarks>
         /// 1.  batchSize is set by caller [from App.config
         /// </remarks>
-        async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise)
+        async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise, bool getMissing = false)
         {
             var batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List
                 {
+                    if (webpage.Download != WebPage.DownloadEnum.Downloaded)      // this page already fully downloaded ?
+                    {
+                        continue;                                               // no. [sproc should not have included it]/ TODO: make Debug.Assert instead
+                    }
                     var htmlFile = webpage.Filespec;
                     var backupFile = backupdir + Path.DirectorySeparatorChar + Path.GetFileName(htmlFile);
 
                     Console.WriteLine($"<<<{webpage.Url}\t~~>\t{htmlFile }>>>");
                     try
                     {
-                        var changedLinks = localise.Translate(webpage, MaxLinks);       // [sync] complete current page before starting the next
+                        var changedLinks = await localise.Translate(webpage, MaxLinks, getMissing);   // [async because of Downloader] but complete current page before starting the next
                         webpage.Localise = (changedLinks)
                             ? WebPage.LocaliseEnum.Localised                    // show Localise success
                             : WebPage.LocaliseEnum.Ignore;                      // pretend it wasn't wanted anyway
