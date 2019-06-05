@@ -102,14 +102,29 @@ namespace KissFW
 #pragma warning restore GCop302 // Since '{0}' implements IDisposable, wrap it in a using() statement
 
             var p = new Program();
+            var retrycount = 2;
+            Downloader download;
+            do
+            {
+                HParser = new HapParser(MaxLinks);
+                download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir, MaxFileSize);
+                var dlresult = await p.DownloadAndParse(repo, batchSize, download);
+                if (!dlresult)                          // failure may be due to tainted EF context so have to reset all these
+                {
+                    dbctx = new WebModel();             // EF context defaults to config: "name=DefaultConnection"
+                    repo = new BulkRepository(dbctx, AdoRetryPolicy);
+                    retrycount--;
+                }
+                else
+                {
+                    break;
+                }
 
-            HParser = new HapParser(MaxLinks);
-            var download = new Downloader(repo, Client, HttpRetryPolicy, HParser, htmldir, otherdir, backupdir, MaxFileSize);
-            //await p.DownloadAndParse(repo, batchSize, download);
+            } while (retrycount >= 0);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
             var localise = new Localiser(HParser, htmldir, backupdir, download);
-            await p.HtmlLocalise(repo, batchSize, localise);
+            await p.HtmlLocalise(repo, batchSize, localise, getMissing: true);
             Console.WriteLine("*** DownloadAndParse FINISHED ***");
 
 #if DEBUG
@@ -122,9 +137,11 @@ namespace KissFW
             Console.ReadLine();
         }
 
-        async Task DownloadAndParse(IRepository repo, int batchSize, Downloader download)
+        async Task<bool> DownloadAndParse(IRepository repo, int batchSize, Downloader download)
         {
             List<WebPage> batch;
+            const int RETRYMAX = 5;
+            var retry = RETRYMAX;
             //batch = dbctx.WebPages
             //.Include("ConsumeFrom")
             //.Include("SupplyTo")            // not necessary
@@ -178,17 +195,23 @@ namespace KissFW
                     try
                     {
                         await download.FetchFileAsync(webpage, progress: progressIndicator);  // complete current page before starting the next
+                        retry = RETRYMAX;
                     }
                     catch (Exception excp)                                          // either explicit from FetchFileAsync or HTTP timeout [TODO: Polly retries]
                     {
                         Console.WriteLine($"Main EXCEPTION\tfor {webpage.PageId}\t{webpage.Url}\n{excp.Message}");   // see Filespec like '~%'
-
+                        retry--;
+                        if (retry <= 0)
+                        {
+                            return false;
+                        }
                         webpage.Download = WebPage.DownloadEnum.Ignore;             // prevent any [infinite] retry loop; although Downloading table should delay
                     }
                 }
                 var finalcnt = await repo.SaveChangesAsync();                       // flush to update any pending webpage.Download changed rows (else p_ToDownload will repeat)
                 batch = await repo.GetWebPagesToDownloadAsync(batchSize);           // get next batch
             }
+            return true;
         }
 
         /// <summary>
@@ -212,13 +235,14 @@ namespace KissFW
         async Task HtmlLocalise(IRepository repo, int batchSize, Localiser localise, bool getMissing = false)
         {
             List<WebPage> batch;
-            //batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
-            batch = new List<WebPage>(dbctx.WebPages.Where(w => w.Url == "https://www.ligonier.org/learn/scripture/").ToList());
+            batch = await repo.GetWebPagesToLocaliseAsync(batchSize);       // get first batch (as List<WebPage>)
+            //batch = new List<WebPage>(dbctx.WebPages.Where(w => w.Url == "https://www.ligonier.org/learn/scripture/").ToList());
             while (batch.Count > 0)
             {
                 foreach (var webpage in batch)                                  // iterate through [re-]obtained List
                 {
-                    if (webpage.Download != WebPage.DownloadEnum.Downloaded)      // this page already fully downloaded ?
+                    if (webpage.Download != WebPage.DownloadEnum.Downloaded     // this page already fully downloaded ?
+                        || webpage.Localise != WebPage.LocaliseEnum.ToLocalise) //  and needs localisation ?
                     {
                         continue;                                               // no. [sproc should not have included it]/ TODO: make Debug.Assert instead
                     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,16 +34,18 @@ namespace KissFW
             }
             var usingfs = webpage.Filespec;
             if (webpage.Download != WebPage.DownloadEnum.Downloaded         // not fully downloaded ?
-                || !File.Exists(usingfs)                                     // or file [now] missing
-                || !getMissing                                              // or download impossible
-                || webpage.Download != WebPage.DownloadEnum.Ignore          // or invalid state
-                || !(await Downloader.FetchFileAsync(webpage))              // or [another] download attempt failed
-                || webpage.Download != WebPage.DownloadEnum.Downloaded)     // or not refreshed to fully downloaded
+               || !File.Exists(usingfs))                                    // or file [now] missing
             {
-                return false;                                               // can't localise
+                if (!getMissing                                             // or download impossible
+                //    || webpage.Download != WebPage.DownloadEnum.Ignore      // or invalid state
+                    || (!(await Downloader.FetchFileAsync(webpage)))        // try [another] download. did it fail?
+                    || webpage.Download != WebPage.DownloadEnum.Downloaded) // or not refreshed to fully downloaded
+                {
+                    return false;                                           // can't localise
+                }
             }
 
-            var mydict = new Dictionary<string, string>();
+            IDictionary<string, string> mydict = new SortedDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);   // Dictionary<string, string>()
             foreach (var dad in webpage.ConsumeFrom)
             {
                 var supplied = dad;
@@ -50,13 +53,14 @@ namespace KissFW
                 {
                     if (supplied?.Download == WebPage.DownloadEnum.Redirected)
                     {
-                        supplied = supplied.ConsumeFrom.FirstOrDefault();   // redirected should have exactly ONE redirect, but redirect may cascade anew
+                        supplied = supplied.ConsumeFrom.FirstOrDefault();           // redirected should have exactly ONE redirect, but redirect may cascade anew
                     }
                     else
                     {
                         if (!getMissing                                             // can we do last-chance download? ...
                             || supplied?.Download != WebPage.DownloadEnum.Ignore    // in appropriate state ?
-                            || !(await Downloader.FetchFileAsync(supplied)))        // but did [another] download fail ?
+                            || supplied.Filespec.StartsWith(ERRTAG)                 //  and request not already rejected
+                            || !(await Downloader.FetchFileAsync(supplied)))        // try [another] download. did it fail ?
                         {
                             break;                                                  // quit while loop [d/l success needs re-test for redirect so loop again]
                         }
@@ -66,22 +70,25 @@ namespace KissFW
                 if (supplied.Download.Value == WebPage.DownloadEnum.Downloaded
                     && !string.IsNullOrWhiteSpace(usedfs = supplied.Filespec)
                     && !usedfs.StartsWith(ERRTAG)
-                    //&& !mydict.ContainsKey(supplied.Url)                          // should be unnecessary as WebPage.Url is unique
                     && File.Exists(usedfs))
                 {
                     // make usedfs relative to usingfs
                     var relfs = Utils.GetRelativePath(usingfs, usedfs);
 
-                    mydict.Add(supplied.Url, usedfs);                               //
-                    if (mydict.Count > maxlinks)
+                    if (!mydict.ContainsKey(supplied.Url))                        // protect against redirections feeding duplicates
                     {
-                        break;                                                      // now at capacity, so exit the foreach
+                        mydict.Add(supplied.Url, relfs);                            //
+                        if (mydict.Count > maxlinks)
+                        {
+                            break;                                                  // now at capacity, so exit the foreach
+                        }
                     }
                 }
             }
-            if (mydict.Count == 0)
+            var thisUrl = webpage.Url;
+            if (!mydict.ContainsKey(thisUrl))                                       // relativise link-to-self (including any fragment)
             {
-                return false;                                                       // no links to replace
+                mydict.Add(thisUrl, ".");                                           // Path.GetFileName(webpage.Filespec)
             }
 
             Httpserver.LoadFromFile(webpage.Url, usingfs);

@@ -54,6 +54,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Errors.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="BulkRepository.cs" />
     <Compile Include="Migrations\201904232011537_InitialDDL.cs" />

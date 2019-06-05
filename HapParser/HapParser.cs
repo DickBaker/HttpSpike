@@ -12,7 +12,6 @@ namespace HapLib
     public class HapParser : IHttpParser
     {
         static readonly char[] CRLF = { '\r', '\n' };
-        static readonly char[] DIRSEP = { Path.DirectorySeparatorChar };
 
         const string EXTN_SEPARATOR = ".";
         static readonly string[] LinkAttList = { "cite", "data", "href", "src", "srcset" };
@@ -73,7 +72,7 @@ namespace HapLib
                     if ((uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)   // ignore "mailto" "javascript" etc
                         || hnode.Attributes["rel"]?.Value == "nofollow"
                         || url.Length > WebPage.URLSIZE                             // oversize URL ?
-                        || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase) // skip any self-refs (e.g. with fragment) or as rel=canonical
+                    //    || url.Equals(ReqUriMatch, StringComparison.InvariantCultureIgnoreCase) // skip any self-refs (e.g. with fragment) or as rel=canonical
                         || !oldNewLinks.TryGetValue(schemeUrl, out var fsabs))      // ContainsKey does not have ignoreCase but Repository.PutWebPage does
                     {
                         continue;                                           // don't change any uninteresting link (not even make relative)
@@ -432,7 +431,7 @@ namespace HapLib
 
         public bool ReworkLinks(string filespec, IDictionary<string, string> oldNewLinks)
         {
-            var dirname = Path.GetDirectoryName(filespec) + DIRSEP;          // must have trailing slash for recognition as folder
+            var dirname = Path.GetDirectoryName(filespec) + Path.DirectorySeparatorChar;    // must have trailing slash for recognition as folder
             var changedLinks = false;
             foreach (var att in LinkAttList)
             {

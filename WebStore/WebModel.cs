@@ -8,9 +8,10 @@ namespace Webstore
         /*
         The target context 'Webstore.WebModel' is not constructible. Add a default constructor or provide an implementation of IDbContextFactory.
         */
-        public WebModel() : this("name=DefaultConnection")         // would generate Webstore.WebModel db unless given overload
+        public WebModel() : base("name=DefaultConnection")          // would generate Webstore.WebModel db unless given overload
         { }
-        public WebModel(string config) : base(config) => System.Console.WriteLine(Database.Connection.ConnectionTimeout);
+        //public WebModel(string config) : base(config)               // => System.Console.WriteLine(Database.Connection.ConnectionTimeout);
+        //{ }
 
         public virtual DbSet<ContentTypeToExtn> ContentTypeToExtns { get; set; }
         //public virtual DbSet<Host> Hosts { get; set; }

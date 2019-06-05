@@ -1,16 +1,13 @@
-namespace WebStore.Migrations
+namespace DataHosts.Migrations
 {
     using System.Data.Entity.Migrations;
     using Infrastructure.Models;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<Webstore.WebModel>
+    internal sealed class Configuration : DbMigrationsConfiguration<WebModel>
     {
-        public Configuration()
-        {
-            AutomaticMigrationsEnabled = false;
-        }
+        public Configuration() => AutomaticMigrationsEnabled = false;
 
-        protected override void Seed(Webstore.WebModel context)
+        protected override void Seed(WebModel context)
         {
             //  This method will be called after migrating to the latest version.
 

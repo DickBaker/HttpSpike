@@ -405,6 +405,7 @@ namespace DownloadLib
             catch (Exception except)
             {
                 Console.WriteLine($"FetchFileAsync3: {except.Message}");        // swallow the error. NB may have tainted the EF changeset
+                return false;
             }
             return true;
         }

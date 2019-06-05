@@ -34,6 +34,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UrlStd", "UrlStd\UrlStd.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloadLib", "DownloadLib\DownloadLib.csproj", "{44126907-2AD5-488A-BABF-4751C2FDB3B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataHosts", "DataHosts\DataHosts.csproj", "{A1BBE330-E6D2-4487-9187-C6A6F6FD03A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCmd", "DataCmd\DataCmd.csproj", "{1A789487-0887-4AE1-9E70-3535E73EFEED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +94,14 @@ Global
 		{44126907-2AD5-488A-BABF-4751C2FDB3B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44126907-2AD5-488A-BABF-4751C2FDB3B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44126907-2AD5-488A-BABF-4751C2FDB3B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1BBE330-E6D2-4487-9187-C6A6F6FD03A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1BBE330-E6D2-4487-9187-C6A6F6FD03A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1BBE330-E6D2-4487-9187-C6A6F6FD03A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1BBE330-E6D2-4487-9187-C6A6F6FD03A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A789487-0887-4AE1-9E70-3535E73EFEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A789487-0887-4AE1-9E70-3535E73EFEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A789487-0887-4AE1-9E70-3535E73EFEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A789487-0887-4AE1-9E70-3535E73EFEED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
