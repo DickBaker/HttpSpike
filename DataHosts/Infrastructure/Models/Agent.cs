@@ -13,7 +13,7 @@ namespace Infrastructure.Models
 
         public int? PrefHostId { get; set; }
 
-        [StringLength(450)]
+        [StringLength(WebPage.URLSIZE)]
         public string Url { get; set; }
 
         [Column(TypeName = "smalldatetime")]

@@ -125,7 +125,7 @@ namespace KissFW
 
             var localise = new Localiser(HParser, htmldir, backupdir, download);
             await p.HtmlLocalise(repo, batchSize, localise, getMissing: true);
-            Console.WriteLine("*** DownloadAndParse FINISHED ***");
+            Console.WriteLine("*** HtmlLocalise FINISHED ***");
 
 #if DEBUG
             foreach (var extn in MimeCollection.MissingExtns.OrderBy(e => e))

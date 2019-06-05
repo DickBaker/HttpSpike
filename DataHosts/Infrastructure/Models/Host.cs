@@ -18,6 +18,7 @@ namespace Infrastructure.Models
             IsXml = isXml;
             IsOther = isOther;
         }
+
         public int HostId { get; set; }
 
         public int? ParentId { get; set; }
@@ -48,14 +49,18 @@ namespace Infrastructure.Models
         public virtual ICollection<Agent> Agents { get; set; } = new HashSet<Agent>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Host> Hosts1 { get; set; } = new HashSet<Host>();
+        public virtual ICollection<Host> SubDomains { get; set; } = new HashSet<Host>();
 
         public virtual Host ParentHost { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<WebPage> WebPages { get; set; } = new HashSet<WebPage>();
 
+        #region IEquatable<Host>
         public bool Equals(Host other) => HostName == other.HostName;
         public override int GetHashCode() => HostName.GetHashCode();
+        #endregion
+
+        public override string ToString() => $"Id[{HostId}]:\t{HostName}";
     }
 }

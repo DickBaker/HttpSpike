@@ -43,7 +43,7 @@ namespace DataHosts
                 .HasForeignKey(e => e.PrefHostId);
 
             modelBuilder.Entity<Host>()
-                .HasMany(e => e.Hosts1)
+                .HasMany(e => e.SubDomains)
                 .WithOptional(e => e.ParentHost)
                 .HasForeignKey(e => e.ParentId);
 

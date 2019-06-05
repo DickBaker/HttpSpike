@@ -13,7 +13,8 @@ namespace Infrastructure.Models
 
         const int maxlen = 650;
         static HashSet<string> ValidExtns;
-
+#if DEBUG
+#endif
         static readonly IDictionary<string, ContentTypeToExtn> MimeDict = new SortedDictionary<string, ContentTypeToExtn>();
 
         public static List<string> MissingExtns { get; } = new List<string>();
