@@ -110,8 +110,22 @@ namespace DownloadLib
 
         async Task ExtractLinks(WebPage webpage)
         {
+            List<string> prevParents;
             var filespec3 = webpage.Filespec;
-            var prevParents = webpage.ConsumeFrom.Select(w => w.Url).ToList();
+            try                         // no big deal if this breaks, we can tolerate stale links to old gen resources
+            {
+                prevParents = webpage.ConsumeFrom.Select(w => w.Url).ToList();
+            }
+            catch (System.Data.Entity.Core.EntityCommandExecutionException excp1)
+            {
+                Console.WriteLine($"EntityCommandExecutionException error getting PrevParents, so setting to empty set/n/t{excp1.Message}");
+                prevParents = new List<string>();
+            }
+            catch (Exception excp2)
+            {
+                Console.WriteLine($"{excp2.GetType().Name} error getting PrevParents, so setting to empty set/n/t{excp2.Message}");
+                prevParents = new List<string>();
+            }
             Httpserver.LoadFromFile(webpage.Url, filespec3);
             //await Httpserver.LoadFromWebAsync("http://stackoverflow.com/questions/2226554/c-class-for-decoding-quoted-printable-encoding", CancellationToken.None);
             var filespec4 = Utils.TrimOrNull(Httpserver.Title);
