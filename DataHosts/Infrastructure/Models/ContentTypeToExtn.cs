@@ -4,7 +4,7 @@ namespace Infrastructure.Models
 
     public class ContentTypeToExtn
     {
-        public const int EXTNSIZE = 10;
+        public const int EXTNSIZE = 7;
         public ContentTypeToExtn() { }
 
         public ContentTypeToExtn(string template, string extn, bool isText = false)

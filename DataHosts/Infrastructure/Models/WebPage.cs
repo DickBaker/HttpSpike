@@ -141,10 +141,10 @@ namespace Infrastructure.Models
 
 
         [StringLength(7)]
-        public string DraftExtn { get; set; }
+        public string DraftExtn { get; private set; }
 
         [StringLength(7)]
-        public string FinalExtn { get; set; }
+        public string FinalExtn { get; private set; }
 
         public virtual Downloading Downloading { get; set; }
 
