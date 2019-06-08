@@ -16,8 +16,39 @@ EXAMPLES
 	exec dbo.p_ToLocalise	'http%://%DICK.com%', 'html', @Take = 25
 	exec dbo.p_ToLocalise	@Take = 15
 begin tran	-- watch index usage !
-	exec dbo.p_ToLocalise	@Take = 25, @AllYN = 1		-- dependent must have 100% independents already downloaded
+	exec dbo.p_ToLocalise	@Take = 2500	--, @AllYN = 1		-- dependent must have 100% independents already downloaded
 rollback
+
+select *
+-- update W set Localise=0
+from WebPages W where PageId in (47686, 60107)
+where  Download=3 and Localise>0
+ and Filespec is not NULL and Filespec not like '~%'
+
+SELECT * FROM [dbo].Depends D join WebPages W on W.PageId=D.ParentId
+where D.ChildId in (28096, 47686)
+and W.[Url] like '%Keyword%'
+order by D.ChildId, W.[Url]
+
+SELECT W.*, D.*
+FROM [dbo].Depends D
+join WebPages W on W.PageId=D.ChildId or W.PageId=55752
+where D.ParentId = 55752
+order by W.[Url], D.ChildId
+
+update W set Download=2
+-- select *
+from WebPages W
+where Download=3
+ and 
+order by [Url]
+
+select count(*) as N, Download
+from WebPages W
+group by Download
+order by Download
+
+select * from WebPages where [Url] like '%Keyword%' order by [Url]
 
 NOTES
 1.	Agents table is indexed by the SPID of the calling client (assumed to be an agent)
@@ -59,8 +90,7 @@ if not exists(SELECT 1 from dbo.Agents (nolock) where Spid = @SPID)
 	from	dbo.Downloading		D
 	join	dbo.WebPages		W	on	W.PageId	= D.PageId
 	where	D.Spid			= @Spid
-	 and	(	W.Download	= 0				-- no download required
-			or	W.Download	= 3				-- completely downloaded
+	 and	(	W.Download	< 3				-- completely downloaded(2), redirect(1) or Ignore(0)
 	--		or	W.Filespec	is not NULL		-- forces CI index scan (inefficient)
 			)
   end
@@ -95,14 +125,14 @@ INSERT @results (PageId, [Url], DraftFilespec, Filespec, TotRefs, GotRefs, PC)
 		,	(	select	count(*)					-- GotRefs: count # external resources needed and downloaded
 				from	dbo.Depends (nolock)	D
 				join	dbo.WebPages (nolock)	P	ON	P.PageId	= D.ParentId
-				where	P.Download	= 3				-- independent resource already downloaded
+				where	P.Download	= 2				-- independent resource already downloaded
 				--and	P.Filespec	is NOT NULL
 				 and	D.ChildId	= W.PageId
 			)	as	GotRefs
 		from	dbo.WebPages	W
 		where	Filespec	is NOT NULL
 			and	FinalExtn	= 'html'
-			and	Download	= 3				-- this dependent Html page already downloaded & links extracted
+			and	Download	= 2				-- this dependent Html page already downloaded & links extracted
 			and	Localise	= 1				--  and localisation requested but not yet completed
 	)	as	A
 	where	TotRefs			> 0				-- if using no external independent resources then NO-OP (and avoid div-by-zero)
@@ -140,7 +170,7 @@ where	Spid	= @SPID
 -- SELECT * from @results			-- DISABLE for PROD
 
 -- 7.	return exact entity rows to client app (N.B. client ignorant of HostId)
-SELECT	PageId, [Url], DraftFilespec, Filespec, convert(tinyint,3) as Download, convert(tinyint,1) as Localise	-- need to cast as int8 otherwise will be int32
+SELECT	PageId, [Url], DraftFilespec, Filespec, convert(tinyint,2) as Download, convert(tinyint,1) as Localise	-- need to cast as int8 otherwise will be int32
 from	@results
 
 END

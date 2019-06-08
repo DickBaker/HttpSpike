@@ -9,11 +9,13 @@
     [IsXml]     BIT            CONSTRAINT [DF_Host_IsXml] DEFAULT ((1)) NOT NULL,
     [IsOther]   BIT            CONSTRAINT [DF_Host_IsOther] DEFAULT ((1)) NOT NULL,
     [IsImage]   BIT            CONSTRAINT [DF_Hosts_IsDownload] DEFAULT ((1)) NOT NULL,
-    [Priority]  TINYINT        CONSTRAINT [DF_Hosts_Priority] DEFAULT ((100)) NOT NULL,
-    [WaitCount] INT            NULL,
+    [Priority]  TINYINT        CONSTRAINT [DF_Hosts_Priority] DEFAULT ((33)) NOT NULL,
+    [WaitCount] INT            CONSTRAINT [DF_Hosts_WaitCount] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_Hosts] PRIMARY KEY NONCLUSTERED ([HostId] ASC),
     CONSTRAINT [FK_Hosts_ParentHost] FOREIGN KEY ([ParentId]) REFERENCES [dbo].[Hosts] ([HostId])
 );
+
+
 
 
 

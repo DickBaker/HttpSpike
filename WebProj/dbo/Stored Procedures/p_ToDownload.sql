@@ -1,5 +1,4 @@
 ﻿
-
 CREATE PROCEDURE [dbo].[p_ToDownload] 
 /*
 PURPOSE
@@ -13,6 +12,8 @@ HISTORY
 	20190508 dbaker	update ORDER BY priorities
 	20190509 dbaker	correct DownloadEnum.Downloaded (value 4) and DownloadEnum.Redirected (value 3). anticipate Download as priority (>2)
 	20190513 dbaker	adapt to LoPriorityDownload .. HiPriorityDownload
+	20190607 dbaker	change ORDERBY to H.[Priority] + W.Download, but pragmatically not in the TOP 200 sq
+					TODO: return HostId once part of WebPage entity in C#
 
 EXAMPLES
 	exec dbo.p_ToDownload
@@ -69,10 +70,10 @@ if @@ROWCOUNT = 0
 	from	dbo.Downloading		D
 	join	dbo.WebPages		W	on	W.PageId	= D.PageId
 	where	D.Spid	= @@SPID
-	 and	W.Download	between 0 and 2		-- no download required, redirected or completely downloaded
+	 and	W.Download	< 3				-- no download required, redirected or completely downloaded
 	UPDATE dbo.Downloading set
 			Retry	= Retry +1
-		,	Spid	= NULL						-- no longer bound to this agent (another agent could attempt download after retry interval elapses)
+		,	Spid	= NULL				-- no longer bound to this agent (another agent could attempt download after retry interval elapses)
 	where	Spid	= @@SPID
  end
 
@@ -93,21 +94,29 @@ INSERT @results (PageId, HostId, [Url], DraftFilespec, Filespec, Download, Local
 -- declare @Take smallint=10, @retrytime smalldatetime=getdate()-'00:20:00', @PrefHostId int=-1
 	SELECT top (@Take)	W.PageId, W.HostId, W.[Url], DraftFilespec, Filespec, Download, Localise
 	from
-	(	select top 200								-- should pick good enough universe (e.g. to get best 30 by outer orderby criteria)
-				PageId, HostId, [Url], DraftFilespec, Filespec, Download, Localise
-		from	dbo.WebPages
+	(	SELECT top 200								-- should pick good enough universe (e.g. to get best 30 by outer orderby criteria)
+				PageId, WP.HostId, [Url], DraftFilespec, Filespec, Download, Localise
+		from	dbo.WebPages	WP	-- with (index=WebPages_Download_HostId)
+		--left join
+		--		dbo.Hosts		H	on	H.HostId	= WP.HostId
 		where	Download		between 3 and 63	-- LoPriorityDownload=3 .. HiPriorityDownload=63 inclusive
 		-- and	Filespec		is NULL				-- already downloaded (or broken if ~...)
-		order by Download desc
+		order by
+		--		ISNULL(H.[Priority], 0) + Download	desc,	-- match ORDERBY in outer SELECT (but commented-out is too expensive needing all WP+H rows!)
+				Download	desc
+		--	,	PageId
+		--	,	HostId								-- index WebPages_Download_HostId has this as INCLUDE column
 	)		W
-	join	dbo.Hosts			H	on H.HostId = W.HostId
+	left join
+			dbo.Hosts			H	on H.HostId = W.HostId
 	left join
 	(	-- declare @retrytime smalldatetime=getdate()-'00:20:00'
 		SELECT	count(*) as ANO, HostId			-- another SPID active on this sub-domain ?
 		from	dbo.Downloading	(nolock)	D2
 		join	dbo.WebPages				W2	ON	W2.PageId	= D2.PageId
-		where	Spid		!=	@@SPID
-		 and	D2.LastCall	>	@retrytime		-- still busy ?
+		where	Spid		is not NULL			-- ignore entries where no agent is working (i.e. in temporary sin-bin)
+		 and	Spid		!=	@@SPID			-- tagged for another agent
+		 and	D2.LastCall	>	@retrytime		-- still busy (i.e. ignore when other agent probably crashed)?
 		group by HostId
 	)							A			ON		A.HostId	= W.HostId
 	left join	dbo.Downloading	D (nolock)	ON		D.PageId	= W.PageId		-- eligible for new download
@@ -124,8 +133,10 @@ INSERT @results (PageId, HostId, [Url], DraftFilespec, Filespec, Download, Local
 		--	)
 	 order by
 		isnull(A.ANO, 0)						-- # other agents also working on this Host (hopefully none)
-	,	H.Priority desc							-- # items from this host yet to download
-	,	W.Download desc							-- prioritise download (based on # dependent pages)
+	--,	H.[Priority] desc						-- # items from this host yet to download
+	--,	W.Download desc							-- prioritise download (based on # dependent pages)
+	,	(ISNULL(H.[Priority], 0)				-- # items from this host yet to download
+		+ W.Download) desc						-- prioritise download (based on # dependent pages)
 	,	case when W.HostId = @PrefHostId then 0 else 1 end	-- agent should stay with same [preferred] Host
 	,	W.HostId									-- favour older Host
 	,	W.PageId								-- favour older request
@@ -157,10 +168,10 @@ UPDATE	dbo.Agents set
 		LastCall	= @clock					-- record last sproc invocation
 	,	PrefHostId	= @PrefHostId				-- even if no candidate rows found (that match input param criteria)
 	,	[Url]		= @Url						-- this input speccurrently ignored
-where	Spid	= @@SPID
+where	Spid		= @@SPID
 
 -- 7. return exact entity rows to client app
-SELECT	PageId, [Url], DraftFilespec, Filespec, Download, Localise
+SELECT	PageId, [Url], DraftFilespec, Filespec, Download, Localise	-- currently HostId is not part of the WbPage entity in C#
 from	@results
 
 END
